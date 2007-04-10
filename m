@@ -1,76 +1,190 @@
-From: Ming Zhang <blackmagic02881@gmail.com>
-Date: Fri, 13 Apr 2007 13:18:39 +0000
-Subject: Re: BLK_TA_ISSUE
-Message-Id: <1176470319.3624.5.camel@fs0004.ibrix.com>
+From: "Alan D. Brunelle" <alan.brunelle@hp.com>
+Date: Tue, 10 Apr 2007 17:05:09 +0000
+Subject: [BTT PATCH] Add in option to change seek distance calculations
+Message-Id: <461BC3C5.5060307@hp.com>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="------------090307060903020709050203"
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1176341579.3409.2.camel@localhost.localdomain>
-In-Reply-To: <1176341579.3409.2.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Fri, 2007-04-13 at 07:30 +0200, Jens Axboe wrote:
-> On Thu, Apr 12 2007, Ming Zhang wrote:
-> > On Thu, 2007-04-12 at 23:16 +0200, Jens Axboe wrote:
-> > > On Thu, Apr 12 2007, Ming Zhang wrote:
-> > > > On Thu, 2007-04-12 at 13:29 +0200, Jens Axboe wrote:
-> > > > > On Wed, Apr 11 2007, Ming Zhang wrote:
-> > > > > > Hi All
-> > > > > > 
-> > > > > > For this ISSUE event, currently it is in elv_next_request(), any idea
-> > > > > > why it is not in elv_dequeue_request() which is where the request marked
-> > > > > > as on-the-fly and send to lower level?
-> > > > > 
-> > > > > elv_next_request() is the driver hand-off point, so should be pretty
-> > > > > close to the issue time unless the request gets requeued due to some
-> > > > > busy condition (which will also be logged). elv_dequeue_request() may
-> > > > > happen much later, some drivers do it right before calling the io
-> > > > > completion handler - IDE does this - since it leaves the request on the
-> > > > > queue list for the duration of the operation. So moving the ISSUE event
-> > > > > to elv_dequeue_request() would not be correct.
-> > > > > 
-> > > > 
-> > > > ic. i assumed all requests will be removed from queue before llDD handle
-> > > > it.
-> > > > 
-> > > > in 2.6.20 ele_dequeue_request
-> > > > 
-> > > > 771 
-> > > > 772         /*
-> > > > 773          * the time frame between a request being removed from the lists
-> > > > 774          * and to it is freed is accounted as io that is in progress at
-> > > > 775          * the driver side.
-> > > > 776          */
-> > > > 777         if (blk_account_rq(rq))
-> > > > 778                 q->in_flight++;
-> > > > 
-> > > > then this in_flight counter is more likely to be how many outstanding
-> > > > requests that not in the queue and before it is free. and it might be
-> > > > less than how many undergoing IOs?
-> > > 
-> > > It's good enough for what ->in_flight is used for. Your assumption on
-> > > that all low level drivers dequeue before handling a request is wrong.
-> > > Usually only drivers that do queueing do this.
-> > 
-> > so u meant most driver will leave request in queue unless they do
-> > internal queuing?
-> 
-> Not internal queuing, queuing at the device level. No drivers should do
-> internal queuing, they should always push requests back if they cannot
-> handle them.
+This is a multi-part message in MIME format.
+--------------090307060903020709050203
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
+See the updated doc for details.
 
-> 
-> > does this mean the queue can be unnecessary long and travel the list
-> > will go through some requests that under io already?
-> 
-> Typically no, because such devices will only have 1 request active at
-> the time.
-> 
+--------------090307060903020709050203
+Content-Type: text/plain;
+ name="seek-absolute"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="seek-absolute"
 
-ic. thanks for explanation on both.
+From: Alan D. Brunelle <Alan.Brunelle@hp.com>
 
-Ming
+Add in option to have seeks be start-to-start, rather than closest
 
+Signed-off-by: Alan D. Brunelle <Alan.Brunelle@hp.com>
+---
 
+ btt/args.c        |   11 ++++++++++-
+ btt/bt_timeline.c |    2 +-
+ btt/doc/btt.tex   |   28 ++++++++++++++++++++++++++--
+ btt/globals.h     |    2 +-
+ btt/seek.c        |   19 ++++++++++++-------
+ 5 files changed, 50 insertions(+), 12 deletions(-)
+
+diff --git a/btt/args.c b/btt/args.c
+index 9aa24ae..bc60faf 100644
+--- a/btt/args.c
++++ b/btt/args.c
+@@ -29,9 +29,15 @@
+ 
+ #define SETBUFFER_SIZE	(64 * 1024)
+ 
+-#define S_OPTS	"AB:d:D:e:hi:I:l:M:o:p:q:s:S:t:T:Vv"
++#define S_OPTS	"aAB:d:D:e:hi:I:l:M:o:p:q:s:S:t:T:Vv"
+ static struct option l_opts[] = {
+ 	{
++		.name = "seek-absolute",
++		.has_arg = no_argument,
++		.flag = NULL,
++		.val = 'a'
++	},
++	{
+ 		.name = "all-data",
+ 		.has_arg = no_argument,
+ 		.flag = NULL,
+@@ -213,6 +219,9 @@ void handle_args(int argc, char *argv[])
+ 
+ 	while ((c = getopt_long(argc, argv, S_OPTS, l_opts, NULL)) != -1) {
+ 		switch (c) {
++		case 'a':
++			seek_absolute = 1;
++			break;
+ 		case 'A':
+ 			output_all_data = 1;
+ 			break;
+diff --git a/btt/bt_timeline.c b/btt/bt_timeline.c
+index d998e99..76676a3 100644
+--- a/btt/bt_timeline.c
++++ b/btt/bt_timeline.c
+@@ -30,7 +30,7 @@ char bt_timeline_version[] = "0.99.1";
+ char *devices, *exes, *input_name, *output_name, *seek_name, *bno_dump_name;
+ char *d2c_name, *q2c_name, *per_io_name;
+ FILE *ranges_ofp, *avgs_ofp, *per_io_ofp;
+-int verbose, done, time_bounded, output_all_data;
++int verbose, done, time_bounded, output_all_data, seek_absolute;
+ double t_astart, t_aend;
+ unsigned long n_traces;
+ struct avgs_info all_avgs;
+diff --git a/btt/doc/btt.tex b/btt/doc/btt.tex
+index 07b2127..ced747d 100644
+--- a/btt/doc/btt.tex
++++ b/btt/doc/btt.tex
+@@ -1,5 +1,5 @@
+ \documentclass{article}
+-\usepackage{epsfig}
++\usepackage{epsfig,placeins}
+ 
+ %
+ % Copyright (C) 2007 Alan D. Brunelle <Alan.Brunelle@hp.com>
+@@ -22,7 +22,7 @@
+ 
+ \title{\texttt{btt} User Guide}
+ \author{Alan D. Brunelle (Alan.Brunelle@hp.com)}
+-\date{1 March 2007}
++\date{10 April 2007}
+ 
+ \begin{document}
+ \maketitle
+@@ -591,11 +591,27 @@ Device:       rrqm/s   wrqm/s     r/s     w/s    rsec/s    wsec/s
+   \epsfig{file=seek.eps,width=4.5in}
+   \caption{\label{fig:seek}Seek Chart}
+   \end{figure}
++  \FloatBarrier
++
++  The seek difference is calculated in one of two ways:
++
++  \begin{description}
++    \item[default] By default, the seek distance is calculated as the
++    \emph{closest} distance between the previous IO and this IO. The
++    concept of \emph{closeness} means that it could either be the
++    \emph{end} of the previous IO and the beginning of the next, or the
++    end of this IO and the start of the next.
++
++    \item[\texttt{-a}] If the \texttt{-a} or \texttt{seek-absolute}
++    option is specified, then the seek distance is simply the difference
++    between the start of the previous IO and the start of this IO.
++  \end{description}
+ 
+ \newpage\section{\label{sec:cmd-line}Command Line}
+ 
+ \begin{verbatim}
+ Usage: \texttt{btt} 0.99.1 
++[ -a               | --seek-absolute ]
+ [ -A               | --all-data ]
+ [ -B <output name> | --dump-blocknos=<output name> ]
+ [ -d <seconds>     | --range-delta=<seconds> ]
+@@ -617,6 +633,14 @@ Usage: \texttt{btt} 0.99.1
+ [ -v               | --verbose ]
+ \end{verbatim}
+ 
++\subsection{\label{sec:o-a}\texttt{--seek-absolute}/\texttt{-a}}
++
++  When specified on the command line, this directs btt to calculate seek
++  distances based solely upon the starting block addresses of succeeding
++  IOs. By default \texttt{btt} uses the concept of the closeness to either
++  the beginning or end of the previous IO. See section~\ref{sec:seek}
++  for more details about seek distances.
++
+ \subsection{\label{sec:o-A}\texttt{--all-data}/\texttt{-A}}
+ 
+   Normally \texttt{btt} will not print out verbose information
+diff --git a/btt/globals.h b/btt/globals.h
+index 912bb7c..ad50917 100644
+--- a/btt/globals.h
++++ b/btt/globals.h
+@@ -199,7 +199,7 @@ extern char *seek_name, *iostat_name, *d2c_name, *q2c_name, *per_io_name;
+ extern char *bno_dump_name;
+ extern double range_delta;
+ extern FILE *ranges_ofp, *avgs_ofp, *iostat_ofp, *per_io_ofp;
+-extern int verbose, done, time_bounded, output_all_data;
++extern int verbose, done, time_bounded, output_all_data, seek_absolute;
+ extern unsigned int n_devs;
+ extern unsigned long n_traces;
+ extern struct list_head all_devs, all_procs, retries, rmhd;
+diff --git a/btt/seek.c b/btt/seek.c
+index fb62714..b8a3d42 100644
+--- a/btt/seek.c
++++ b/btt/seek.c
+@@ -105,14 +105,19 @@ long long seek_dist(struct seeki *sip, struct io *iop)
+ 	long long dist;
+ 	long long start = BIT_START(iop), end = BIT_END(iop);
+ 
+-	/* Some overlap means no seek */
+-	if (((sip->last_start <= start) && (start <= sip->last_end)) ||
+-	    ((sip->last_start <= end) && (end <= sip->last_end)))
+-		dist = 0;
+-	else if (start > sip->last_end)
+-		dist = start - sip->last_end;
+-	else
++	if (seek_absolute)
+ 		dist = start - sip->last_start;
++	else {
++		/* Some overlap means no seek */
++		if (((sip->last_start <= start) && (start <= sip->last_end)) ||
++		    ((sip->last_start <= end) && (end <= sip->last_end)))
++			dist = 0;
++		else if (start > sip->last_end)
++			dist = start - sip->last_end;
++		else
++			dist = start - sip->last_start;
++
++	}
+ 
+ 	sip->last_start = start;
+ 	sip->last_end = end;
+
+--------------090307060903020709050203--
