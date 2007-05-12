@@ -1,27 +1,26 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Fri, 11 May 2007 13:43:44 +0000
-Subject: Re: [PATCH btrace] Add in -r support for btrace
-Message-Id: <20070511134343.GD4629@kernel.dk>
+Date: Sat, 12 May 2007 04:00:02 +0000
+Subject: Recent changes
+Message-Id: <46453bc2.BXA6hpi+hx2eDVQl%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46446DDF.7050108@pobox.com>
-In-Reply-To: <46446DDF.7050108@pobox.com>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Fri, May 11 2007, Alan D. Brunelle wrote:
-> Using Ubuntu, debugfs is mounted on /debug instead of /sys/kernel/debug. 
-> [Perhaps, we should put in blktrace a search through "common" areas 
-> where debug could be mounted, and or do a simple parsing of the output 
-> from a 'mount' command to /find/ the directory.]
+The following changes since commit 5406b9715ffa8deecea13185a281196f878c53c6:
+  Alan D. Brunelle (1):
+        Fix unplug histogram placement.
 
-A search would be nice, probably /debug and /sys/kernel/debug are the
-only ones we are likely to see (unless the user is on an older system
-and decided to put it elsewhere manually).
+are found in the git repository at:
 
-For now I committed the updated btrace.
+  git://git.kernel.dk/data/git/blktrace.git
 
--- 
-Jens Axboe
+Alan D. Brunelle (1):
+      btrace: Add in -r support for btrace
 
+ btrace |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+ mode change 100755 => 100644 btrace
