@@ -1,7 +1,7 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Sat, 12 May 2007 04:00:02 +0000
+Date: Thu, 17 May 2007 04:00:01 +0000
 Subject: Recent changes
-Message-Id: <46453bc2.BXA6hpi+hx2eDVQl%jens.axboe@oracle.com>
+Message-Id: <464bd341.FlIOxN7rVtRMRn+s%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
@@ -10,17 +10,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 5406b9715ffa8deecea13185a281196f878c53c6:
+The following changes since commit 3b79b22702659877d9ced51d77b175f2cbdbf940:
   Alan D. Brunelle (1):
-        Fix unplug histogram placement.
+        btrace: Add in -r support for btrace
 
 are found in the git repository at:
 
   git://git.kernel.dk/data/git/blktrace.git
 
-Alan D. Brunelle (1):
-      btrace: Add in -r support for btrace
+Jens Axboe (1):
+      Fix crash with '-' stdin input
 
- btrace |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
- mode change 100755 => 100644 btrace
+ blkparse.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
