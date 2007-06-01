@@ -1,34 +1,25 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Tue, 12 Jun 2007 16:23:06 +0000
-Subject: Re: blktrace crashing with 2.6.22-rc3
-Message-Id: <20070612162306.GN18832@kernel.dk>
+Date: Fri, 01 Jun 2007 04:00:02 +0000
+Subject: Recent changes
+Message-Id: <465f99c2.r/cgulgTYc8GE7wx%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <466E7226.7060609@lichota.net>
-In-Reply-To: <466E7226.7060609@lichota.net>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Tue, Jun 12 2007, Krzysztof Lichota wrote:
-> Jens Axboe napisa??(a):
-> >> Should I investigate it further or is it a known issue?
-> >
-> > I think it's a known issue. Don't run blktrace -k unless the trace is
-> > really stuck - does it work correctly if you just ctrl-c out of
-> > blktrace?
-> 
-> Yes, it works. I just got the impression that blktrace -k is the
-> preferred way of terminating the trace.
+The following changes since commit d57450af7817f35ddaa3241426a6213689a3eec6:
+  Jens Axboe (1):
+        Small format update for empty requests
 
-oh no, -k is for KILL, extremely unpolite :-)
+are found in the git repository at:
 
-> Thanks for help :)
+  git://git.kernel.dk/data/git/blktrace.git
 
-It sounds like you have found a way to reliably cause that bug, so I'll
-see if I can reproduce and get it fixed.
+Jens Axboe (1):
+      Make the %C format specified explanation more clear
 
-
--- 
-Jens Axboe
-
+ README |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
