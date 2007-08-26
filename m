@@ -1,68 +1,98 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Tue, 07 Aug 2007 08:22:47 +0000
-Subject: Re: Blkparse weirdness with "A" (remap) action
-Message-Id: <20070807082246.GS5245@kernel.dk>
+From: Jan Blunck <jblunck@suse.de>
+Date: Sun, 26 Aug 2007 14:57:48 +0000
+Subject: [PATCH] Makefile fixes
+Message-Id: <20070826145748.GU546@hasse.suse.de>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20070726193952.GN32546@stingr.net>
-In-Reply-To: <20070726193952.GN32546@stingr.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Mon, Aug 06 2007, Alan D. Brunelle wrote:
-> Jens Axboe wrote:
-> > On Fri, Jul 27 2007, Paul P Komkoff Jr wrote:
-> >   
-> >> Replying to Paul P Komkoff Jr:
-> >>     
-> >>> I'm having a little problem here. I have a setup with md over some
-> >>> disks, and I'm running blktrace /dev/md? /dev/sd?, then doing blkparse
-> >>> *.blktrace.*, I'm getting this kind of stuff:
-> >>>
-> >>>  40,131071  1       67     3.043450168   420  A   W 4274944 + 8 <- (253,0) 4275328
-> >>>  40,131071  1       67     3.043450168   420  A   W 4274944 + 8 <- (253,0) 4275328
-> >>>       
-> >> Replying to my own message.
-> >> I assume this is because we have this in kernel:
-> >>
-> >> /*
-> >>  * The remap event
-> >>  */
-> >> struct blk_io_trace_remap {
-> >>         __be32 device;
-> >>         u32 __pad;
-> >>         __be64 sector;
-> >> };
-> >>
-> >> but this in blktrace:
-> >>
-> >> /*
-> >>  * The remap event
-> >>  */
-> >> struct blk_io_trace_remap {
-> >>         __u32 device;
-> >>         __u32 device_from;
-> >>         __u64 sector;
-> >> };
-> >>     
-> >
-> > I think Alan had a patch for filling in that missing device_from value,
-> > currently it's not used in the kernel (as you spotted). Alan?
-> >
-> >   
-> I have submitted these patches at least twice - once last fall, and once
-> again this spring - the latter time a certain someone named Axboe said
-> they'd be going in for sure... :-)
+Here is a patch with small fixes to the Makefiles which I use in the
+openSUSE blktrace package.
 
-Sorry Alan :-)
+Signed-off-by: Jan Blunck <jblunck@suse.de>
+---
+ Makefile     |   12 ++++++------
+ btt/Makefile |   29 ++++++++++++++---------------
+ 2 files changed, 20 insertions(+), 21 deletions(-)
 
-> I'm back from holiday and will get cracking on getting an updated set of
-> patches out soon...
-
-Thanks, I'll be sure to merge them into an upstream-headed branch so
-they'll make 2.6.23.
-
--- 
-Jens Axboe
-
+--- a/Makefile
++++ b/Makefile
+@@ -65,12 +65,12 @@ clean: docsclean
+ 	$(MAKE) -C btt clean
+ 
+ install: all
+-	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
+-	$(INSTALL) -m755 -d $(DESTDIR)$(mandir)/man1
+-	$(INSTALL) -m755 -d $(DESTDIR)$(mandir)/man8
+-	$(INSTALL) $(ALL) $(DESTDIR)$(bindir)
+-	$(INSTALL) doc/*.1 $(DESTDIR)$(mandir)/man1
+-	$(INSTALL) doc/*.8 $(DESTDIR)$(mandir)/man8
++	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
++	$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1
++	$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man8
++	$(INSTALL) -m 755 $(ALL) $(DESTDIR)$(bindir)
++	$(INSTALL) -m 644 doc/*.1 $(DESTDIR)$(mandir)/man1
++	$(INSTALL) -m 644 doc/*.8 $(DESTDIR)$(mandir)/man8
+ 
+ ifneq ($(wildcard .depend),)
+ include .depend
+--- a/btt/Makefile
++++ b/btt/Makefile
+@@ -6,41 +6,40 @@
+ #
+ 
+ CC	= gcc
++CFLAGS	= -Wall -W -O2 -g
+ INCS	= -I. -I..
+ OCFLAGS	= -UCOUNT_IOS -UDEBUG -DNDEBUG
+-XCFLAGS	= -Wall -W -g -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITSd
+-CFLAGS	= $(INCS) -O2 $(XCFLAGS) $(OCFLAGS)
++XCFLAGS	= -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITSd
++override CFLAGS += $(INCS) $(XCFLAGS) $(OCFLAGS)
+ 
+ PROGS	= btt
+ LIBS	= $(PLIBS) $(ELIBS)
+ OBJS	= args.o bt_timeline.o devmap.o devs.o dip_rb.o iostat.o latency.o \
+ 	  misc.o output.o proc.o seek.o trace.o trace_complete.o trace_im.o \
+-	  trace_issue.o trace_queue.o trace_remap.o trace_requeue.o rbtree.o \
+-	  mmap.o trace_plug.o bno_dump.o unplug_hist.o
++	  trace_issue.o trace_queue.o trace_remap.o trace_requeue.o \
++	  ../rbtree.o mmap.o trace_plug.o bno_dump.o unplug_hist.o
+ 
+ all: depend $(PROGS)
+ 
+-rbtree.o: ../rbtree.c
+-	$(CC) -o $*.o -c $(CFLAGS) $<
++.PHONY : depend
++depend: $(patsubst %.o,%.c,$(filter %.o,$(OBJS)))
++	@$(CC) -MM $(CFLAGS) -I.. $^ 1> .depend
+ 
+-depend:
+-	@$(CC) -MM $(CFLAGS) -I.. *.c 1> .depend
++docs:
++	$(MAKE) -C doc all
++
++docsclean:
++	$(MAKE) -C doc clean
+ 
+ clean: docsclean
+ 	-rm -f *.o $(PROGS) .depend
+ 
+ %.o: %.c
+-	$(CC) -o $*.o -c $(CFLAGS) $<
++	$(CC) $(CFLAGS) -c -o $*.o $<
+ 
+ btt: $(OBJS)
+ 	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LIBS)
+ 
+-docs:
+-	$(MAKE) -C doc all
+-
+-docsclean:
+-	$(MAKE) -C doc clean
+-
+ ifneq ($(wildcard .depend),)
+ include .depend
+ endif
