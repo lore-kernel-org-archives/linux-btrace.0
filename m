@@ -1,7 +1,7 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Mon, 27 Aug 2007 04:00:01 +0000
+Date: Tue, 28 Aug 2007 04:00:02 +0000
 Subject: Recent changes
-Message-Id: <46d24c41.P36nFaOZh5OIXAhP%jens.axboe@oracle.com>
+Message-Id: <46d39dc2.gbs5Yhv5SdIlns6M%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
@@ -10,17 +10,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit f806a4478092ab8e2383efd05aa88073e55df7e7:
-  Jens Axboe (1):
-        Disregard generated doc files in .gitignore
+The following changes since commit e2d964ec9f7f92da9abe0fb2588606dda39306ce:
+  Jan Blunck (1):
+        Makefile fixes
 
 are available in the git repository at:
 
   git://git.kernel.dk/data/git/blktrace.git master
 
-Jan Blunck (1):
-      Makefile fixes
+Valerie Henson (1):
+      blktrace: fix indent typo
 
- Makefile     |   12 ++++++------
- btt/Makefile |   29 ++++++++++++++---------------
- 2 files changed, 20 insertions(+), 21 deletions(-)
+ doc/blktrace.8 |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
