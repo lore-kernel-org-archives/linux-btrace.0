@@ -1,45 +1,41 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Tue, 02 Oct 2007 18:07:44 +0000
-Subject: Re: [PATCH] Add btrecord/btreplay capability
-Message-Id: <20071002180744.GP5236@kernel.dk>
+From: Joshua Root <jmr@gelato.unsw.edu.au>
+Date: Sun, 07 Oct 2007 04:44:02 +0000
+Subject: [PATCH] Fix crash with btreplay -v
+Message-Id: <47086412.90601@gelato.unsw.edu.au>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="------------070904080207080507070809"
 List-Id: <linux-btrace.vger.kernel.org>
-References: <47027480.2040408@hp.com>
-In-Reply-To: <47027480.2040408@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Tue, Oct 02 2007, Alan D. Brunelle wrote:
-> Jens Axboe wrote:
-> >
-> > This looks pretty nifty and useful. I've applied both your patches. They
-> > do have a few build warnings here, involving fatal():
-> >
-> > btrecord.c: In function 'stream_open':
-> > btrecord.c:685: warning: the address of 'ofile_name' will always
-> > evaluate as 'true'
-> > btrecord.c:704: warning: the address of 'vfile_name' will always
-> > evaluate as 'true'
-> >
-> > btreplay.c: In function 'tip_init':
-> > btreplay.c:783: warning: the address of 'fn' will always evaluate as
-> > 'true'
-> > btreplay.c: In function 'replay_sub':
-> > btreplay.c:1314: warning: the address of 'path' will always evaluate as
-> > 'true'
-> >
-> >   
-> Hi Jens -
-> 
-> Thanks for taking these in - I have no idea why I'm not seeing that
-> here, it builds clean on ia64 (SLES10/gcc=4.1.0) and x86_64
-> (Ubuntu/gcc=4.1.2).
-> 
-> I see why the warnings come out, and will think of a way to clean that up.
+This is a multi-part message in MIME format.
+--------------070904080207080507070809
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Probably gcc-4.2.1 being more chatty, I see it on i386 and x86_64 here.
-
+tip->vfp is only initialised when verbose > 1, so we must only use it
+under the same circumstance.
 -- 
-Jens Axboe
+Joshua Root,  jmr AT gelato.unsw.edu.au
+http://www.gelato.unsw.edu.au
 
+--------------070904080207080507070809
+Content-Type: text/plain; x-mac-type="0"; x-mac-creator="0";
+ name="0001-Fix-crash-with-btreplay-v.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="0001-Fix-crash-with-btreplay-v.patch"
+
+IGJ0cmVwbGF5L2J0cmVwbGF5LmMgfCAgICAyICstCiAxIGZpbGVzIGNoYW5nZWQsIDEgaW5z
+ZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9idHJlcGxheS9idHJl
+cGxheS5jIGIvYnRyZXBsYXkvYnRyZXBsYXkuYwppbmRleCA4OTg4MWNiLi4xODA4YjM1IDEw
+MDY0NAotLS0gYS9idHJlcGxheS9idHJlcGxheS5jCisrKyBiL2J0cmVwbGF5L2J0cmVwbGF5
+LmMKQEAgLTEzMjcsNyArMTMyNyw3IEBAIHN0YXRpYyB2b2lkICpyZXBsYXlfc3ViKHZvaWQg
+KmFyZykKICAgICAgICBzZXRfcmVwbGF5X3JlYWR5KCk7CiAgICAgICAgd2hpbGUgKCFpc19z
+ZW5kX2RvbmUodGlwKSAmJiB0aXAtPml0ZXJhdGlvbnMtLSkgewogICAgICAgICAgICAgICAg
+d2FpdF9pdGVyX3N0YXJ0KCk7Ci0gICAgICAgICAgICAgICBpZiAodmVyYm9zZSkKKyAgICAg
+ICAgICAgICAgIGlmICh2ZXJib3NlID4gMSkKICAgICAgICAgICAgICAgICAgICAgICAgZnBy
+aW50Zih0aXAtPnZmcCwgIlxuPT09ICVkID09PVxuIiwgdGlwLT5pdGVyYXRpb25zKTsKICAg
+ICAgICAgICAgICAgIHdoaWxlICghaXNfc2VuZF9kb25lKHRpcCkgJiYgbmV4dF9idW5jaCh0
+aXAsICZidW5jaCkpCiAgICAgICAgICAgICAgICAgICAgICAgIHByb2Nlc3NfYnVuY2godGlw
+LCAmYnVuY2gpOwo=
+--------------070904080207080507070809--
