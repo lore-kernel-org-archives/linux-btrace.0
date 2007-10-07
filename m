@@ -1,53 +1,50 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Tue, 02 Oct 2007 17:51:22 +0000
+From: Ingo Molnar <mingo@elte.hu>
+Date: Sun, 07 Oct 2007 19:32:56 +0000
 Subject: Re: Linux Kernel Markers - performance characterization with large
-Message-Id: <4702851A.1050100@hp.com>
+Message-Id: <20071007193256.GA18558@elte.hu>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46F92219.9020406@hp.com> <20070925171349.GA6057@Krystal> <46FA7A86.6090804@hp.com> <20071002122118.GL5236@kernel.dk> <20071002124803.GA23425@Krystal>
-In-Reply-To: <20071002124803.GA23425@Krystal>
+References: <46F92219.9020406@hp.com> <20070925171349.GA6057@Krystal> <46FA7A86.6090804@hp.com>
+In-Reply-To: <46FA7A86.6090804@hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mathieu Desnoyers <mathieu.desnoyers@polymtl.ca>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, btrace <linux-btrace@vger.kernel.org>
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Cc: Mathieu Desnoyers <mathieu.desnoyers@polymtl.ca>, linux-kernel@vger.kernel.org, btrace <linux-btrace@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Mathieu Desnoyers wrote:
->> remember that we have seen and discussed something like this before,
->> it's still a puzzle to me...
->>
->>     
-> I do wonder about that performance _increase_ with blktrace enabled. I
->
-> Interesting question indeed.
->
-> In those tests, when blktrace is running, are the relay buffers only
-> written to or they are also read ?
->   
 
-blktrace (the utility) was running too - so the relay buffere /were/
-being read and stored out to disk elsewhere.
+* Alan D. Brunelle <Alan.Brunelle@hp.com> wrote:
 
-> Running the tests without consuming the buffers (in overwrite mode)
-> would tell us more about the nature of the disturbance causing the
-> performance increase.
->   
+>  o  All kernels start off with Linux 2.6.23-rc6 + 2.6.23-rc6-mm1
+> 
+>  o  '- bt cfg' or '+ bt cfg' means a kernel without or with blktrace 
+> configured respectively.
+> 
+>  o  '- markers' or '+ markers' means a kernel without or with the 
+> 11-patch marker series respectively.
+> 
+> 38 runs without blk traces being captured (dropped hi/lo value from 40 runs)
+> 
+> Kernel Options       Min val    Avg val    Max val    Std Dev
+> ------------------  ---------  ---------  ---------  ---------
+> - markers - bt cfg  15.349127  16.169459  16.372980   0.184417
+> + markers - bt cfg  15.280382  16.202398  16.409257   0.191861
+> 
+> - markers + bt cfg  14.464366  14.754347  16.052306   0.463665
+> + markers + bt cfg  14.421765  14.644406  15.690871   0.233885
 
-I'd have to write a utility to enable the traces, but then not read. Let
-me think about that.
+actually, the pure marker overhead seems to be a regression:
 
-> Also, a kernel trace could help us understand more thoroughly what is
-> happening there.. is it caused by the scheduler ? memory allocation ?
-> data cache alignment ?
->   
+> - markers - bt cfg  15.349127  16.169459  16.372980   0.184417
+> + markers - bt cfg  15.280382  16.202398  16.409257   0.191861
 
-Yep - when I get some time, I'll look into that. [Clearly not a gating
-issue for marker support...]
+why isnt the marker near zero-cost as it should be? (as long as they are 
+enabled but are not in actual use) 2% increase is _ALOT_. That's the 
+whole point of good probes: they do not slow down the normal kernel.
 
-> I would suggest that you try aligning the block layer data structures
-> accessed by blktrace on L2 cacheline size and compare the results (when
-> blktrace is disabled).
->   
+_Worst case_ it should be at most a few instructions overhead but that 
+does not explain the ~2% wall-clock time regression you measured here.
 
-Again, when I get some time! :-)
+So there's something wrong going on - either markers have unacceptably 
+high cost, or the measurement is not valid.
 
-Alan
+	Ingo
