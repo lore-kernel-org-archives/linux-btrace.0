@@ -1,39 +1,31 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Wed, 10 Oct 2007 11:24:52 +0000
-Subject: btreplay updated
-Message-Id: <470CB684.7000302@hp.com>
+From: Jan Blunck <jblunck@suse.de>
+Date: Wed, 14 Nov 2007 09:39:12 +0000
+Subject: Re: blktrace segfault.
+Message-Id: <20071114093912.GJ3767@hasse.suse.de>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <4724673E.1090404@linux.vnet.ibm.com>
+In-Reply-To: <4724673E.1090404@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-commit cbb3e69ee7499d2df365e2dbc1dfd367a4d997f8
-Author: Joshua Root <>
-Date:   Wed Oct 10 07:17:56 2007 -0400
+On Sun, Oct 28, Aneesh Kumar K.V wrote:
 
-     Fix segfault in replay_sub when verbose is 1
+>
+> the below diff fix the same.
+>
+> diff --git a/blktrace.c b/blktrace.c
+> index 42613a7..4f4fcde 100644
+> --- a/blktrace.c
+> +++ b/blktrace.c
+> @@ -1220,6 +1220,7 @@ static int start_devices(void)
+> 	size = ncpus * sizeof(struct thread_information);
+> 	thread_information = malloc(size * ndevs);
+> +	memset(thread_information, 0, size*ndevs);
+> 	if (!thread_information) {
+> 		fprintf(stderr, "Out of memory, threads (%d)\n", size * ndevs);
+> 		return 1;
 
-     tip->vfp is only initialised when verbose > 1, so we must only use
-     it under the same circumstance.
-
-     Signed-off-by: Alan D. Brunelle <Alan.Brunelle@hp.com>
-
-updating 'refs/heads/master'
-   from 0106d9cfa13b912042bace7bbb2d2475dfd35e10
-   to   cbb3e69ee7499d2df365e2dbc1dfd367a4d997f8
-updating 'refs/heads/origin'
-   from d47a3fec3f4bbcf6b0c6ef757a4eb449dd81d10a
-   to   0106d9cfa13b912042bace7bbb2d2475dfd35e10
-Generating pack...
-Done counting 12 objects.
-Result has 6 objects.
-Deltifying 6 objects.
-  100% (6/6) done
-Writing 6 objects.
-  100% (6/6) done
-Total 6, written 6 (delta 3), reused 0 (delta 0)
-refs/heads/master: 0106d9cfa13b912042bace7bbb2d2475dfd35e10 -> 
-cbb3e69ee7499d2df365e2dbc1dfd367a4d997f8
-refs/heads/origin: d47a3fec3f4bbcf6b0c6ef757a4eb449dd81d10a -> 
-0106d9cfa13b912042bace7bbb2d2475dfd35e10
+I'm pretty sure you want to make the memset after the NULL-pointer check. If
+malloc fails this is segfaulting too.
