@@ -1,59 +1,35 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Date: Thu, 13 Dec 2007 16:23:32 +0000
-Subject: Re: [RFC] blktrace interface for sg devices
-Message-Id: <20071213162332.GA16902@schmichrtp.de.ibm.com>
+From: Joshua Root <jmr@gelato.unsw.edu.au>
+Date: Thu, 06 Dec 2007 05:46:36 +0000
+Subject: [PATCH] Remove strange make dependency
+Message-Id: <47578CBC.1040904@gelato.unsw.edu.au>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20071213090946.GA32110@schmichrtp.de.ibm.com> <20071213091942.GB10113@kernel.dk>
-In-Reply-To: <20071213091942.GB10113@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org
+To: linux-btrace@vger.kernel.org
 
-On Thu, Dec 13, 2007 at 10:19:42AM +0100, Jens Axboe wrote:
-[...]
-> I think this approach is the simplest and right way to do it. Tracing is
-> really just tied to the "transport" (transport here meaning how we
-> transport commands to the device), and even character scsi devices use
-> the block layer queue for this operation, as you note.
-> 
-> Let me know when you are happy with the patch, and I'll queue it up for
-> 2.6.25.
-> > @@ -1066,6 +1068,16 @@ sg_ioctl(struct inode *inode, struct fil
-> >  	case BLKSECTGET:
-> >  		return put_user(sdp->device->request_queue->max_sectors * 512,
-> >  				ip);
-> > +	case BLKTRACESETUP:
-> > +	{
-> > +		return blk_trace_setup(sdp->device->request_queue , sdp->device->sdev_gendev.bus_id, &sdp->device->sdev_gendev, arg);
-> > +	}
-> 
-> Don't need those braces, some other space and long line style issues as
-> well.
-> 
-> > --- a/include/linux/blkdev.h	2007-12-13 08:48:23.000000000 +0100
-> > +++ b/include/linux/blkdev.h	2007-12-13 08:48:25.000000000 +0100
-> > @@ -747,6 +747,16 @@ static inline void blkdev_dequeue_reques
-> >  	elv_dequeue_request(req->q, req);
-> >  }
-> >  
-> > +#ifdef CONFIG_BLK_DEV_IO_TRACE
-> > +extern int blk_trace_setup(request_queue_t *q,  char * name, dev_t dev, char __user *arg);
-> > +extern int blk_trace_startstop(request_queue_t *q, int start);
-> > +extern int blk_trace_remove(request_queue_t *q);
-> > +#else
-> > +#define blk_trace_setup(q, name, dev, arg) do { } while(0)
-> > +#define blk_trace_startstop(q, start) do { } while(0)
-> > +#define blk_trace_remove(q) do { } while(0)
-> > +#endif
-> > +
-> 
-> Put these in the blktrace include file.
+Listing "-lpthread" as a dependency in a make rule doesn't make much sense.
 
-Thanks for your input. I will prepare and send an updated version of
-the patch. I also want to do some more testing, especially to see how
-i can get the sizes of read and write requests and latencies for SCSI
-tape drives.
+Signed-off-by: Joshua Root <jmr@gelato.unsw.edu.au>
+---
+  Makefile |    2 +-
+  1 files changed, 1 insertions(+), 1 deletions(-)
+  mode change 100644 => 100755 Makefile
 
-Christof Schmitt
+diff --git a/Makefile b/Makefile
+old mode 100644
+new mode 100755
+index fda76f4..edc6ca9
+--- a/Makefile
++++ b/Makefile
+@@ -24,7 +24,7 @@ btreplay/btreplay:
+  blkparse: blkparse.o blkparse_fmt.o rbtree.o act_mask.o
+  	$(CC) $(ALL_CFLAGS) -o $@ $(filter %.o,$^)
+
+-blktrace: blktrace.o act_mask.o $(LIBS)
++blktrace: blktrace.o act_mask.o
+  	$(CC) $(ALL_CFLAGS) -o $@ $(filter %.o,$^) $(LIBS)
+
+  verify_blkparse: verify_blkparse.o
+-- 
+1.5.3.4
