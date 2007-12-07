@@ -1,24 +1,25 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 08 Nov 2007 20:15:45 +0000
-Subject: Re: [PATCH] Add UNPLUG traces to all appropriate places
-Message-Id: <20071108201544.GB13741@kernel.dk>
+Date: Fri, 07 Dec 2007 05:00:01 +0000
+Subject: Recent changes
+Message-Id: <4758d351.+80+jZNhcQ1VRJEw%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <473319F3.30706@hp.com>
-In-Reply-To: <473319F3.30706@hp.com>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: linux-kernel@vger.kernel.org, dm-devel@redhat.com, btrace <linux-btrace@vger.kernel.org>
+To: linux-btrace@vger.kernel.org
 
-On Thu, Nov 08 2007, Alan D. Brunelle wrote:
-> Added blk_unplug interface, allowing all invocations of unplugs to result
-> in a generated blktrace UNPLUG. Previously, we saw a PLUG on each of the
-> underlying devices, and an UNPLUG on the volume. This patch ensures that
-> we see the UNPLUG calls for each of the underlying devices.
+The following changes since commit 24c7e97eb6a28a3cfcc966aa2d38af6caed01997:
+  Jens Axboe (1):
+        memset() must be done after NULL check
 
-Looks fine Alan, applied.
+are available in the git repository at:
 
--- 
-Jens Axboe
+  git://git.kernel.dk/data/git/blktrace.git master
 
+Joshua Root (1):
+      Remove strange make dependency
+
+ Makefile |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
