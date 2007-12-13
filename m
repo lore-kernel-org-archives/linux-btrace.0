@@ -1,81 +1,59 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 13 Dec 2007 09:19:42 +0000
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Date: Thu, 13 Dec 2007 16:23:32 +0000
 Subject: Re: [RFC] blktrace interface for sg devices
-Message-Id: <20071213091942.GB10113@kernel.dk>
+Message-Id: <20071213162332.GA16902@schmichrtp.de.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20071213090946.GA32110@schmichrtp.de.ibm.com>
-In-Reply-To: <20071213090946.GA32110@schmichrtp.de.ibm.com>
+References: <20071213090946.GA32110@schmichrtp.de.ibm.com> <20071213091942.GB10113@kernel.dk>
+In-Reply-To: <20071213091942.GB10113@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
+To: Jens Axboe <jens.axboe@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org
 
-On Thu, Dec 13 2007, Christof Schmitt wrote:
-> I am referring to the discussion of introducing statistics in the SCSI
-> layer and the conclusion that blktrace already provides the data:
-> http://lkml.org/lkml/2006/10/21/72
-> http://lkml.org/lkml/2006/11/2/141
+On Thu, Dec 13, 2007 at 10:19:42AM +0100, Jens Axboe wrote:
+[...]
+> I think this approach is the simplest and right way to do it. Tracing is
+> really just tied to the "transport" (transport here meaning how we
+> transport commands to the device), and even character scsi devices use
+> the block layer queue for this operation, as you note.
 > 
-> While blktrace works fine for disk devices, it currently does not
-> provide data for non-disk devices like tape drives. To close this gap,
-> i am looking for a way to get the same trace data also from other SCSI
-> devices.
+> Let me know when you are happy with the patch, and I'll queue it up for
+> 2.6.25.
+> > @@ -1066,6 +1068,16 @@ sg_ioctl(struct inode *inode, struct fil
+> >  	case BLKSECTGET:
+> >  		return put_user(sdp->device->request_queue->max_sectors * 512,
+> >  				ip);
+> > +	case BLKTRACESETUP:
+> > +	{
+> > +		return blk_trace_setup(sdp->device->request_queue , sdp->device->sdev_gendev.bus_id, &sdp->device->sdev_gendev, arg);
+> > +	}
 > 
-> Since the SCSI layer internally uses the same request queuest for all
-> devices and the queues already use the blktrace interface, the main
-> missing part is the interface to enable the tracing for all SCSI
-> devices.
+> Don't need those braces, some other space and long line style issues as
+> well.
 > 
-> Attached is a patch that adds the ioctl interface for blktrace to the
-> sg generic scsi interface. This already allows to get some trace data
-> for SCSI tape drives, although i have to do more testing.
+> > --- a/include/linux/blkdev.h	2007-12-13 08:48:23.000000000 +0100
+> > +++ b/include/linux/blkdev.h	2007-12-13 08:48:25.000000000 +0100
+> > @@ -747,6 +747,16 @@ static inline void blkdev_dequeue_reques
+> >  	elv_dequeue_request(req->q, req);
+> >  }
+> >  
+> > +#ifdef CONFIG_BLK_DEV_IO_TRACE
+> > +extern int blk_trace_setup(request_queue_t *q,  char * name, dev_t dev, char __user *arg);
+> > +extern int blk_trace_startstop(request_queue_t *q, int start);
+> > +extern int blk_trace_remove(request_queue_t *q);
+> > +#else
+> > +#define blk_trace_setup(q, name, dev, arg) do { } while(0)
+> > +#define blk_trace_startstop(q, start) do { } while(0)
+> > +#define blk_trace_remove(q) do { } while(0)
+> > +#endif
+> > +
 > 
-> For testing, any sg device file can be passed to blktrace, e.g.:
-> # blktrace -d /dev/sg1 -o - | blkparse -i -
-> 
-> I am seeking input in this approach: Is this approach worth pursuing
-> to enable blktrace to trace SCSI tape drives? Would there be a better
-> approach to get this trace data?
+> Put these in the blktrace include file.
 
-I think this approach is the simplest and right way to do it. Tracing is
-really just tied to the "transport" (transport here meaning how we
-transport commands to the device), and even character scsi devices use
-the block layer queue for this operation, as you note.
+Thanks for your input. I will prepare and send an updated version of
+the patch. I also want to do some more testing, especially to see how
+i can get the sizes of read and write requests and latencies for SCSI
+tape drives.
 
-Let me know when you are happy with the patch, and I'll queue it up for
-2.6.25.
-> @@ -1066,6 +1068,16 @@ sg_ioctl(struct inode *inode, struct fil
->  	case BLKSECTGET:
->  		return put_user(sdp->device->request_queue->max_sectors * 512,
->  				ip);
-> +	case BLKTRACESETUP:
-> +	{
-> +		return blk_trace_setup(sdp->device->request_queue , sdp->device->sdev_gendev.bus_id, &sdp->device->sdev_gendev, arg);
-> +	}
-
-Don't need those braces, some other space and long line style issues as
-well.
-
-> --- a/include/linux/blkdev.h	2007-12-13 08:48:23.000000000 +0100
-> +++ b/include/linux/blkdev.h	2007-12-13 08:48:25.000000000 +0100
-> @@ -747,6 +747,16 @@ static inline void blkdev_dequeue_reques
->  	elv_dequeue_request(req->q, req);
->  }
->  
-> +#ifdef CONFIG_BLK_DEV_IO_TRACE
-> +extern int blk_trace_setup(request_queue_t *q,  char * name, dev_t dev, char __user *arg);
-> +extern int blk_trace_startstop(request_queue_t *q, int start);
-> +extern int blk_trace_remove(request_queue_t *q);
-> +#else
-> +#define blk_trace_setup(q, name, dev, arg) do { } while(0)
-> +#define blk_trace_startstop(q, start) do { } while(0)
-> +#define blk_trace_remove(q) do { } while(0)
-> +#endif
-> +
-
-Put these in the blktrace include file.
-
--- 
-Jens Axboe
-
+Christof Schmitt
