@@ -1,39 +1,36 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Mon, 14 Jan 2008 08:42:32 +0000
-Subject: Re: [patch] block: fix blktrace timestamps
-Message-Id: <20080114084231.GQ6258@kernel.dk>
+From: David Dillow <dillowda@ornl.gov>
+Date: Wed, 09 Jan 2008 22:48:32 +0000
+Subject: CONFIG_NO_HZ breaks blktrace timestamps
+Message-Id: <1199918912.8388.13.camel@lap75545.ornl.gov>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20080111092334.GA8143@elte.hu> <20080111092513.GO6258@kernel.dk> <20080111094205.GE8143@elte.hu> <20080111095654.GR6258@kernel.dk> <20080111102953.GA27223@elte.hu> <20080111122802.GT6258@kernel.dk> <20080111132106.GA16496@elte.hu> <20080111171855.GX6258@kernel.dk> <20080114075114.GA13195@elte.hu> <20080114083901.GA17897@infradead.org>
-In-Reply-To: <20080114083901.GA17897@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ingo Molnar <mingo@elte.hu>, David Dillow <dillowda@ornl.gov>, Guillaume Chazarain <guichaz@yahoo.fr>, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org, mingo@redhat.com, tglx@linutronix.de, Andrew Morton <akpm@linux-foundation.org>
+To: linux-btrace@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Mon, Jan 14 2008, Christoph Hellwig wrote:
-> 
-> Folks, this is getting a little silly.
+While trying to gain some insight into a disk issue, I found that
+blktrace/blkparse was giving me bogus traces -- I was seeing requests
+complete before they were even dispatched or queued even! I had thought
+that maybe this was an issue with SMP on the box, but when running with
+'maxcpus=1', it told me that my 53 second test run only took 3.5
+seconds.
 
-It is
+I started tracking this down, and upon looking at cpu_clock(), and found
+that it uses sched_clock(), which is based on jiffies. At this point I
+had an ahah! moment and remembered that I had NO_HZ enabled.
 
-> Even if CONFIG_NO_HZ is new this is a an important regression, and
-> yes we should avoid regressions wherever we can, and for such a quite
-> important feature we should fix it.  On the other hand blktrace is using
-> the wrong interface, and it has been told multiple times on lkml that
-> sched_clock() should never ever be used outside the scheduler.  So the
-> burden to fix this regression lies on the shoulders of the blktrace
-> maintainer.
+Turning that off got blktrace to report the proper time for the test
+run.
 
-That is true. So far alternatives have all been slower though, so not
-very tempting to transition to.
-
-> No need for silly name calling here.
-
-I don't know what thread you are reading, but neiter Ingo nor I have
-resorted to silly name calling. The thread has long since diverted from
-the original topic, though.
+I'm not sure of the proper fix, nor am I sure I'm going to have much
+time to track this down at the momenet, but I thought someone should
+know.
 
 -- 
-Jens Axboe
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
+
 
