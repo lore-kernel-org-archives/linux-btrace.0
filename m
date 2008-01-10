@@ -1,66 +1,51 @@
-From: Linda Walsh <lkml@tlinx.org>
-Date: Wed, 23 Jan 2008 23:17:30 +0000
-Subject: Re: blktrace & btrace usability
-Message-Id: <4797CB0A.7050406@tlinx.org>
+From: "Pei Yan" <pyan@wayne.edu>
+Date: Thu, 10 Jan 2008 16:35:45 +0000
+Subject: How to interpret this
+Message-Id: <000001c853a6$d9a5afd0$970d15ac@pei>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <47906577.8090604@tlinx.org> <20080122164145.GB4531@hasse.suse.de> <47964B66.5020001@tlinx.org> <20080123132700.GI4531@hasse.suse.de>
-In-Reply-To: <20080123132700.GI4531@hasse.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Blunck <jblunck@suse.de>
-Cc: linux-btrace@vger.kernel.org, Linux-Xfs <linux-xfs@oss.sgi.com>
+To: linux-btrace@vger.kernel.org
 
-Jan Blunck wrote:
-> On Tue, Jan 22, Linda Walsh wrote:
->
->   
->> Jan Blunck wrote:
->>     
->>> blktrace is used by the preload package. The preload package is capable of
->>> remapping blocks for faster booting. Therefore we need the blktrace
->>> output. But we only have a remapper for ext3.
->>>  
->>>       
->> ----
->>    I wondered about that, but the blktrace package doesn't containg
->> any utility for remapping blocks. The blktrace-0.99.3-12 package
->> included in OSuse-10.3, I only see utilities "blkparse, blktrace, btrace,
->> blkrawverify, btt, and verify_blktrace". 
->>    Was it left out by accident?  ---or---
->>     
->
-> No, this is the reason why I said "blktrace is used by the preload
-> package". The ext3remapper is part of the preload package.
->   
-----
-    Ahh...I'm sorry, I didn't know that the blktrace rc-scripts were
-unrelated to the blktrace package and that by preload package you meant
-a package named "preload" (I thought preload was some other phase
-that I didn't know about that happened before other packages
-were processed, or something).  I got confused by the names (no
-idea why...*cough*)...  I'm not sure why the package, "preload", got
-installed and "chkconfig'ed on" when I have no ext{23} disks.
+Hi,
 
-    I have "personal" issues with each new version adding more
-automatically run "services".  Reminds me more and more of WinXP with
-all its auto-start boot progs & services and how it initially (pre-SP2),
-installed with most services turned on (even though they weren't
-needed by most users).  In a similar way, SuSE organizes its
-rpms to "require" features (packages) that I don't want and don't
-need (avahi an apple-ad-hoc networking util with most of gnome
-requiring its presence).
+  8,16   0        8     0.000594537  3420  Q   R 1318936 + 8 [fio]
+  8,16   0        9     0.000596873  3420  G   R 1318936 + 8 [fio]
+  8,16   0       10     0.000597670  3420  P   N [fio]
+  8,16   0       11     0.000598051  3420  I   R 1318936 + 8 [fio]
+  8,16   0       12     0.000600492  3420  D   R 1318936 + 8 [fio]
+  8,16   0       13     0.000669173  3420  U   N [fio] 1
+> 8,16   0       14     0.015246002  3380  C   R 1318936 + 8 [0]
+  8,16   0       15     0.121368302  3421  Q   R 12328 + 8 [fio]
+  8,16   0       16     0.121376327  3421  G   R 12328 + 8 [fio]
+  8,16   0       17     0.121378041  3421  P   N [fio]
+  8,16   0       18     0.121378833  3421  I   R 12328 + 8 [fio]
+  8,16   0       19     0.121381194  3421  U   N [fio] 1
+  8,16   0       20     0.121732327  3422  Q   R 1576976 + 8 [fio]
+  8,16   0       21     0.121735570  3422  G   R 1576976 + 8 [fio]
+  8,16   0       22     0.121736232  3422  I   R 1576976 + 8 [fio]
+  8,16   0       23     0.121737335  3422  U   N [fio] 2
+> 8,16   0       24     0.128906924    17  D   R 12328 + 8 [kblockd/0]
+> 8,16   0       25     0.129079556     0  C   R 12328 + 8 [0]
+  8,16   0       26     0.129139932  3421  Q   R 12336 + 8 [fio]
+  8,16   0       27     0.129142609  3421  G   R 12336 + 8 [fio]
+  8,16   0       28     0.129143370  3421  I   R 12336 + 8 [fio]
+  8,16   0       29     0.129145791  3421  D   R 12336 + 8 [fio]
+  8,16   0       30     0.129213867  3421  U   N [fio] 2
+> 8,16   0       31     0.129276092     0  C   R 12336 + 8 [0]
 
-    xfs has a file-system re-organizer, but its design goal
-(probably ~10 years back) was simply to coalesce discontiguous
-file parts to speed up speed sensitive real-time video streaming.
-If it was deemed important, the existing xfs_fsr might be
-adaptable...
 
-    Sorry for my confusion..., from the names "boot.blktrace" &
-"stopblktrace", I thought they were general scripts for recording
-the "boot+rc" block actions -- not specifically for the
-package named "preload".
+Q: why are the pids in four tagged lines above changed? For example, in the
+first tagged line, the pid related to the same request(1318936 + 8) changes
+to 3380 from 3420. Why? 
 
--l
+Are there any methods to ensure that all activities initiated by a process
+be all tagged with the pid of that initiating process?
+
+I will appreciate any answers! 
+
+Thanks.
+
+P.Y
 
