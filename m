@@ -1,62 +1,40 @@
-From: Ingo Molnar <mingo@elte.hu>
-Date: Fri, 11 Jan 2008 09:51:24 +0000
+From: Jens Axboe <jens.axboe@oracle.com>
+Date: Fri, 11 Jan 2008 09:56:54 +0000
 Subject: Re: CONFIG_NO_HZ breaks blktrace timestamps
-Message-Id: <20080111095121.GG8143@elte.hu>
+Message-Id: <20080111095654.GR6258@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1199918912.8388.13.camel@lap75545.ornl.gov> <1199996752.9159.46.camel@lap75545.ornl.gov> <20080110234438.4826f658@inria.fr> <1200020661.5099.3.camel@obelisk.thedillows.org> <20080111094441.GF8143@elte.hu>
-In-Reply-To: <20080111094441.GF8143@elte.hu>
+References: <1199918912.8388.13.camel@lap75545.ornl.gov> <1199996752.9159.46.camel@lap75545.ornl.gov> <20080110234438.4826f658@inria.fr> <1200020661.5099.3.camel@obelisk.thedillows.org> <20080111090723.GI6258@kernel.dk> <20080111092334.GA8143@elte.hu> <20080111092513.GO6258@kernel.dk> <20080111094205.GE8143@elte.hu>
+In-Reply-To: <20080111094205.GE8143@elte.hu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Dillow <dillowda@ornl.gov>
-Cc: Guillaume Chazarain <guichaz@yahoo.fr>, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org, mingo@redhat.com, tglx@linutronix.de
+To: Ingo Molnar <mingo@elte.hu>
+Cc: David Dillow <dillowda@ornl.gov>, Guillaume Chazarain <guichaz@yahoo.fr>, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org, mingo@redhat.com, tglx@linutronix.de
 
-
-* Ingo Molnar <mingo@elte.hu> wrote:
-
-> > With those patches, CONFIG_NO_HZ works just fine.
+On Fri, Jan 11 2008, Ingo Molnar wrote:
 > 
-> could you please try the two patches below, do they fix the problem as 
-> well? They got a ton of testing in x86.git in the past ~2 months and 
-> we could perhaps still push them into v2.6.24.
+> * Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> > > they are from the scheduler git tree (except the first debug patch), 
+> > > but queued up for v2.6.25 at the moment.
+> > 
+> > So this means that blktrace will be broken with CONFIG_NO_HZ for 
+> > 2.6.24? That's clearly a regression.
+> 
+> 64-bit CONFIG_NO_HZ is a new feature in v2.6.24. If it happens on 32-bit 
+> too and it didnt happen in v2.6.23 32-bit then it's a regression.
 
-plus, if needed, perhaps this patch below from Guillaume ontop of it.
+If blktrace worked in 2.6.23 and it doesn't in 2.6.24 because of some
+option that isn't immediately apparent, then it's a regression. Period.
 
-	Ingo
+> all this comes from blktrace's original decision of using sched_clock()
+> :-) It's not a global timesource and it's not trivial to turn it into a
+> halfways usable global timesource.
 
----------------->
-Subject: sched: fix rq->clock warps on frequency changes
-From: Guillaume Chazarain <guichaz@yahoo.fr>
+Hey, it was a high res time source and the only one easily available :)
+I'm fine with using another timesource, I'll take suggestions or patches
+any day!
 
-sched: fix rq->clock warps on frequency changes
+-- 
+Jens Axboe
 
-Fix 2bacec8c318ca0418c0ee9ac662ee44207765dd4
-(sched: touch softlockup watchdog after idling) that reintroduced warps
-on frequency changes. touch_softlockup_watchdog() calls __update_rq_clock
-that checks rq->clock for warps, so call it after adjusting rq->clock.
-
-Signed-off-by: Guillaume Chazarain <guichaz@yahoo.fr>
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
----
- kernel/sched.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux-x86.q/kernel/sched.c
-=================================--- linux-x86.q.orig/kernel/sched.c
-+++ linux-x86.q/kernel/sched.c
-@@ -668,7 +668,6 @@ void sched_clock_idle_wakeup_event(u64 d
- 	struct rq *rq = cpu_rq(smp_processor_id());
- 	u64 now = sched_clock();
- 
--	touch_softlockup_watchdog();
- 	rq->idle_clock += delta_ns;
- 	/*
- 	 * Override the previous timestamp and ignore all
-@@ -680,6 +679,7 @@ void sched_clock_idle_wakeup_event(u64 d
- 	rq->prev_clock_raw = now;
- 	rq->clock += delta_ns;
- 	spin_unlock(&rq->lock);
-+	touch_softlockup_watchdog();
- }
- EXPORT_SYMBOL_GPL(sched_clock_idle_wakeup_event);
- 
