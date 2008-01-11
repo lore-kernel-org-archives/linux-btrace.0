@@ -1,31 +1,23 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Fri, 11 Jan 2008 09:34:01 +0000
+From: Ingo Molnar <mingo@elte.hu>
+Date: Fri, 11 Jan 2008 09:34:32 +0000
 Subject: Re: CONFIG_NO_HZ breaks blktrace timestamps
-Message-Id: <20080111093401.GP6258@kernel.dk>
+Message-Id: <20080111093432.GD8143@elte.hu>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1199918912.8388.13.camel@lap75545.ornl.gov> <1199996752.9159.46.camel@lap75545.ornl.gov> <20080110234438.4826f658@inria.fr> <1200020661.5099.3.camel@obelisk.thedillows.org> <20080111090723.GI6258@kernel.dk> <20080111092334.GA8143@elte.hu> <20080111092925.GB8143@elte.hu>
-In-Reply-To: <20080111092925.GB8143@elte.hu>
+References: <1199918912.8388.13.camel@lap75545.ornl.gov> <1199996752.9159.46.camel@lap75545.ornl.gov>
+In-Reply-To: <1199996752.9159.46.camel@lap75545.ornl.gov>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ingo Molnar <mingo@elte.hu>
-Cc: David Dillow <dillowda@ornl.gov>, Guillaume Chazarain <guichaz@yahoo.fr>, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org, mingo@redhat.com, tglx@linutronix.de
+To: David Dillow <dillowda@ornl.gov>
+Cc: linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org, mingo@redhat.com, tglx@linutronix.de, Jens Axboe <jens.axboe@oracle.com>
 
-On Fri, Jan 11 2008, Ingo Molnar wrote:
-> 
-> * Ingo Molnar <mingo@elte.hu> wrote:
-> 
-> > > Thanks for reporting this. Guillaume, did you write this patch? We 
-> > > need to get it into 2.6.24-rc7 asap. Let me know if I should take 
-> > > care of that, or if it's already queued up elsewhere.
-> > 
-> > they are from the scheduler git tree (except the first debug patch), 
-> > but queued up for v2.6.25 at the moment.
-> 
-> some of them are not - Guillaume has not sent them. I'll sort it out.
 
-Thanks Ingo!
+* David Dillow <dillowda@ornl.gov> wrote:
 
--- 
-Jens Axboe
+> Ingo, Thomas added as I think this is related to 
+> sched.c:__update_rq_clock()'s checking for forward time warps.
 
+yep, we've got some fixes in this area. Do blktrace timestamps work fine 
+in v2.6.23, with NOHZ?
+
+	Ingo
