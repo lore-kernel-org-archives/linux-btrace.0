@@ -1,77 +1,42 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Date: Mon, 07 Jan 2008 07:50:59 +0000
+Date: Mon, 14 Jan 2008 07:40:08 +0000
 Subject: [patch 2/2] blkparse: Introduce optional accounting of PC requests
-Message-Id: <20080107075446.155572000@de.ibm.com>
+Message-Id: <20080114074506.775114000@de.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20080107075446.155572000@de.ibm.com>
+In-Reply-To: <20080107075446.155572000@de.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+The current blkparse lists only PC requests, but does not account for
+number of PC requests and the size of the attached data.  This patch
+introduces optional accounting for PC requests.  If any PC event was
+encountered, the summary output will also include data from PC
+requests.
 
-The current blkparse lists only PC requests, but does not
-account for number of PC requests and the size of the attached
-data. This makes sense for block devices where requests originate
-from file systems.
-
-When tracing SCSI tape drives via the sg device files, then all requests are PC
-requests. This patch introduces optional accounting for PC requests with the -p
-or --pc flags to blkparse. For disk drives and CD-ROMs this could also be
-useful to see a summary of the number and transferred data of PC requests.
-
-Accounting the completion events does not work, since the kernel uses the
-data_len field as residual bytes count on event completion, so this has been
-left out.
+For PC completion events the amount of transferred data is not
+available, since the kernel uses the data_len field as residual bytes
+count on event completion.
 
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 
---- a/blktrace.h	2008-01-04 11:31:00.000000000 +0100
-+++ b/blktrace.h	2008-01-04 13:14:36.000000000 +0100
-@@ -32,6 +32,10 @@ struct io_stats {
+--- a/blktrace.h	2008-01-14 07:42:45.000000000 +0100
++++ b/blktrace.h	2008-01-14 07:59:24.000000000 +0100
+@@ -32,6 +32,9 @@ struct io_stats {
  	unsigned long long qread_kb, qwrite_kb, cread_kb, cwrite_kb;
  	unsigned long long iread_kb, iwrite_kb;
  	unsigned long long mread_kb, mwrite_kb;
-+	unsigned long qreads_pc, qwrites_pc, creads_pc, cwrites_pc;
-+	unsigned long ireads_pc, iwrites_pc;
-+	unsigned long long qread_kb_pc, qwrite_kb_pc, cread_kb_pc, cwrite_kb_pc;
-+	unsigned long long iread_kb_pc, iwrite_kb_pc;
++	unsigned long qreads_pc, qwrites_pc, ireads_pc, iwrites_pc;
++	unsigned long rrqueue_pc, wrqueue_pc, creads_pc, cwrites_pc;
++	unsigned long long qread_kb_pc, qwrite_kb_pc, iread_kb_pc, iwrite_kb_pc;
  	unsigned long io_unplugs, timer_unplugs;
  };
  
---- a/blkparse.c	2008-01-04 12:21:42.000000000 +0100
-+++ b/blkparse.c	2008-01-04 13:44:07.000000000 +0100
-@@ -104,7 +104,7 @@ static struct per_process_info *ppi_hash
- static struct per_process_info *ppi_list;
- static int ppi_list_entries;
- 
--#define S_OPTS  "a:A:b:D:d:f:F:hi:o:Oqstw:vV"
-+#define S_OPTS  "a:A:b:D:d:f:F:hi:o:Opqstw:vV"
- static struct option l_opts[] = {
-  	{
- 		.name = "act-mask",
-@@ -209,6 +209,12 @@ static struct option l_opts[] = {
- 		.val = 'V'
- 	},
- 	{
-+		.name = "pc",
-+		.has_arg = no_argument,
-+		.flag = NULL,
-+		.val = 'p'
-+	},
-+	{
- 		.name = NULL,
- 	}
- };
-@@ -271,6 +277,7 @@ static int verbose;
- static unsigned int act_mask = -1U;
- static int stats_printed;
- int data_is_native = -1;
-+static int trace_pc = 0;
- 
- static FILE *dump_fp;
- static char *dump_binary;
-@@ -1168,6 +1175,77 @@ static inline void account_m(struct blk_
+--- a/blkparse.c	2008-01-14 07:45:20.000000000 +0100
++++ b/blkparse.c	2008-01-14 08:10:28.000000000 +0100
+@@ -1168,6 +1168,98 @@ static inline void account_m(struct blk_
  	}
  }
  
@@ -123,33 +88,54 @@ Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 +	}
 +}
 +
-+static inline void __account_pc_c(struct io_stats *ios, int rw, int bytes)
++static inline void __account_pc_requeue(struct io_stats *ios,
++					struct blk_io_trace *t, int rw)
 +{
 +	if (rw) {
-+		ios->cwrites_pc++;
-+		ios->cwrite_kb_pc += bytes >> 10;
++		ios->wrqueue_pc++;
++		ios->iwrite_kb_pc -= t_kb(t);
 +	} else {
-+		ios->creads_pc++;
-+		ios->cread_kb_pc += bytes >> 10;
++		ios->rrqueue_pc++;
++		ios->iread_kb_pc -= t_kb(t);
 +	}
 +}
 +
-+static inline void account_pc_c(struct blk_io_trace *t, struct per_cpu_info *pci,
-+				int rw, int bytes)
++static inline void account_pc_requeue(struct blk_io_trace *t,
++				      struct per_cpu_info *pci, int rw)
 +{
-+	__account_pc_c(&pci->io_stats, rw, bytes);
++	__account_pc_requeue(&pci->io_stats, t, rw);
 +
 +	if (per_process_stats) {
 +		struct io_stats *ios = find_process_io_stats(t->pid);
 +
-+		__account_pc_c(ios, rw, bytes);
++		__account_pc_requeue(ios, t, rw);
++	}
++}
++
++static inline void __account_pc_c(struct io_stats *ios, int rw)
++{
++	if (rw)
++		ios->cwrites_pc++;
++	else
++		ios->creads_pc++;
++}
++
++static inline void account_pc_c(struct blk_io_trace *t,
++				struct per_cpu_info *pci, int rw)
++{
++	__account_pc_c(&pci->io_stats, rw);
++
++	if (per_process_stats) {
++		struct io_stats *ios = find_process_io_stats(t->pid);
++
++		__account_pc_c(ios, rw);
 +	}
 +}
 +
  static inline void __account_queue(struct io_stats *ios, struct blk_io_trace *t,
  				   int rw)
  {
-@@ -1356,6 +1434,7 @@ static void dump_trace_pc(struct blk_io_
+@@ -1356,6 +1448,7 @@ static void dump_trace_pc(struct blk_io_
  	switch (act) {
  		case __BLK_TA_QUEUE:
  			log_generic(pci, t, "Q");
@@ -157,11 +143,11 @@ Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
  			break;
  		case __BLK_TA_GETRQ:
  			log_generic(pci, t, "G");
-@@ -1370,9 +1449,11 @@ static void dump_trace_pc(struct blk_io_
+@@ -1370,9 +1463,11 @@ static void dump_trace_pc(struct blk_io_
  			 */
  			if (pdi->cur_depth[w])
  				pdi->cur_depth[w]--;
-+			account_requeue(t, pci, w);
++			account_pc_requeue(t, pci, w);
  			log_generic(pci, t, "R");
  			break;
  		case __BLK_TA_ISSUE:
@@ -169,30 +155,33 @@ Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
  			pdi->cur_depth[w]++;
  			if (pdi->cur_depth[w] > pdi->max_depth[w])
  				pdi->max_depth[w] = pdi->cur_depth[w];
-@@ -1383,6 +1464,7 @@ static void dump_trace_pc(struct blk_io_
+@@ -1382,6 +1477,7 @@ static void dump_trace_pc(struct blk_io_
  			if (pdi->cur_depth[w])
  				pdi->cur_depth[w]--;
- 
-+			account_pc_c(t, pci, w, t->bytes);
  			log_pc(pci, t, "C");
++			account_pc_c(t, pci, w);
  			break;
  		case __BLK_TA_INSERT:
-@@ -1533,6 +1615,14 @@ static void dump_io_stats(struct per_dev
+ 			log_pc(pci, t, "I");
+@@ -1531,6 +1627,17 @@ static void dump_io_stats(struct per_dev
  		fprintf(ofp, " Read depth:      %'8u%8c\t", pdi->max_depth[0], ' ');
  		fprintf(ofp, " Write depth:      %'8u\n", pdi->max_depth[1]);
  	}
-+	if (trace_pc) {
-+		fprintf(ofp, " PC Reads Queued:    %s, %siB\t", size_cnv(x, ios->qreads_pc, 0), size_cnv(y, ios->qread_kb_pc, 1));
-+		fprintf(ofp, " PC Writes Queued:    %s, %siB\n", size_cnv(x, ios->qwrites_pc, 0), size_cnv(y, ios->qwrite_kb_pc, 1));
-+		fprintf(ofp, " PC Read Dispatches: %s, %siB\t", size_cnv(x, ios->ireads_pc, 0), size_cnv(y, ios->iread_kb_pc, 1));
-+		fprintf(ofp, " PC Write Dispatches: %s, %siB\n", size_cnv(x, ios->iwrites_pc, 0), size_cnv(y, ios->iwrite_kb_pc, 1));
-+		fprintf(ofp, " PC Reads Completed: %s, %siB\t", size_cnv(x, ios->creads_pc, 0), size_cnv(y, ios->cread_kb_pc, 1));
-+		fprintf(ofp, " PC Writes Completed: %s, %siB\n", size_cnv(x, ios->cwrites_pc, 0), size_cnv(y, ios->cwrite_kb_pc, 1));
++	if (ios->qreads_pc || ios->qwrites_pc || ios->ireads_pc || ios->iwrites_pc ||
++	    ios->rrqueue_pc || ios->wrqueue_pc || ios->creads_pc || ios->cwrites_pc) {
++		fprintf(ofp, " PC Reads Queued: %s, %siB\t", size_cnv(x, ios->qreads_pc, 0), size_cnv(y, ios->qread_kb_pc, 1));
++		fprintf(ofp, " PC Writes Queued: %s, %siB\n", size_cnv(x, ios->qwrites_pc, 0), size_cnv(y, ios->qwrite_kb_pc, 1));
++		fprintf(ofp, " PC Read Disp.:   %s, %siB\t", size_cnv(x, ios->ireads_pc, 0), size_cnv(y, ios->iread_kb_pc, 1));
++		fprintf(ofp, " PC Write Disp.:   %s, %siB\n", size_cnv(x, ios->iwrites_pc, 0), size_cnv(y, ios->iwrite_kb_pc, 1));
++		fprintf(ofp, " PC Reads Req.:   %s\t\t", size_cnv(x, ios->rrqueue_pc, 0));
++		fprintf(ofp, " PC Writes Req.:   %s\n", size_cnv(x, ios->wrqueue_pc, 0));
++		fprintf(ofp, " PC Reads Compl.: %s\t\t", size_cnv(x, ios->creads_pc, 0));
++		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites, 0));
 +	}
  	fprintf(ofp, " IO unplugs:      %'8lu%8c\t", ios->io_unplugs, ' ');
  	fprintf(ofp, " Timer unplugs:    %'8lu\n", ios->timer_unplugs);
  }
-@@ -1662,6 +1752,14 @@ static void show_device_and_cpu_stats(vo
+@@ -1660,6 +1767,20 @@ static void show_device_and_cpu_stats(vo
  			total.iwrite_kb += ios->iwrite_kb;
  			total.mread_kb += ios->mread_kb;
  			total.mwrite_kb += ios->mwrite_kb;
@@ -203,44 +192,15 @@ Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 +			total.cwrites_pc += ios->cwrites_pc;
 +			total.ireads_pc += ios->ireads_pc;
 +			total.iwrites_pc += ios->iwrites_pc;
++			total.rrqueue_pc += ios->rrqueue_pc;
++			total.wrqueue_pc += ios->wrqueue_pc;
++			total.qread_kb_pc += ios->qread_kb_pc;
++			total.qwrite_kb_pc += ios->qwrite_kb_pc;
++			total.iread_kb_pc += ios->iread_kb_pc;
++			total.iwrite_kb_pc += ios->iwrite_kb_pc;
 +
  			total.timer_unplugs += ios->timer_unplugs;
  			total.io_unplugs += ios->io_unplugs;
  
-@@ -2494,7 +2592,7 @@ static int is_pipe(const char *str)
- 	return 0;
- }
- 
--#define S_OPTS  "a:A:b:D:d:f:F:hi:o:Oqstw:vV"
-+#define S_OPTS  "a:A:b:D:d:f:F:hi:o:Opqstw:vV"
- static char usage_str[] =    "\n\n" \
- 	"-i <file>           | --input=<file>\n" \
- 	"[ -a <action field> | --act-mask=<action field> ]\n" \
-@@ -2507,6 +2605,7 @@ static char usage_str[] =    "\n\n" \
- 	"[ -h                | --hash-by-name ]\n" \
- 	"[ -o <file>         | --output=<file> ]\n" \
- 	"[ -O                | --no-text-output ]\n" \
-+	"[ -p                | --pc ]\n" \
- 	"[ -q                | --quiet ]\n" \
- 	"[ -s                | --per-program-stats ]\n" \
- 	"[ -t                | --track-ios ]\n" \
-@@ -2523,6 +2622,7 @@ static char usage_str[] =    "\n\n" \
- 	"\t-i Input file containing trace data, or '-' for stdin\n" \
- 	"\t-o Output file. If not given, output is stdout\n" \
- 	"\t-O Do NOT output text data\n" \
-+	"\t-p Show statistics for PC requests\n"
- 	"\t-q Quiet. Don't display any stats at the end of the trace\n" \
- 	"\t-s Show per-program io statistics\n" \
- 	"\t-t Track individual ios. Will tell you the time a request took\n" \
-@@ -2619,6 +2719,9 @@ int main(int argc, char *argv[])
- 		case 'd':
- 			dump_binary = optarg;
- 			break;
-+		case 'p':
-+			trace_pc = 1;
-+			break;
- 		default:
- 			usage(argv[0]);
- 			return 1;
 
 -- 
