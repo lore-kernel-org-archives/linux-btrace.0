@@ -1,44 +1,22 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Thu, 31 Jan 2008 18:23:12 +0000
-Subject: Updated btt portion of the tree
-Message-Id: <47A21210.3070007@hp.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Date: Mon, 14 Jan 2008 07:40:06 +0000
+Subject: [patch 0/2] updated blkparse extensions for PC requests
+Message-Id: <20080114074006.156933000@de.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+Here is an updated version of the PC requests patches for blkparse.
 
-[PATCH] Fixed excess bucket information for unplug histograms.
+The first patch (add PC requests to queue depth accounting) only has
+some white space cleanups compared to the last version.
 
-(Jens: the push worked OK...)
+The second patch (account PC requests) no longer introduces the --pc
+flag on the command line. Instead, the PC summary data is printed,
+whenever a PC event was encountered. I also added accounting the PC
+requeue and PC completion events.
 
----
- btt/unplug_hist.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/btt/unplug_hist.c b/btt/unplug_hist.c
-index 4971f31..aaa4c39 100644
---- a/btt/unplug_hist.c
-+++ b/btt/unplug_hist.c
-@@ -23,7 +23,7 @@
- #define BKT_WIDTH	5
- #define MAX_BKT		19
- #define EXCESS_BKT	20
--#define NBKTS		EXCESS_BKT
-+#define NBKTS		(EXCESS_BKT + 1)
- 
- struct hist_bkt {
- 	__u32 dev;
-@@ -56,7 +56,7 @@ void unplug_hist_add(struct io *u_iop)
- 		struct hist_bkt *hbp = dip->unplug_hist_handle;
- 
- 		idx = (n_unplugs / BKT_WIDTH);
--		if (idx > MAX_BKT)
-+		if (idx > EXCESS_BKT)
- 			idx = EXCESS_BKT;
- 
- 		assert((0 <= idx) && (idx <= EXCESS_BKT));
 -- 
-1.5.2.5
-
+Christof Schmitt
