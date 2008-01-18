@@ -1,22 +1,20 @@
-From: "Alan D. Brunelle" <alan.brunelle@hp.com>
-Date: Mon, 10 Dec 2007 19:08:35 +0000
-Subject: Updated: blktrace/btt - Split out DM devices as well as differentiating
-Message-Id: <475D8EB3.5090701@hp.com>
+From: Linda Walsh <lkml@tlinx.org>
+Date: Fri, 18 Jan 2008 08:38:15 +0000
+Subject: blktrace & btrace usability
+Message-Id: <47906577.8090604@tlinx.org>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-commit ae6d30f4475181d685d1f33faf056755803f189b
-Author: Alan D. Brunelle <Alan.Brunelle@hp.com>
-Date:   Mon Dec 10 13:41:37 2007 -0500
+I was examining the SuSE10.3 boot process and noted
+it is setup to start & stop blktrace while the system
+is booting.  Odd think is that it checks to verify that
+the root file system is of type "ext3". 
 
-     Separated out g/i/m trace handling.
+Is that a "SuSEism" or is there some reason why it wouldn't
+work with any file system?
 
-     Also separated out DM-device calculations.
+linda
 
-(See the documentation btt/doc/btt.pdf for more details concerning all 
-the outputs.)
-
-Alan
