@@ -1,51 +1,25 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Wed, 13 Feb 2008 16:50:58 +0000
-Subject: Re: [PATCH] btt: fix missing cleanup call
-Message-Id: <47B31FF2.7070800@hp.com>
+From: Mohsen Pahlevanzadeh <mohsen@pahlevanzadeh.org>
+Date: Fri, 01 Feb 2008 17:51:06 +0000
+Subject: LTT & its patches.
+Message-Id: <47A3593A.3010101@pahlevanzadeh.org>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <47B2A0BE.1030709@gelato.unsw.edu.au>
-In-Reply-To: <47B2A0BE.1030709@gelato.unsw.edu.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Aaron Carroll wrote:
-> clean_args() exists but is never called, thus any files opened in args remain
-> open while the buffers backing those files are closed.
-> 
-> Signed-off-by: Aaron Carroll <aaronc@gelato.unsw.edu.au>
-> ---
->  btt/bt_timeline.c |    1 +
->  btt/globals.h     |    1 +
->  2 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/btt/bt_timeline.c b/btt/bt_timeline.c
-> index 981b909..17a1b23 100644
-> --- a/btt/bt_timeline.c
-> +++ b/btt/bt_timeline.c
-> @@ -92,6 +92,7 @@ int main(int argc, char *argv[])
->  	free(input_name);
->  	if (output_name) free(output_name);
->  
-> +	clean_args();
->  	clean_bufs();
->  
->  	return 0;
-> diff --git a/btt/globals.h b/btt/globals.h
-> index f6041de..486a3fc 100644
-> --- a/btt/globals.h
-> +++ b/btt/globals.h
-> @@ -228,6 +228,7 @@ extern struct list_head cios;
->  
->  /* args.c */
->  void handle_args(int argc, char *argv[]);
-> +void clean_args();
->  
->  /* devmap.c */
->  int dev_map_read(char *fname);
-> 
+Dear all,
+I need to work with kernel 2.6.10 .But ltt hasn't 2.6.10 patches in the 
+its site.oldest version is 2.6.12.
+If you have its patch for 2.6.10 please mail me....
+Cheers,
+Mohsen
+-- 
+-------------------------
+Mohsen Pahlevanzadeh
+email address : mohsen@pahlevanzadeh.org
+web site : http://pahlevanzadeh.org
+IRC IM : m_pahlevanzadeh
+yahoo IM : linuxorbsd
+----------------------------
 
-Looks good, applied, thanks!
-
-Alan
