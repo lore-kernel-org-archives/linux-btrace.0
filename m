@@ -1,33 +1,66 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Sat, 23 Feb 2008 05:00:02 +0000
-Subject: Recent changes
-Message-Id: <47bfa852.ezXHDHXMzt9Lyemc%jens.axboe@oracle.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Date: Fri, 29 Feb 2008 11:59:37 +0000
+Subject: [patch 1/2] blkparse: Add PC requests to depth trace
+Message-Id: <20080229120313.630829000@de.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+References: <20080107075445.459210000@de.ibm.com>
+In-Reply-To: <20080107075445.459210000@de.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 8b10aae0cd4137f1cc9848181e4f45a9fa20de24:
-  Alan D. Brunelle (1):
-        Cleanups: Fixed IOPs in btt left over at end of run
+The PC requests use the same queue and also contribute to the
+queue length, so they should be added to the queue depth trace.
 
-are available in the git repository at:
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-  git://git.kernel.dk/data/git/blktrace.git master
+--- a/blkparse.c	2008-01-14 07:42:45.000000000 +0100
++++ b/blkparse.c	2008-01-14 07:45:20.000000000 +0100
+@@ -1347,8 +1347,10 @@ static void log_pc(struct per_cpu_info *
+ 	process_fmt(act, pci, t, -1ULL, t->pdu_len, buf);
+ }
+ 
+-static void dump_trace_pc(struct blk_io_trace *t, struct per_cpu_info *pci)
++static void dump_trace_pc(struct blk_io_trace *t, struct per_dev_info *pdi,
++			  struct per_cpu_info *pci)
+ {
++	int w = (t->action & BLK_TC_ACT(BLK_TC_WRITE)) != 0;
+ 	int act = t->action & 0xffff;
+ 
+ 	switch (act) {
+@@ -1362,12 +1364,23 @@ static void dump_trace_pc(struct blk_io_
+ 			log_generic(pci, t, "S");
+ 			break;
+ 		case __BLK_TA_REQUEUE:
++			/*
++			 * can happen if we miss traces, don't let it go
++			 * below zero
++			 */
++			if (pdi->cur_depth[w])
++				pdi->cur_depth[w]--;
+ 			log_generic(pci, t, "R");
+ 			break;
+ 		case __BLK_TA_ISSUE:
++			pdi->cur_depth[w]++;
++			if (pdi->cur_depth[w] > pdi->max_depth[w])
++				pdi->max_depth[w] = pdi->cur_depth[w];
+ 			log_pc(pci, t, "D");
+ 			break;
+ 		case __BLK_TA_COMPLETE:
++			if (pdi->cur_depth[w])
++				pdi->cur_depth[w]--;
+ 			log_pc(pci, t, "C");
+ 			break;
+ 		case __BLK_TA_INSERT:
+@@ -1463,7 +1476,7 @@ static void dump_trace(struct blk_io_tra
+ {
+ 	if (text_output) {
+ 		if (t->action & BLK_TC_ACT(BLK_TC_PC))
+-			dump_trace_pc(t, pci);
++			dump_trace_pc(t, pdi, pci);
+ 		else
+ 			dump_trace_fs(t, pdi, pci);
+ 	}
 
-Bas Zoetekouw (4):
-      Added man page for bno_plot and updated btt man page to refer to bno_plot
-      Really commit the changes to btt.1
-      Don't like btrecord against libaio and librt, as it doesn't use any of their symbols
-      Fix section of btrecord and btreplay man pages
-
- btreplay/Makefile |    2 +-
- doc/bno_plot.1    |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- doc/btrecord.8    |    2 +-
- doc/btreplay.8    |    2 +-
- doc/btt.1         |    8 +++++-
- 5 files changed, 74 insertions(+), 4 deletions(-)
- create mode 100644 doc/bno_plot.1
+-- 
