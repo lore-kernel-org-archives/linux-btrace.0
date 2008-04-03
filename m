@@ -1,7 +1,7 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 03 Apr 2008 04:00:01 +0000
+Date: Thu, 03 Apr 2008 07:04:02 +0000
 Subject: Recent changes
-Message-Id: <47f45641.fmXIuwKgcq40xE7P%jens.axboe@oracle.com>
+Message-Id: <47f48162.BK15dPBX3kHVqDLh%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
@@ -16,7 +16,7 @@ The following changes since commit 967492e81cd045b058fc93dacc15924bebd00b9b:
 
 are available in the git repository at:
 
-  git://git.kernel.dk/data/git/blktrace.git master
+  git://git.kernel.dk/blktrace.git master
 
 Christof Schmitt (2):
       blkparse: Add PC requests to depth trace
