@@ -1,31 +1,30 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Thu, 08 May 2008 19:33:27 +0000
-Subject: [PATCHed btt]  Added -X option - generate easily parseable file
-Message-Id: <48235587.4050004@hp.com>
+From: "K.Prasad" <prasad@linux.vnet.ibm.com>
+Date: Fri, 16 May 2008 17:17:42 +0000
+Subject: [RFC Patch 0/5] Modifying blktrace to use 'trace' infrastructure
+Message-Id: <op.ua9a3sz103j166@prasadkr_t60p.in.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: kernel list <linux-kernel@vger.kernel.org>
+Cc: dwilder@us.ibm.com, axboe@kernel.dk, linux-btrace@vger.kernel.org, akpm@linux-foundation.org, prasad@linux.vnet.ibm.com
 
-Writes a portion of the default output into a separate file that is more
-easily parsed.
+Hi All,
+	Please review the following set of patches which modify blktrace
+to use trace_dump() function provided as a part of 'trace'
+infrastructure.
 
-Sample output (btt.xvg):
+This change brings amount huge amount of code savings i.e. ~130 lines of
+code reduced in blktrace.c while retaining all existing functionality
+provided by the blktrace application. This change in the kernel requires
+no user-space code changes.
 
-DMI 8,16 310407 106729 2.908366049 0 182 1024 19504768
-QSK 8,16 310407 167141.958551192 0 0 235753
-DSK 8,16 106729 433247.436563633 0 0 33974
-PLG 8,16 40824 382 0.008882101
-UPG 8,16 1.993361748 1.866492147
-ARQ 8,16 22.863331046
+The patchset is based upon 2.6.25-mm1 and has been tested on an i386
+machine.
 
-Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
----
- btt/args.c        |   36 ++++++++++++++++++++++++-----
- btt/bt_timeline.c |    5 ++-
- btt/doc/btt.tex   |   56 +++++++++++++++++++++++++++++++++++++++++++--
- btt/globals.h     |    3 +-
- btt/output.c      |   64
-+++++++++++++++++++++++++++++++++++++++++++++++++---
- 5 files changed, 148 insertions(+), 16 deletions(-)
+The patchset contains five patches, most of which remove the code in
+blktrace.c that have become redundant due to use of 'trace_dump()'.
+
+Thanks,
+K.Prasad
+
