@@ -1,15 +1,17 @@
 From: "K.Prasad" <prasad@linux.vnet.ibm.com>
-Date: Fri, 16 May 2008 17:19:39 +0000
-Subject: [RFC Patch 5/5] Blktrace - Remove trace_state and associated flags from blktrace.[ch]
-Message-Id: <op.ua9a61lw03j166@prasadkr_t60p.in.ibm.com>
+Date: Sat, 17 May 2008 02:35:27 +0000
+Subject: Re: [RFC Patch 5/5] Blktrace - Remove trace_state and associated flags from blktrace.[ch]
+Message-Id: <op.ua90xdqx03j166@prasadkr_t60p.in.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20080516164644.GA22928@in.ibm.com>
-In-Reply-To: <20080516164644.GA22928@in.ibm.com>
+References: <20080516164644.GA22928@in.ibm.com> <op.ua9a61lw03j166@prasadkr_t60p.in.ibm.com>
+In-Reply-To: <op.ua9a61lw03j166@prasadkr_t60p.in.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
+To: kernel list <linux-kernel@vger.kernel.org>
 Cc: dwilder@us.ibm.com, axboe@kernel.dk, linux-btrace@vger.kernel.org, akpm@linux-foundation.org, prasad@linux.vnet.ibm.com
+
+Re-sending the patch due to style issues found in the previous version.
 
 This patch removes the 'trace_state' flag from blk_trace structure, since  
 the
@@ -58,7 +60,7 @@ Index: linux-blktrace-many/block/blktrace.c
 
 -	if (bt->trace_state = Blktrace_setup ||
 -	    bt->trace_state = Blktrace_stopped)
-+	if(!trace_running(bt->tpk->ti))
++	if (!trace_running(bt->tpk->ti))
   		blk_trace_cleanup(bt);
 
   	return 0;
