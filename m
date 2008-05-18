@@ -1,84 +1,34 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Fri, 30 May 2008 11:44:02 +0000
-Subject: Re: [RFC PATCH] block: disable IRQs until data is written to relay  channel
-Message-Id: <20080530114401.GY25504@kernel.dk>
+From: "M. Edward (Ed) Borasky" <znmeb@cesmail.net>
+Date: Sun, 18 May 2008 02:54:53 +0000
+Subject: segfault in "blkparse -s"?
+Message-Id: <482F9A7D.3060001@cesmail.net>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20080530110429.GA23157@ping.uio.no>
-In-Reply-To: <20080530110429.GA23157@ping.uio.no>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Fri, May 30 2008, Carl Henrik Lunde wrote:
-> Hi,
-> 
-> Can you review this patch?  I'm new to locking in the Linux kernel
-> so I may be misssing something.
-> 
-> I think we must disable IRQs between relay_reserve and initializing
-> the data; consider the following scenario where task 1 and task 2
-> runs on the same CPU:
-> 
-> task 1: trace_note_message  task 2: interrupt  userspace (blktrace)
-> --------------------------  -----------------  --------------------
-> __trace_note_message                           read(relay)
-> relay_reserve                                  <blocks ...> 
-> <interrupted: I/O completion>
-> 
->                             __blk_add_trace
->                             relay_reserve
->                             <buffers switched,
->                              wake user>
->                                                <reads uninitialized
->                                                 trace_note_message>
->                             <done>
-> <runs again>
-> memcpy() - too late
-> 
-> -- 
-> Carl Henrik
+Environment: Gentoo Linux 2.6.25 kernel, AMD Athlon64 X2 dual core, 4 GB 
+of RAM, single disk drive sda, reiserfs filesystems.
 
-> From 30fce97a2d7c02ba265eceed59592dbdc9c34f26 Mon Sep 17 00:00:00 2001
-> From: Carl Henrik Lunde <chlunde@ping.uio.no>
-> Date: Fri, 30 May 2008 12:57:47 +0200
-> Subject: [PATCH] block: disable IRQs until data is written to relay channel
-> 
-> As we may run relay_reserve from interrupt context we must always disable
-> IRQs.  This is because a call to relay_reserve may expose previously written
-> data to use space.
-> 
-> Updated new message code and an old but related comment.
-> 
-> Signed-off-by: Carl Henrik Lunde <chlunde@ping.uio.no>
-> ---
->  block/blktrace.c |   10 ++++------
->  1 files changed, 4 insertions(+), 6 deletions(-)
-> 
-> diff --git a/block/blktrace.c b/block/blktrace.c
-> index 7ae87cc..8d3a277 100644
-> --- a/block/blktrace.c
-> +++ b/block/blktrace.c
-> @@ -79,16 +79,17 @@ void __trace_note_message(struct blk_trace *bt, const char *fmt, ...)
->  {
->  	int n;
->  	va_list args;
-> +	unsigned long flags;
->  	char *buf;
->  
-> -	preempt_disable();
-> +	local_irq_save(flags);
->  	buf = per_cpu_ptr(bt->msg_data, smp_processor_id());
->  	va_start(args, fmt);
->  	n = vscnprintf(buf, BLK_TN_MAX_MSG, fmt, args);
->  	va_end(args);
->  
->  	trace_note(bt, 0, BLK_TN_MESSAGE, buf, n);
-> -	preempt_enable();
-> +	local_irq_restore(flags);
+I started up blktrace with "blktrace -d /dev/sda". Version is
+$ blktrace -V
+blktrace version 0.99.3
 
-Good spotting, applied! Thanks.
+Then I recompiled php to generate some I/O. Then I stopped blktrace and 
+ran blkparse. Version is
+$ blkparse -V
+blkparse version 0.99.3
 
--- 
-Jens Axboe
+Both "blkparse sda" and "blkparse -t sda" run fine, but "blkparse -s 
+sda" segfaults:
 
+$ blkparse -s sda > blkparse.out
+Segmentation fault
+
+It generates partial output before crashing.
+
+I'm planning to try this again under gdb to get a traceback. The Gentoo 
+"btrace" package is sys-block/btrace-0.0.20071210202527 -- if this is 
+too old, let me know and I'll install something more recent from the 
+repositories.
