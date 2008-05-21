@@ -1,62 +1,78 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Wed, 28 May 2008 13:28:09 +0000
-Subject: Re: [PATCH] Changed blk trace msgs to directly use relay buffer
-Message-Id: <20080528132808.GX25504@kernel.dk>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Wed, 21 May 2008 20:01:32 +0000
+Subject: [PATCH] Handled no difference in seek times
+Message-Id: <48347F9C.1080509@hp.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <483C1C5A.5000001@hp.com> <20080528121329.GU25504@kernel.dk> <483D4F73.5020503@hp.com> <20080528130056.GW25504@kernel.dk> <483D5C91.7030604@hp.com>
-In-Reply-To: <483D5C91.7030604@hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-btrace@vger.kernel.org
+To: linux-btrace@vger.kernel.org
 
-On Wed, May 28 2008, Alan D. Brunelle wrote:
-> Jens Axboe wrote:
-> > On Wed, May 28 2008, Alan D. Brunelle wrote:
-> >> Jens Axboe wrote:
-> >>> On Tue, May 27 2008, Alan D. Brunelle wrote:
-> >>>
-> >>>> From 43c8ea2b78f31d7ccd349384a9a2084e787aafc1 Mon Sep 17 00:00:00 2001
-> >>>> From: Alan D. Brunelle <alan.brunelle@hp.com>
-> >>>> Date: Tue, 27 May 2008 10:32:36 -0400
-> >>>> Subject: [PATCH] Changed blk trace msgs to directly use relay buffer
-> >>>>
-> >>>> Allows for SMP-usage without corruption, and removes an extra copy at
-> >>>> the expense of copying extra bytes. Reduced message size from 1024 to 128.
-> >>> Or, alternatively, something like the below. Then we don't
-> >>> unconditionally reserve and copy 128 bytes for each message, at the
-> >>> cost 128 bytes per-cpu per trace.
-> >> I looked into something like this, but thought the added complexity
-> >> wasn't worth it. Besides the extra per-cpu stuff, you also have an
-> >> extra memcopy involved - in my patch you print directly into the relay
-> >> buffer.  I figure that /if/ copying (128-msg_size) extra bytes is too
-> >> much, one could always shrink the 128 down further. [I would think 64
-> >> bytes is probably ok.]
-> >>
-> >> I'd bet that the reduced complexity, and skipping the extra memcopy
-> >> more than offsets having to copy a few extra bytes...
-> > 
-> > The complexity is the same imho, both versions are fairly trivial.
-> > I wasn't out to optimize this in a memory copy sense. To me the most
-> > precious resource is the data stream to the app, and 128 bytes
-> > is probably 6 times larger than the normal message would be. With
-> > the actual trace structure, we are down to about 3 times the byte
-> > size.
-> > 
-> > So it was just an idea, I don't care much either way. With 128 bytes,
-> > we could just put the buffer on the stack (and still do the copy to
-> > the relay buffer). The per-cpu buffers has the advantage that we
-> > could grow the size easily if we wanted to.
-> > 
-> > So, given everything, which do you prefer?
-> > 
-> 
-> Given your prioritizing of relay-copying over kernel-copying, I think
-> you're solution is better (and more flexible going forward).
+For some reason recent kernels (2.6.25.4, for example) have lost a lot
+of resolution in our blktrace times. This can result in lots of things
+happening "simultaneously." This change at least tries to handle the
+case where all the seeks happen at once.
 
-OK good, it's committed and going upstream soon(ish).
+Probably have other issues that need to be looked into...
 
+[[Jens: I've pushed this, so you don't need to apply this, but I'm
+wondering have others seen this? I'm seeing 0.01 - which I think means
+we're gated by HZ (set to 100 on this .config, I'm trying w/ HZ00 to
+check this theory). A /lot/ happens in 1/100th of a second on modern
+computers! :-) ]]
+
+Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
+---
+ btt/doc/btt.tex |    4 +++-
+ btt/seek.c      |    7 ++++---
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/btt/doc/btt.tex b/btt/doc/btt.tex
+index 9938f67..87e7082 100644
+--- a/btt/doc/btt.tex
++++ b/btt/doc/btt.tex
+@@ -769,7 +769,9 @@ Device:       rrqm/s   wrqm/s     r/s     w/s
+rsec/s    wsec/s
+
+   When there is only a single data point within a 1-second window,
+   \texttt{btt} will just output the time value for the point, and the
+-  value 1.0 in the second column.
++  value 1.0 in the second column. If there is no perceived difference
++  in the times present for the current sample, then the second columns
++  value is the number of seeks present at that time.
+
+   Otherwise, if $\alpha$ and $\Omega$ are the first and last times
+   seen within a 1-second window, and $\nu$ are the number of seeks seen
+diff --git a/btt/seek.c b/btt/seek.c
+index fec57c4..69400c8 100644
+--- a/btt/seek.c
++++ b/btt/seek.c
+@@ -18,6 +18,7 @@
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+02111-1307  USA
+  *
+  */
++#include <float.h>
+ #include "globals.h"
+
+ static struct file_info *seek_files = NULL;
+@@ -102,13 +103,13 @@ static void sps_emit(struct seeki *sip)
+ {
+ 	double tstamp, s_p_s;
+ 	struct sps_bkt *sps = &sip->sps;
++	double delta = sps->t_last - sps->t_start;
+
+-	if (sps->nseeks = 1) {
+-		s_p_s = 1.0;
++	if ((sps->nseeks = 1) || (delta < DBL_EPSILON)) {
++		s_p_s = (double)(sps->nseeks);
+ 		tstamp = sps->t_start;
+ 	}
+ 	else {
+-		double delta = sps->t_last - sps->t_start;
+
+ 		s_p_s = (double)(sps->nseeks) / delta;
+ 		tstamp = sps->t_start + (delta / 2);
 -- 
-Jens Axboe
+1.5.4.3
 
