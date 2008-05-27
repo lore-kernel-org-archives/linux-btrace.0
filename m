@@ -1,101 +1,66 @@
-From: "K.Prasad" <prasad@linux.vnet.ibm.com>
-Date: Sat, 17 May 2008 02:35:27 +0000
-Subject: Re: [RFC Patch 5/5] Blktrace - Remove trace_state and associated flags from blktrace.[ch]
-Message-Id: <op.ua90xdqx03j166@prasadkr_t60p.in.ibm.com>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Tue, 27 May 2008 12:47:55 +0000
+Subject: [PATCH] Added in new message updates to the documentation.
+Message-Id: <483C02FB.4040409@hp.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20080516164644.GA22928@in.ibm.com> <op.ua9a61lw03j166@prasadkr_t60p.in.ibm.com>
-In-Reply-To: <op.ua9a61lw03j166@prasadkr_t60p.in.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: kernel list <linux-kernel@vger.kernel.org>
-Cc: dwilder@us.ibm.com, axboe@kernel.dk, linux-btrace@vger.kernel.org, akpm@linux-foundation.org, prasad@linux.vnet.ibm.com
+To: linux-btrace@vger.kernel.org
 
-Re-sending the patch due to style issues found in the previous version.
 
-This patch removes the 'trace_state' flag from blk_trace structure, since  
-the
-state transitions will now be managed using 'trace' infrastructure.
-
-Signed-off-by: K.Prasad <prasad@linux.vnet.ibm.com>
+Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
 ---
-  block/blktrace.c             |   26 +++++++-------------------
-  include/linux/blktrace_api.h |    7 -------
-  2 files changed, 7 insertions(+), 26 deletions(-)
+ doc/blktrace.tex |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-Index: linux-blktrace-many/include/linux/blktrace_api.h
-=================================--- linux-blktrace-many.orig/include/linux/blktrace_api.h
-+++ linux-blktrace-many/include/linux/blktrace_api.h
-@@ -110,14 +110,7 @@ struct blk_io_trace_remap {
-  	__be64 sector;
-  };
+diff --git a/doc/blktrace.tex b/doc/blktrace.tex
+index 7e08543..82c35e8 100644
+--- a/doc/blktrace.tex
++++ b/doc/blktrace.tex
+@@ -21,7 +21,7 @@
+ \title{blktrace User Guide}
+ \author{blktrace: Jens Axboe (jens.axboe@oracle.com)\\
+         User Guide: Alan D. Brunelle (Alan.Brunelle@hp.com)}
+-\date{18 February 2007}
++\date{27 May 2008}
 
--enum {
--	Blktrace_setup = 1,
--	Blktrace_running,
--	Blktrace_stopped,
--};
--
-  struct blk_trace {
--	int trace_state;
-  	unsigned long *sequence;
-  	u16 act_mask;
-  	u64 start_lba;
-Index: linux-blktrace-many/block/blktrace.c
-=================================--- linux-blktrace-many.orig/block/blktrace.c
-+++ linux-blktrace-many/block/blktrace.c
-@@ -127,9 +127,6 @@ void __blk_add_trace(struct blk_trace *b
-  	pid_t pid;
-  	int cpu;
+ \begin{document}
+ \maketitle
+@@ -536,6 +536,9 @@ Short              & Long                       &
+Description \\ \hline\hline
+   using better hardware - either a better io controller, or a platform
+   with an IOMMU.
 
--	if (unlikely(bt->trace_state != Blktrace_running))
--		return;
--
-  	what |= ddir_act[rw & WRITE];
-  	what |= bio_act[trace_barrier_bit(rw)];
-  	what |= bio_act[trace_sync_bit(rw)];
-@@ -199,8 +196,7 @@ int blk_trace_remove(struct request_queu
-  	if (!bt)
-  		return -EINVAL;
++  \item[m -- message] Text message generated via kernel call to
++  \texttt{blk\_add\_trace\_msg}.
++
+   \item[M -- back merge] A previously inserted request exists that ends
+   on the boundary of where this io begins, so the io scheduler can merge
+   them together.
+@@ -721,6 +724,9 @@ The default output for all event types includes this
+header.
+   \item[A -- remap] Sector and length is output, along with the original
+   device and sector offset.
 
--	if (bt->trace_state = Blktrace_setup ||
--	    bt->trace_state = Blktrace_stopped)
-+	if (!trace_running(bt->tpk->ti))
-  		blk_trace_cleanup(bt);
++  \item[m -- message] The supplied message is appended to the end of
++  the standard header.
++
+ \end{description}
 
-  	return 0;
-@@ -262,7 +258,6 @@ int do_blk_trace_setup(struct request_qu
-  		bt->end_lba = -1ULL;
+ %------------------------------
+@@ -796,6 +802,11 @@ kernel routine invocable interfaces:
+ 	Adds a trace with a remap event. \emph{dev} and \emph{sector} denote
+ 	the original device this \emph{bio} was mapped from.
 
-  	bt->pid = buts->pid;
--	bt->trace_state = Blktrace_setup;
++  \item[blk\_add\_trace\_msg(struct request\_queue *q, char *fmt, ...)]
++	Adds a formatted message to the output stream. The total message
++	size can not exceed BLK\_TN\_MSG\_MSG characters (currently
++	1024). Standard format conversions are supported (as supplied
++	by \texttt{vscnprintf}.
 
-  	ret = -EBUSY;
-  	old_bt = xchg(&q->blk_trace, bt);
-@@ -319,20 +314,13 @@ int blk_trace_startstop(struct request_q
-  	 */
-  	ret = -EINVAL;
-  	if (start) {
--		if (bt->trace_state = Blktrace_setup ||
--		    bt->trace_state = Blktrace_stopped) {
--			blktrace_seq++;
--			smp_mb();
--			bt->trace_state = Blktrace_running;
--
--			trace_note_time(bt);
--			ret = 0;
--		}
-+		blktrace_seq++;
-+		smp_mb();
-+		trace_note_time(bt);
-+		ret = 0;
-  	} else {
--		if (bt->trace_state = Blktrace_running) {
--			bt->trace_state = Blktrace_stopped;
--			ret = 0;
--		}
-+		trace_stop(bt->tpk->ti);
-+		ret = 0;
-  	}
+ \end{description}
+ \end{document}
+-- 
+1.5.4.3
 
-  	return ret;
