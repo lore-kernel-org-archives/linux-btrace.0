@@ -1,115 +1,94 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Tue, 27 May 2008 14:36:10 +0000
-Subject: [PATCH] Changed blk trace msgs to directly use relay buffer
-Message-Id: <483C1C5A.5000001@hp.com>
-MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------080602070900050801030108"
+From: Jens Axboe <jens.axboe@oracle.com>
+Date: Wed, 28 May 2008 12:13:29 +0000
+Subject: Re: [PATCH] Changed blk trace msgs to directly use relay buffer
+Message-Id: <20080528121329.GU25504@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-btrace@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------080602070900050801030108
-Content-Type: text/plain; charset=ISO-8859-1
+References: <483C1C5A.5000001@hp.com>
+In-Reply-To: <483C1C5A.5000001@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-btrace@vger.kernel.org
 
+On Tue, May 27 2008, Alan D. Brunelle wrote:
 
---------------080602070900050801030108
-Content-Type: text/x-diff;
- name="0001-Changed-blk-trace-msgs-to-directly-use-relay-buffer.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="0001-Changed-blk-trace-msgs-to-directly-use-relay-buffer.pat";
- filename*1="ch"
+> From 43c8ea2b78f31d7ccd349384a9a2084e787aafc1 Mon Sep 17 00:00:00 2001
+> From: Alan D. Brunelle <alan.brunelle@hp.com>
+> Date: Tue, 27 May 2008 10:32:36 -0400
+> Subject: [PATCH] Changed blk trace msgs to directly use relay buffer
+> 
+> Allows for SMP-usage without corruption, and removes an extra copy at
+> the expense of copying extra bytes. Reduced message size from 1024 to 128.
 
-From 43c8ea2b78f31d7ccd349384a9a2084e787aafc1 Mon Sep 17 00:00:00 2001
-From: Alan D. Brunelle <alan.brunelle@hp.com>
-Date: Tue, 27 May 2008 10:32:36 -0400
-Subject: [PATCH] Changed blk trace msgs to directly use relay buffer
-
-Allows for SMP-usage without corruption, and removes an extra copy at
-the expense of copying extra bytes. Reduced message size from 1024 to 128.
-
-Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
----
- block/blktrace.c             |   42 ++++++++++++++++++++++++++----------------
- include/linux/blktrace_api.h |    2 +-
- 2 files changed, 27 insertions(+), 17 deletions(-)
+Or, alternatively, something like the below. Then we don't
+unconditionally reserve and copy 128 bytes for each message, at the
+cost 128 bytes per-cpu per trace.
 
 diff --git a/block/blktrace.c b/block/blktrace.c
-index 20e11f3..38e6b83 100644
+index 20e11f3..7ae87cc 100644
 --- a/block/blktrace.c
 +++ b/block/blktrace.c
-@@ -27,6 +27,20 @@
- 
- static unsigned int blktrace_seq __read_mostly = 1;
- 
-+static inline void note_header(struct blk_io_trace *t, struct blk_trace *bt,
-+				pid_t pid, int action, size_t len)
-+{
-+	const int cpu = smp_processor_id();
-+
-+	t->magic = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION;
-+	t->time = ktime_to_ns(ktime_get());
-+	t->device = bt->dev;
-+	t->action = action;
-+	t->pid = pid;
-+	t->cpu = cpu;
-+	t->pdu_len = len;
-+}
-+
- /*
-  * Send out a notify message.
-  */
-@@ -37,15 +51,7 @@ static void trace_note(struct blk_trace *bt, pid_t pid, int action,
- 
- 	t = relay_reserve(bt->rchan, sizeof(*t) + len);
- 	if (t) {
--		const int cpu = smp_processor_id();
--
--		t->magic = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION;
--		t->time = ktime_to_ns(ktime_get());
--		t->device = bt->dev;
--		t->action = action;
--		t->pid = pid;
--		t->cpu = cpu;
--		t->pdu_len = len;
-+		note_header(t, bt, pid, action, len);
- 		memcpy((void *) t + sizeof(*t), data, len);
- 	}
- }
-@@ -77,15 +83,19 @@ static void trace_note_time(struct blk_trace *bt)
- 
- void __trace_note_message(struct blk_trace *bt, const char *fmt, ...)
+@@ -79,13 +79,16 @@ void __trace_note_message(struct blk_trace *bt, const char *fmt, ...)
  {
--	int n;
--	va_list args;
+ 	int n;
+ 	va_list args;
 -	static char bt_msg_buf[BLK_TN_MAX_MSG];
-+	struct blk_io_trace *t;
++	char *buf;
  
--	va_start(args, fmt);
++	preempt_disable();
++	buf = per_cpu_ptr(bt->msg_data, smp_processor_id());
+ 	va_start(args, fmt);
 -	n = vscnprintf(bt_msg_buf, BLK_TN_MAX_MSG, fmt, args);
--	va_end(args);
-+	t = relay_reserve(bt->rchan, sizeof(*t) + BLK_TN_MAX_MSG);
-+	if (t) {
-+		va_list args;
-+		char *bt_msg_buf = (void *) t + sizeof(*t);
-+
-+		va_start(args, fmt);
-+		vscnprintf(bt_msg_buf, BLK_TN_MAX_MSG, fmt, args);
-+		va_end(args);
++	n = vscnprintf(buf, BLK_TN_MAX_MSG, fmt, args);
+ 	va_end(args);
  
 -	trace_note(bt, 0, BLK_TN_MESSAGE, bt_msg_buf, n);
-+		note_header(t, bt, 0, BLK_TN_MESSAGE, BLK_TN_MAX_MSG);
-+	}
++	trace_note(bt, 0, BLK_TN_MESSAGE, buf, n);
++	preempt_enable();
  }
  EXPORT_SYMBOL_GPL(__trace_note_message);
  
+@@ -246,6 +249,7 @@ static void blk_trace_cleanup(struct blk_trace *bt)
+ 	debugfs_remove(bt->dropped_file);
+ 	blk_remove_tree(bt->dir);
+ 	free_percpu(bt->sequence);
++	free_percpu(bt->msg_data);
+ 	kfree(bt);
+ }
+ 
+@@ -360,6 +364,10 @@ int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
+ 	if (!bt->sequence)
+ 		goto err;
+ 
++	bt->msg_data = __alloc_percpu(BLK_TN_MAX_MSG);
++	if (!bt->msg_data)
++		goto err;
++
+ 	ret = -ENOENT;
+ 	dir = blk_create_tree(buts->name);
+ 	if (!dir)
+@@ -406,6 +414,7 @@ err:
+ 		if (bt->dropped_file)
+ 			debugfs_remove(bt->dropped_file);
+ 		free_percpu(bt->sequence);
++		free_percpu(bt->msg_data);
+ 		if (bt->rchan)
+ 			relay_close(bt->rchan);
+ 		kfree(bt);
 diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
-index b7cd8f1..3228caa 100644
+index b7cd8f1..e3ef903 100644
 --- a/include/linux/blktrace_api.h
 +++ b/include/linux/blktrace_api.h
-@@ -172,7 +172,7 @@ extern void __trace_note_message(struct blk_trace *, const char *fmt, ...);
+@@ -121,6 +121,7 @@ struct blk_trace {
+ 	int trace_state;
+ 	struct rchan *rchan;
+ 	unsigned long *sequence;
++	unsigned char *msg_data;
+ 	u16 act_mask;
+ 	u64 start_lba;
+ 	u64 end_lba;
+@@ -172,7 +173,7 @@ extern void __trace_note_message(struct blk_trace *, const char *fmt, ...);
  		if (unlikely(bt))					\
  			__trace_note_message(bt, fmt, ##__VA_ARGS__);	\
  	} while (0)
@@ -118,8 +97,7 @@ index b7cd8f1..3228caa 100644
  
  /**
   * blk_add_trace_rq - Add a trace for a request oriented action
+
 -- 
-1.5.4.3
+Jens Axboe
 
-
---------------080602070900050801030108--
