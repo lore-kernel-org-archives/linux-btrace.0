@@ -1,36 +1,86 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Tue, 27 May 2008 12:45:33 +0000
-Subject: [PATCH 2/2] Added in elevator switch message to blktrace stream
-Message-Id: <483C026D.5060302@hp.com>
+From: "Carl Henrik Lunde" <chlunde@ping.uio.no>
+Date: Wed, 11 Jun 2008 12:32:57 +0000
+Subject: Re: [RFC PATCH] block: disable IRQs until data is written to relay channel
+Message-Id: <ed038eb20806110532n2b21cc24y75d85468c1ca0736@mail.gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <483C0216.70008@hp.com>
-In-Reply-To: <483C0216.70008@hp.com>
+References: <20080530110429.GA23157@ping.uio.no>
+In-Reply-To: <20080530110429.GA23157@ping.uio.no>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-btrace@vger.kernel.org
+To: linux-btrace@vger.kernel.org
 
+On Fri, May 30, 2008 at 13:44, Jens Axboe <jens.axboe@oracle.com> wrote:
+> On Fri, May 30 2008, Carl Henrik Lunde wrote:
+>> Hi,
+>>
+>> Can you review this patch?  I'm new to locking in the Linux kernel
+>> so I may be misssing something.
+>>
+>> I think we must disable IRQs between relay_reserve and initializing
+>> the data; consider the following scenario where task 1 and task 2
+>> runs on the same CPU:
+>>
+>> task 1: trace_note_message  task 2: interrupt  userspace (blktrace)
+>> --------------------------  -----------------  --------------------
+>> __trace_note_message                           read(relay)
+>> relay_reserve                                  <blocks ...>
+>> <interrupted: I/O completion>
+>>
+>>                             __blk_add_trace
+>>                             relay_reserve
+>>                             <buffers switched,
+>>                              wake user>
+>>                                                <reads uninitialized
+>>                                                 trace_note_message>
+>>                             <done>
+>> <runs again>
+>> memcpy() - too late
+>>
+>> --
+>> Carl Henrik
+>
+>> From 30fce97a2d7c02ba265eceed59592dbdc9c34f26 Mon Sep 17 00:00:00 2001
+>> From: Carl Henrik Lunde <chlunde@ping.uio.no>
+>> Date: Fri, 30 May 2008 12:57:47 +0200
+>> Subject: [PATCH] block: disable IRQs until data is written to relay channel
+>>
+>> As we may run relay_reserve from interrupt context we must always disable
+>> IRQs.  This is because a call to relay_reserve may expose previously written
+>> data to use space.
+>>
+>> Updated new message code and an old but related comment.
+>>
+>> Signed-off-by: Carl Henrik Lunde <chlunde@ping.uio.no>
+>> ---
+>>  block/blktrace.c |   10 ++++------
+>>  1 files changed, 4 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/block/blktrace.c b/block/blktrace.c
+>> index 7ae87cc..8d3a277 100644
+>> --- a/block/blktrace.c
+>> +++ b/block/blktrace.c
+>> @@ -79,16 +79,17 @@ void __trace_note_message(struct blk_trace *bt, const char *fmt, ...)
+>>  {
+>>       int n;
+>>       va_list args;
+>> +     unsigned long flags;
+>>       char *buf;
+>>
+>> -     preempt_disable();
+>> +     local_irq_save(flags);
+>>       buf = per_cpu_ptr(bt->msg_data, smp_processor_id());
+>>       va_start(args, fmt);
+>>       n = vscnprintf(buf, BLK_TN_MAX_MSG, fmt, args);
+>>       va_end(args);
+>>
+>>       trace_note(bt, 0, BLK_TN_MESSAGE, buf, n);
+>> -     preempt_enable();
+>> +     local_irq_restore(flags);
+>
+> Good spotting, applied! Thanks.
 
-Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
----
- block/elevator.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Hmm, applied where?
 
-diff --git a/block/elevator.c b/block/elevator.c
-index 980f8ae..902dd13 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -1110,6 +1110,8 @@ static int elevator_switch(struct request_queue
-*q, struct elevator_type *new_e)
- 	queue_flag_clear(QUEUE_FLAG_ELVSWITCH, q);
- 	spin_unlock_irq(q->queue_lock);
-
-+	blk_add_trace_msg(q, "elv switch: %s", e->elevator_type->elevator_name);
-+
- 	return 1;
-
- fail_register:
 -- 
-1.5.4.3
-
+Carl Henrik
