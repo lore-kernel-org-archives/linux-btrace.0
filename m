@@ -1,90 +1,73 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Wed, 11 Jun 2008 13:06:46 +0000
-Subject: Re: [RFC PATCH] block: disable IRQs until data is written to relay channel
-Message-Id: <20080611130642.GA20851@kernel.dk>
+From: Tom Zanussi <tzanussi@gmail.com>
+Date: Wed, 25 Jun 2008 06:17:56 +0000
+Subject: [RFC] Useful Tracing Tools library (utt)
+Message-Id: <1214374677.7741.52.camel@charm-linux>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20080530110429.GA23157@ping.uio.no>
-In-Reply-To: <20080530110429.GA23157@ping.uio.no>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Wed, Jun 11 2008, Carl Henrik Lunde wrote:
-> On Fri, May 30, 2008 at 13:44, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > On Fri, May 30 2008, Carl Henrik Lunde wrote:
-> >> Hi,
-> >>
-> >> Can you review this patch?  I'm new to locking in the Linux kernel
-> >> so I may be misssing something.
-> >>
-> >> I think we must disable IRQs between relay_reserve and initializing
-> >> the data; consider the following scenario where task 1 and task 2
-> >> runs on the same CPU:
-> >>
-> >> task 1: trace_note_message  task 2: interrupt  userspace (blktrace)
-> >> --------------------------  -----------------  --------------------
-> >> __trace_note_message                           read(relay)
-> >> relay_reserve                                  <blocks ...>
-> >> <interrupted: I/O completion>
-> >>
-> >>                             __blk_add_trace
-> >>                             relay_reserve
-> >>                             <buffers switched,
-> >>                              wake user>
-> >>                                                <reads uninitialized
-> >>                                                 trace_note_message>
-> >>                             <done>
-> >> <runs again>
-> >> memcpy() - too late
-> >>
-> >> --
-> >> Carl Henrik
-> >
-> >> From 30fce97a2d7c02ba265eceed59592dbdc9c34f26 Mon Sep 17 00:00:00 2001
-> >> From: Carl Henrik Lunde <chlunde@ping.uio.no>
-> >> Date: Fri, 30 May 2008 12:57:47 +0200
-> >> Subject: [PATCH] block: disable IRQs until data is written to relay channel
-> >>
-> >> As we may run relay_reserve from interrupt context we must always disable
-> >> IRQs.  This is because a call to relay_reserve may expose previously written
-> >> data to use space.
-> >>
-> >> Updated new message code and an old but related comment.
-> >>
-> >> Signed-off-by: Carl Henrik Lunde <chlunde@ping.uio.no>
-> >> ---
-> >>  block/blktrace.c |   10 ++++------
-> >>  1 files changed, 4 insertions(+), 6 deletions(-)
-> >>
-> >> diff --git a/block/blktrace.c b/block/blktrace.c
-> >> index 7ae87cc..8d3a277 100644
-> >> --- a/block/blktrace.c
-> >> +++ b/block/blktrace.c
-> >> @@ -79,16 +79,17 @@ void __trace_note_message(struct blk_trace *bt, const char *fmt, ...)
-> >>  {
-> >>       int n;
-> >>       va_list args;
-> >> +     unsigned long flags;
-> >>       char *buf;
-> >>
-> >> -     preempt_disable();
-> >> +     local_irq_save(flags);
-> >>       buf = per_cpu_ptr(bt->msg_data, smp_processor_id());
-> >>       va_start(args, fmt);
-> >>       n = vscnprintf(buf, BLK_TN_MAX_MSG, fmt, args);
-> >>       va_end(args);
-> >>
-> >>       trace_note(bt, 0, BLK_TN_MESSAGE, buf, n);
-> >> -     preempt_enable();
-> >> +     local_irq_restore(flags);
-> >
-> > Good spotting, applied! Thanks.
-> 
-> Hmm, applied where?
+Hi,
 
-Still local, I'll get it pushed out for 2.6.26 final for sure.
+I'm happy to make available the first cut of a tracing library based on
+the blktrace userspace code that allows any tracing application to take
+advantage of the powerful tracing capabilities blktrace users have known
+for years.  AFAIK, blktrace is the only tracing system that supports
+efficient per-cpu tracing to disk as well as over the network, and also
+supports a very useful 'live tracing mode', among other things.  Now,
+any tracing application can have the same capabilities, by making use of
+this library.
 
--- 
-Jens Axboe
+Basically what I did for this was to take everything in blktrace that I
+thought could be applicable to generic tracing/display, moved it into a
+separate directory, and modified it to make it usable as a generic
+tracing API.
+
+The utt code can be found here:
+
+http://sourceforge.net/projects/utt/
+
+I also created a simple website for it:
+
+http://utt.sourceforge.net/
+
+
+The tarball contains utt, blktrace-on-utt and a fairly realistic example
+of using the utt API to create another standalone tracer that uses utt
+to trace a few VFS 'events'.  The example is used as the basis for a
+tutorial which tries to explain how things work and how to write a
+tracing application based on utt:
+
+http://utt.sourceforge.net/tutorial.html
+
+One of the main reasons I chose VFS for the example is that I had also
+planned on using it to demonstrate what I think could be the 'killer'
+feature of having multiple tracers use the common blktrace
+infrastructure - seamlessly combining any number of standalone tracers
+into a single 'system-wide' tracer; each tracer can be used to do it's
+own specialized tracing, but can also be combined with other tracers to
+provide something that ends up being greater than the sum of its parts.
+Adding a simple plugin API along with some other small changes would
+probably be enough, but I haven't thought it out yet.
+
+Anyway, this is just a first cut - the API and the code may be
+reasonable or it may be crap; the only thing I can say is that it works,
+at least for these two apps (blktrace and the vfs example), so any input
+about any of it would be helpful.
+
+Thanks,
+
+Tom
+
+PS I'll be offline for a couple of weeks - I'll have to respond to any
+replies after that...
+
+
+
+
+
+
+
+
 
