@@ -1,50 +1,25 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Mon, 21 Jul 2008 19:34:54 +0000
-Subject: Re: [Patch] blkiomon: repost with some fixes and improvements
-Message-Id: <4884E4DE.6010102@hp.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Date: Wed, 02 Jul 2008 04:00:02 +0000
+Subject: Recent changes
+Message-Id: <486afd42.F5nmXBqcGo4kXmvz%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4884DD6B.6060709@gmail.com>
-In-Reply-To: <4884DD6B.6060709@gmail.com>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-To: linux-s390@vger.kernel.org, linux-btrace@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-btrace@vger.kernel.org
 
-T=F6r=F6k Edwin wrote:
-> On 2008-07-21 21:56, T=F6r=F6k Edwin wrote:
->> On 2008-07-21 21:45, Alan D. Brunelle wrote:
->>  =20
->>> Hi Edwin -
->>>
->>> With the patches sent out today (kernel & application), you can then use
->>> the updated script attached here. It only asks for getrq & sleeprq
->>> traces - so it will cut down a lot, but most likely there will still be
->>> a lot of getrq's (in particular).
->>>
->>> Will now have some time to look at the more general issue concerning how
->>> to see the effects of the sleeprq's...
->>>  =20
->>>    =20
->>  =20
->=20
-> I think it would be useful to somehow "dump" the contents of both queues
-> when a sleep occurs, at least
-> the rw_flags, the pid, and the size of the operation.
-> Maybe that could be done somehow via blktrace on-demand? [it already has
-> all the relayfs communication ...]
->=20
-> P.S.: I tried to blktrace all queueing events and save that to the disk,
-> but no matter what buffer size I used,
-> it kept telling me it has dropped events :(
-> So the only way to know the contents of the queue is for the kernel to
-> give it to me on-demand.
+The following changes since commit 84a26fcd9adebd1537bf2c4eee69d1ca23ccbc5f:
+  Alan D. Brunelle (1):
+        Put message notes from kernel into a separate file for easy tracking
 
-Hi Edwin -
+are available in the git repository at:
 
-That's really strange: I very rarely have that problem - I find if I
-increase the number and size of buffers, those problems go away. (But, I
-tend to have a lot of memory to play with too...)
+  git://git.kernel.dk/blktrace.git master
 
-You are dumping to another disk (other than the one you are tracing), right?
+Jeff Moyer (1):
+      spelling and grammar fixes for btreplay.tex
 
-Alan
+ btreplay/doc/btreplay.tex |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
