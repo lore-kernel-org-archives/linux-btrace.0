@@ -1,26 +1,130 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Thu, 17 Jul 2008 12:27:53 +0000
-Subject: Re: [Patch 0/3] driver data: blktrace pass-through support for	device
-Message-Id: <487F3AC9.8080708@hp.com>
+From: Martin Peschke <mp3@de.ibm.com>
+Date: Wed, 16 Jul 2008 11:25:57 +0000
+Subject: [Patch 2/3] driver data: pass zfcp data through blktrace
+Message-Id: <1216207558.26621.84.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1216297065.26621.147.camel@kitka.ibm.com>
-In-Reply-To: <1216297065.26621.147.camel@kitka.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-s390@vger.kernel.org, linux-btrace@vger.kernel.org
 
-Martin Peschke wrote:
-> On Wed, 2008-07-16 at 11:15 -0400, Alan D. Brunelle wrote:
->> Martin Peschke wrote:
->>> On Wed, 2008-07-16 at 10:47 -0400, Alan D. Brunelle wrote:
->>>> Hm, again, if the blktrace | blkiomon (direct, no blkparse) is how
->>>> you do things,
-> 
-> blktrace | blkiomon   works out of the box :-)
-> 
-> 
+From: Stefan Raspl <raspl@linux.vnet.ibm.com>
 
-Great - that should remove a lot of CPU processing...
+This patch writes the channel and fabric latencies in nanoseconds per
+request via blktrace for later analysis. The utilization of the inbound
+and outbound adapter queue is also reported.
 
-Alan
+Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
+ drivers/s390/scsi/zfcp_def.h  |    2 ++
+ drivers/s390/scsi/zfcp_fsf.c  |   32 ++++++++++++++++++++++++++++++++
+ drivers/s390/scsi/zfcp_fsf.h  |   12 ++++++++++++
+ drivers/s390/scsi/zfcp_qdio.c |    1 +
+ 4 files changed, 47 insertions(+)
+
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -6,6 +6,7 @@
+  * Copyright IBM Corporation 2002, 2008
+  */
+ 
++#include <linux/blktrace_api.h>
+ #include "zfcp_ext.h"
+ 
+ static void zfcp_fsf_request_timeout_handler(unsigned long data)
+@@ -844,6 +845,7 @@ static int zfcp_fsf_req_send(struct zfcp
+ 	list_add_tail(&req->list, &adapter->req_list[idx]);
+ 	spin_unlock(&adapter->req_list_lock);
+ 
++	req->qdio_outb_usage = atomic_read(&req_q->count);
+ 	req->issued = get_clock();
+ 	if (zfcp_qdio_send(req)) {
+ 		/* Queues are down..... */
+@@ -2046,6 +2048,34 @@ static void zfcp_fsf_req_latency(struct 
+ 	spin_unlock_irqrestore(&unit->latencies.lock, flags);
+ }
+ 
++#ifdef CONFIG_BLK_DEV_IO_TRACE
++static void zfcp_fsf_trace_latency(struct zfcp_fsf_req *fsf_req)
++{
++	struct fsf_qual_latency_info *lat_inf;
++	struct scsi_cmnd *scsi_cmnd = (struct scsi_cmnd *)fsf_req->data;
++	struct request *req = scsi_cmnd->request;
++	struct zfcp_blk_drv_data trace;
++	int ticks = fsf_req->adapter->timer_ticks;
++
++	trace.flags = 0;
++	trace.magic = cpu_to_be32(ZFCP_BLK_DRV_DATA_MAGIC);
++	if (fsf_req->adapter->adapter_features & FSF_FEATURE_MEASUREMENT_DATA) {
++		trace.flags |= ZFCP_BLK_LAT_VALID;
++		lat_inf = &fsf_req->qtcb->prefix.prot_status_qual.latency_info;
++		trace.channel_lat = cpu_to_be64(lat_inf->channel_lat * ticks);
++		trace.fabric_lat = cpu_to_be64(lat_inf->fabric_lat * ticks);
++	}
++	if (fsf_req->status & ZFCP_STATUS_FSFREQ_ERROR)
++		trace.flags |= ZFCP_BLK_REQ_ERROR;
++	trace.inb_usage = cpu_to_be16(fsf_req->qdio_inb_usage);
++	trace.outb_usage = cpu_to_be16(fsf_req->qdio_outb_usage);
++
++	blk_add_driver_data(req->q, req, &trace, sizeof(trace));
++}
++#else
++#define zfcp_fsf_trace_latency(fsf_req)	do { } while (0)
++#endif
++
+ static void zfcp_fsf_send_fcp_command_task_handler(struct zfcp_fsf_req *req)
+ {
+ 	struct scsi_cmnd *scpnt = req->data;
+@@ -2078,6 +2108,8 @@ static void zfcp_fsf_send_fcp_command_ta
+ 	if (req->adapter->adapter_features & FSF_FEATURE_MEASUREMENT_DATA)
+ 		zfcp_fsf_req_latency(req);
+ 
++	zfcp_fsf_trace_latency(req);
++
+ 	if (unlikely(fcp_rsp_iu->validity.bits.fcp_rsp_len_valid)) {
+ 		if (fcp_rsp_info[3] = RSP_CODE_GOOD)
+ 			set_host_byte(scpnt, DID_OK);
+--- a/drivers/s390/scsi/zfcp_def.h
++++ b/drivers/s390/scsi/zfcp_def.h
+@@ -639,6 +639,8 @@ struct zfcp_fsf_req {
+ 	unsigned long long     issued;         /* request sent time (STCK) */
+ 	struct zfcp_unit       *unit;
+ 	void			(*handler)(struct zfcp_fsf_req *);
++	u16			qdio_outb_usage;/* usage of outbound queue */
++	u16			qdio_inb_usage;	/* usage of inbound queue */
+ };
+ 
+ /* driver data */
+--- a/drivers/s390/scsi/zfcp_qdio.c
++++ b/drivers/s390/scsi/zfcp_qdio.c
+@@ -117,6 +117,7 @@ static void zfcp_qdio_reqid_check(struct
+ 	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
+ 
+ 	fsf_req->sbal_response = sbal_idx;
++	fsf_req->qdio_inb_usage = atomic_read(&adapter->resp_q.count);
+ 	zfcp_fsf_req_complete(fsf_req);
+ }
+ 
+--- a/drivers/s390/scsi/zfcp_fsf.h
++++ b/drivers/s390/scsi/zfcp_fsf.h
+@@ -514,4 +514,16 @@ struct fsf_qtcb {
+ 	u8 log[FSF_QTCB_LOG_SIZE];
+ } __attribute__ ((packed));
+ 
++struct zfcp_blk_drv_data {
++#define ZFCP_BLK_DRV_DATA_MAGIC			0x1
++	u32 magic;
++#define ZFCP_BLK_LAT_VALID			0x1
++#define ZFCP_BLK_REQ_ERROR			0x2
++	u16 flags;
++	u8 inb_usage;
++	u8 outb_usage;
++	u64 channel_lat;
++	u64 fabric_lat;
++} __attribute__ ((packed));
++
+ #endif				/* FSF_H */
+
+
