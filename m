@@ -1,69 +1,82 @@
 From: Martin Peschke <mp3@de.ibm.com>
-Date: Wed, 16 Jul 2008 14:53:49 +0000
-Subject: Re: [Patch 2/2] blkiomon: I/O monitor
-Message-Id: <1216220030.26621.112.camel@kitka.ibm.com>
+Date: Wed, 16 Jul 2008 11:26:13 +0000
+Subject: [Patch 3/3] driver data: add support to blktrace user space code
+Message-Id: <1216207574.26621.85.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <487DF98B.9020708@hp.com>
-In-Reply-To: <487DF98B.9020708@hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-s390@vger.kernel.org, linux-btrace@vger.kernel.org
 
+Adds a new type of action 'drv_data' for blktrace to handle binary
+driver-specific data. Since the data is binary, blkparse will only put it in
+a binary file, not in the regular human-readable output.
 
-On Wed, 2008-07-16 at 09:37 -0400, Alan D. Brunelle wrote:
-> Martin Peschke wrote:
-> > blkiomon periodically generates per device request size and request latency
-> > statistics from blktrace data. It provides histograms as well as data that
-> > can be used to calculate min, max, average and variance. For this purpose,
-> > it consumes D and C traces read from stdin.
-> > 
-> > There are options for binary output and human-readable output to files and
-> > stdout. Output to a message queue is supported as well.
-> > 
-> > # blktrace /dev/sdw -a issue -a complete -w 3000 -o - \
-> >   | blkparse -i - -O -d - | blkiomon -I 10 -h -
-> > 
-> > device: 65,96   interval end: 1216044286134293
-> 
-> 
-> What units are 'interval end' displayed in?
 
-microseconds
+Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+---
+ act_mask.c     |    1 +
+ blkparse.c     |    3 +++
+ blktrace_api.h |    5 ++++-
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-Might make sense to refine the textual output.
+--- a/act_mask.c
++++ b/act_mask.c
+@@ -25,6 +25,7 @@ static struct mask_map mask_maps[] = {
+ 	DECLARE_MASK_MAP(PC),
+ 	DECLARE_MASK_MAP(AHEAD),
+ 	DECLARE_MASK_MAP(META),
++	DECLARE_MASK_MAP(DRV_DATA),
+ };
+ 
+ int find_mask_map(char *string)
+--- a/blktrace_api.h
++++ b/blktrace_api.h
+@@ -7,7 +7,7 @@
+  * Trace categories
+  */
+ enum {
+-	BLK_TC_READ	= 1 << 0,	/* reads */
++	BLK_TC_READ 	= 1 << 0,	/* reads */
+ 	BLK_TC_WRITE	= 1 << 1,	/* writes */
+ 	BLK_TC_BARRIER	= 1 << 2,	/* barrier */
+ 	BLK_TC_SYNC	= 1 << 3,	/* sync */
+@@ -20,6 +20,7 @@ enum {
+ 	BLK_TC_NOTIFY	= 1 << 10,	/* special message */
+ 	BLK_TC_AHEAD	= 1 << 11,	/* readahead */
+ 	BLK_TC_META	= 1 << 12,	/* metadata */
++	BLK_TC_DRV_DATA	= 1 << 13,	/* binary driver data */
+ 
+ 	BLK_TC_END	= 1 << 15,	/* only 16-bits, reminder */
+ };
+@@ -46,6 +47,7 @@ enum {
+ 	__BLK_TA_SPLIT,			/* bio was split */
+ 	__BLK_TA_BOUNCE,		/* bio was bounced */
+ 	__BLK_TA_REMAP,			/* bio was remapped */
++	__BLK_TA_DRV_DATA,		/* binary driver data */
+ };
+ 
+ /*
+@@ -75,6 +77,7 @@ enum blktrace_notify {
+ #define BLK_TA_SPLIT		(__BLK_TA_SPLIT)
+ #define BLK_TA_BOUNCE		(__BLK_TA_BOUNCE)
+ #define BLK_TA_REMAP		(__BLK_TA_REMAP | BLK_TC_ACT(BLK_TC_QUEUE))
++#define BLK_TA_DRV_DATA	(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
+ 
+ #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
+ #define BLK_TN_TIMESTAMP	(__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -1583,6 +1583,9 @@ static void dump_trace_fs(struct blk_io_
+ 		case __BLK_TA_REMAP:
+ 			log_generic(pci, t, "A");
+ 			break;
++		case __BLK_TA_DRV_DATA:
++			// dump to binary file only
++			break;
+ 		default:
+ 			fprintf(stderr, "Bad fs action %x\n", t->action);
+ 			break;
 
-For our purpose, we are more interested in binary output.
-
-> > requests: read 521, write 34, bidir: 0
-> > sizes: min 4096, max 520192, sum 32059392, squ 4300285673472
-> > d2c: min 238, max 19274, sum 726186, squ 2428562090
-> 
-> 
-> Why not show the average? What is 'squ'?
-
-We want to be able to calculate min/max/avg/variance later on, for
-periods of time that are multiples of the interval monitoring data is
-written for.
-
-> 
-> > sizes histogram (in kB):
-> >        0       1       2       4       8      16      32      64
-> >      128     256     512    1024    2048    4096    8192   16384
-> >        0       0       0      64      17     144      71     117
-> >       97      42       3       0       0       0       0       0
-> 
-> These outputs are a bit hard to read - are they wrapped (from very, very
-> long lines), or is this how they are displayed? If the latter, why not
-> have some sort of MxN chart like:
-> 
->    0:  0      1:  0      2:  0      4: 64
->    8: 17     16:144     32: 71     64:117
->  128: 97    256: 42    512:  3   1024:  0
-> 2048:  0   4096:  0   8192:  0  16384:  0
-
-Looks good to me. I can do that.
-
-Thanks,
-Martin
 
