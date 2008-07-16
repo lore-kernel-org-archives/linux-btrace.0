@@ -1,25 +1,136 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Wed, 02 Jul 2008 04:00:02 +0000
-Subject: Recent changes
-Message-Id: <486afd42.F5nmXBqcGo4kXmvz%jens.axboe@oracle.com>
+From: Martin Peschke <mp3@de.ibm.com>
+Date: Wed, 16 Jul 2008 11:24:25 +0000
+Subject: [Patch] include blktrace_api.h in headers_install
+Message-Id: <1216207465.26621.80.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-s390@vger.kernel.org, linux-btrace@vger.kernel.org
 
-The following changes since commit 84a26fcd9adebd1537bf2c4eee69d1ca23ccbc5f:
-  Alan D. Brunelle (1):
-        Put message notes from kernel into a separate file for easy tracking
+From: Sven Schuetz <sven@linux.vnet.ibm.com>
 
-are available in the git repository at:
+This header file is of interest for user space programming, i.e.
+for tools that process blktrace data.
 
-  git://git.kernel.dk/blktrace.git master
+We would like to use it for a tool on-top of blktrace which processes
+data provided by blktrace. For this purpose, it would be helpful
+if the blktrace API would make it to /usr/include/linux.
 
-Jeff Moyer (1):
-      spelling and grammar fixes for btreplay.tex
+The git tree for the blktrace tools comes with its own copy of this header
+file. I didn't manage to replace that copy with the file generated 
+by the patch below yet. A few more cleanups would be needed.
+For example, the blktrace ioctl numbers, which are currently defined in
+usr/include/fs.h, might need to be moved. Should be feasible, though.
 
- btreplay/doc/btreplay.tex |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+
+Signed-off-by: Sven Schuetz <sven@linux.vnet.ibm.com>
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+
+---
+ include/linux/Kbuild         |    1 
+ include/linux/blktrace_api.h |   58 +++++++++++++++++++++++--------------------
+ 2 files changed, 33 insertions(+), 26 deletions(-)
+
+--- a/include/linux/Kbuild
++++ b/include/linux/Kbuild
+@@ -175,6 +175,7 @@ unifdef-y += audit.h
+ unifdef-y += auto_fs.h
+ unifdef-y += auxvec.h
+ unifdef-y += binfmts.h
++unifdef-y += blktrace_api.h
+ unifdef-y += capability.h
+ unifdef-y += capi.h
+ unifdef-y += cciss_ioctl.h
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -1,8 +1,10 @@
+ #ifndef BLKTRACE_H
+ #define BLKTRACE_H
+ 
++#ifdef __KERNEL__
+ #include <linux/blkdev.h>
+ #include <linux/relay.h>
++#endif
+ 
+ /*
+  * Trace categories
+@@ -89,17 +91,17 @@ enum blktrace_notify {
+  * The trace itself
+  */
+ struct blk_io_trace {
+-	u32 magic;		/* MAGIC << 8 | version */
+-	u32 sequence;		/* event number */
+-	u64 time;		/* in microseconds */
+-	u64 sector;		/* disk offset */
+-	u32 bytes;		/* transfer length */
+-	u32 action;		/* what happened */
+-	u32 pid;		/* who did it */
+-	u32 device;		/* device number */
+-	u32 cpu;		/* on what cpu did it happen */
+-	u16 error;		/* completion error */
+-	u16 pdu_len;		/* length of data after this trace */
++	__u32 magic;		/* MAGIC << 8 | version */
++	__u32 sequence;		/* event number */
++	__u64 time;		/* in microseconds */
++	__u64 sector;		/* disk offset */
++	__u32 bytes;		/* transfer length */
++	__u32 action;		/* what happened */
++	__u32 pid;		/* who did it */
++	__u32 device;		/* device number */
++	__u32 cpu;		/* on what cpu did it happen */
++	__u16 error;		/* completion error */
++	__u16 pdu_len;		/* length of data after this trace */
+ };
+ 
+ /*
+@@ -117,6 +119,25 @@ enum {
+ 	Blktrace_stopped,
+ };
+ 
++/*
++ * User setup structure passed with BLKTRACESTART
++ */
++struct blk_user_trace_setup {
++#ifdef __KERNEL__
++	char name[BDEVNAME_SIZE];	/* output */
++#else
++	char name[32];			/* output */
++#endif
++	__u16 act_mask;			/* input */
++	__u32 buf_size;			/* input */
++	__u32 buf_nr;			/* input */
++	__u64 start_lba;
++	__u64 end_lba;
++	__u32 pid;
++};
++
++#ifdef __KERNEL__
++#if defined(CONFIG_BLK_DEV_IO_TRACE)
+ struct blk_trace {
+ 	int trace_state;
+ 	struct rchan *rchan;
+@@ -132,21 +153,6 @@ struct blk_trace {
+ 	atomic_t dropped;
+ };
+ 
+-/*
+- * User setup structure passed with BLKTRACESTART
+- */
+-struct blk_user_trace_setup {
+-	char name[BDEVNAME_SIZE];	/* output */
+-	u16 act_mask;			/* input */
+-	u32 buf_size;			/* input */
+-	u32 buf_nr;			/* input */
+-	u64 start_lba;
+-	u64 end_lba;
+-	u32 pid;
+-};
+-
+-#ifdef __KERNEL__
+-#if defined(CONFIG_BLK_DEV_IO_TRACE)
+ extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
+ extern void blk_trace_shutdown(struct request_queue *);
+ extern void __blk_add_trace(struct blk_trace *, sector_t, int, int, u32, int, int, void *);
+
+
