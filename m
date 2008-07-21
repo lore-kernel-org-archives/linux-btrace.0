@@ -1,37 +1,31 @@
 From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Mon, 21 Jul 2008 13:49:14 +0000
-Subject: [PATCH kernel] Change 'act_mask' to 'cat_mask'
-Message-Id: <488493DA.8010701@hp.com>
+Date: Mon, 21 Jul 2008 14:13:11 +0000
+Subject: Re: [PATCH kernel] Change 'act_mask' to 'cat_mask'
+Message-Id: <48849977.9050702@hp.com>
 MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------060404090306070708040106"
+Content-Type: multipart/mixed; boundary="------------080402000808010501060304"
 List-Id: <linux-btrace.vger.kernel.org>
+References: <488493DA.8010701@hp.com>
+In-Reply-To: <488493DA.8010701@hp.com>
 To: linux-btrace@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------060404090306070708040106
+--------------080402000808010501060304
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-Hi Jens -
+<sigh> patch missed compat_ioctl structure fix...
 
-It turns out the 'action mask' isn't quite right: in these usages its
-really a category mask. I'm looking into adding real action masks - so
-that one can reduce traces to specific actions (in the particular
-near-term need it's sleeprq & getrq really - I'm sure there are other
-usages as well).
-
-Here's the kernel side patch, next will be the application side patch.
-
---------------060404090306070708040106
+--------------080402000808010501060304
 Content-Type: text/x-diff;
  name="0001-Changed-act_mask-to-cat_mask-Categories-not-actio.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
  filename*0="0001-Changed-act_mask-to-cat_mask-Categories-not-actio.patch"
 
-From 0f57f620c490f9bbd3372e1a80829edc70929c44 Mon Sep 17 00:00:00 2001
+From bbc85dabee6ed5e7af53bacdf2d5e7910d1e512a Mon Sep 17 00:00:00 2001
 From: Alan D. Brunelle <alan.brunelle@hp.com>
-Date: Mon, 21 Jul 2008 09:38:37 -0400
+Date: Mon, 21 Jul 2008 10:11:34 -0400
 Subject: [PATCH] Changed act_mask to cat_mask - Categories, not actions
 
 The mask actually pertains to /categories/ of actions - multiple actions
@@ -44,9 +38,9 @@ This is preparatory to building a true action mask.
 Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
 ---
  block/blktrace.c             |    8 ++++----
- block/compat_ioctl.c         |    2 +-
+ block/compat_ioctl.c         |    4 ++--
  include/linux/blktrace_api.h |    4 ++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/block/blktrace.c b/block/blktrace.c
 index eb9651c..d2d639a 100644
@@ -75,9 +69,18 @@ index eb9651c..d2d639a 100644
  	bt->start_lba = buts->start_lba;
  	bt->end_lba = buts->end_lba;
 diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
-index c23177e..a67ba50 100644
+index c23177e..ef0cc68 100644
 --- a/block/compat_ioctl.c
 +++ b/block/compat_ioctl.c
+@@ -531,7 +531,7 @@ out:
+ 
+ struct compat_blk_user_trace_setup {
+ 	char name[32];
+-	u16 act_mask;
++	u16 cat_mask;
+ 	u32 buf_size;
+ 	u32 buf_nr;
+ 	compat_u64 start_lba;
 @@ -558,7 +558,7 @@ static int compat_blk_trace_setup(struct block_device *bdev, char __user *arg)
  	bdevname(bdev, b);
  
@@ -113,4 +116,4 @@ index d084b8d..f4c2e12 100644
 1.5.4.3
 
 
---------------060404090306070708040106--
+--------------080402000808010501060304--
