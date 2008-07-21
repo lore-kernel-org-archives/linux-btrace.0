@@ -1,136 +1,116 @@
-From: Martin Peschke <mp3@de.ibm.com>
-Date: Wed, 16 Jul 2008 11:24:25 +0000
-Subject: [Patch] include blktrace_api.h in headers_install
-Message-Id: <1216207465.26621.80.camel@kitka.ibm.com>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Mon, 21 Jul 2008 13:49:14 +0000
+Subject: [PATCH kernel] Change 'act_mask' to 'cat_mask'
+Message-Id: <488493DA.8010701@hp.com>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="------------060404090306070708040106"
 List-Id: <linux-btrace.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: linux-btrace@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------060404090306070708040106
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-To: linux-s390@vger.kernel.org, linux-btrace@vger.kernel.org
 
-From: Sven Schuetz <sven@linux.vnet.ibm.com>
+Hi Jens -
 
-This header file is of interest for user space programming, i.e.
-for tools that process blktrace data.
+It turns out the 'action mask' isn't quite right: in these usages its
+really a category mask. I'm looking into adding real action masks - so
+that one can reduce traces to specific actions (in the particular
+near-term need it's sleeprq & getrq really - I'm sure there are other
+usages as well).
 
-We would like to use it for a tool on-top of blktrace which processes
-data provided by blktrace. For this purpose, it would be helpful
-if the blktrace API would make it to /usr/include/linux.
+Here's the kernel side patch, next will be the application side patch.
 
-The git tree for the blktrace tools comes with its own copy of this header
-file. I didn't manage to replace that copy with the file generated 
-by the patch below yet. A few more cleanups would be needed.
-For example, the blktrace ioctl numbers, which are currently defined in
-usr/include/fs.h, might need to be moved. Should be feasible, though.
+--------------060404090306070708040106
+Content-Type: text/x-diff;
+ name="0001-Changed-act_mask-to-cat_mask-Categories-not-actio.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="0001-Changed-act_mask-to-cat_mask-Categories-not-actio.patch"
 
+From 0f57f620c490f9bbd3372e1a80829edc70929c44 Mon Sep 17 00:00:00 2001
+From: Alan D. Brunelle <alan.brunelle@hp.com>
+Date: Mon, 21 Jul 2008 09:38:37 -0400
+Subject: [PATCH] Changed act_mask to cat_mask - Categories, not actions
 
-Signed-off-by: Sven Schuetz <sven@linux.vnet.ibm.com>
-Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+The mask actually pertains to /categories/ of actions - multiple actions
+are encompassed w/in one category. This leads to confusion at the user
+application level: one would /like/ to discriminate based upon individual
+actions, we only support categories (for the moment).
 
+This is preparatory to building a true action mask.
+
+Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
 ---
- include/linux/Kbuild         |    1 
- include/linux/blktrace_api.h |   58 +++++++++++++++++++++++--------------------
- 2 files changed, 33 insertions(+), 26 deletions(-)
+ block/blktrace.c             |    8 ++++----
+ block/compat_ioctl.c         |    2 +-
+ include/linux/blktrace_api.h |    4 ++--
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
---- a/include/linux/Kbuild
-+++ b/include/linux/Kbuild
-@@ -175,6 +175,7 @@ unifdef-y += audit.h
- unifdef-y += auto_fs.h
- unifdef-y += auxvec.h
- unifdef-y += binfmts.h
-+unifdef-y += blktrace_api.h
- unifdef-y += capability.h
- unifdef-y += capi.h
- unifdef-y += cciss_ioctl.h
+diff --git a/block/blktrace.c b/block/blktrace.c
+index eb9651c..d2d639a 100644
+--- a/block/blktrace.c
++++ b/block/blktrace.c
+@@ -96,7 +96,7 @@ EXPORT_SYMBOL_GPL(__trace_note_message);
+ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
+ 			 pid_t pid)
+ {
+-	if (((bt->act_mask << BLK_TC_SHIFT) & what) == 0)
++	if (((bt->cat_mask << BLK_TC_SHIFT) & what) == 0)
+ 		return 1;
+ 	if (sector < bt->start_lba || sector > bt->end_lba)
+ 		return 1;
+@@ -428,9 +428,9 @@ int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
+ 	if (!bt->rchan)
+ 		goto err;
+ 
+-	bt->act_mask = buts->act_mask;
+-	if (!bt->act_mask)
+-		bt->act_mask = (u16) -1;
++	bt->cat_mask = buts->cat_mask;
++	if (!bt->cat_mask)
++		bt->cat_mask = (u16) -1;
+ 
+ 	bt->start_lba = buts->start_lba;
+ 	bt->end_lba = buts->end_lba;
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+index c23177e..a67ba50 100644
+--- a/block/compat_ioctl.c
++++ b/block/compat_ioctl.c
+@@ -558,7 +558,7 @@ static int compat_blk_trace_setup(struct block_device *bdev, char __user *arg)
+ 	bdevname(bdev, b);
+ 
+ 	buts = (struct blk_user_trace_setup) {
+-		.act_mask = cbuts.act_mask,
++		.cat_mask = cbuts.cat_mask,
+ 		.buf_size = cbuts.buf_size,
+ 		.buf_nr = cbuts.buf_nr,
+ 		.start_lba = cbuts.start_lba,
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index d084b8d..f4c2e12 100644
 --- a/include/linux/blktrace_api.h
 +++ b/include/linux/blktrace_api.h
-@@ -1,8 +1,10 @@
- #ifndef BLKTRACE_H
- #define BLKTRACE_H
- 
-+#ifdef __KERNEL__
- #include <linux/blkdev.h>
- #include <linux/relay.h>
-+#endif
- 
- /*
-  * Trace categories
-@@ -89,17 +91,17 @@ enum blktrace_notify {
-  * The trace itself
-  */
- struct blk_io_trace {
--	u32 magic;		/* MAGIC << 8 | version */
--	u32 sequence;		/* event number */
--	u64 time;		/* in microseconds */
--	u64 sector;		/* disk offset */
--	u32 bytes;		/* transfer length */
--	u32 action;		/* what happened */
--	u32 pid;		/* who did it */
--	u32 device;		/* device number */
--	u32 cpu;		/* on what cpu did it happen */
--	u16 error;		/* completion error */
--	u16 pdu_len;		/* length of data after this trace */
-+	__u32 magic;		/* MAGIC << 8 | version */
-+	__u32 sequence;		/* event number */
-+	__u64 time;		/* in microseconds */
-+	__u64 sector;		/* disk offset */
-+	__u32 bytes;		/* transfer length */
-+	__u32 action;		/* what happened */
-+	__u32 pid;		/* who did it */
-+	__u32 device;		/* device number */
-+	__u32 cpu;		/* on what cpu did it happen */
-+	__u16 error;		/* completion error */
-+	__u16 pdu_len;		/* length of data after this trace */
- };
- 
- /*
-@@ -117,6 +119,25 @@ enum {
- 	Blktrace_stopped,
- };
- 
-+/*
-+ * User setup structure passed with BLKTRACESTART
-+ */
-+struct blk_user_trace_setup {
-+#ifdef __KERNEL__
-+	char name[BDEVNAME_SIZE];	/* output */
-+#else
-+	char name[32];			/* output */
-+#endif
-+	__u16 act_mask;			/* input */
-+	__u32 buf_size;			/* input */
-+	__u32 buf_nr;			/* input */
-+	__u64 start_lba;
-+	__u64 end_lba;
-+	__u32 pid;
-+};
-+
-+#ifdef __KERNEL__
-+#if defined(CONFIG_BLK_DEV_IO_TRACE)
- struct blk_trace {
- 	int trace_state;
+@@ -122,7 +122,7 @@ struct blk_trace {
  	struct rchan *rchan;
-@@ -132,21 +153,6 @@ struct blk_trace {
- 	atomic_t dropped;
- };
- 
--/*
-- * User setup structure passed with BLKTRACESTART
-- */
--struct blk_user_trace_setup {
--	char name[BDEVNAME_SIZE];	/* output */
+ 	unsigned long *sequence;
+ 	unsigned char *msg_data;
+-	u16 act_mask;
++	u16 cat_mask;
+ 	u64 start_lba;
+ 	u64 end_lba;
+ 	u32 pid;
+@@ -138,7 +138,7 @@ struct blk_trace {
+  */
+ struct blk_user_trace_setup {
+ 	char name[BDEVNAME_SIZE];	/* output */
 -	u16 act_mask;			/* input */
--	u32 buf_size;			/* input */
--	u32 buf_nr;			/* input */
--	u64 start_lba;
--	u64 end_lba;
--	u32 pid;
--};
--
--#ifdef __KERNEL__
--#if defined(CONFIG_BLK_DEV_IO_TRACE)
- extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
- extern void blk_trace_shutdown(struct request_queue *);
- extern void __blk_add_trace(struct blk_trace *, sector_t, int, int, u32, int, int, void *);
++	u16 cat_mask;			/* input */
+ 	u32 buf_size;			/* input */
+ 	u32 buf_nr;			/* input */
+ 	u64 start_lba;
+-- 
+1.5.4.3
 
 
+--------------060404090306070708040106--
