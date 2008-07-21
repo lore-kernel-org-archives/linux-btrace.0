@@ -1,93 +1,118 @@
-From: Martin Peschke <mp3@de.ibm.com>
-Date: Wed, 16 Jul 2008 11:25:29 +0000
-Subject: [Patch 1/3] driver data: add support to blktrace kernel code
-Message-Id: <1216207530.26621.83.camel@kitka.ibm.com>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Mon, 21 Jul 2008 18:38:18 +0000
+Subject: [Patch kernel] Allow one to filter on specific trace actions
+Message-Id: <4884D79A.5030001@hp.com>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="------------060506090905060607050604"
 List-Id: <linux-btrace.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: linux-btrace@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------060506090905060607050604
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-To: linux-s390@vger.kernel.org, linux-btrace@vger.kernel.org
 
-From: Stefan Raspl <raspl@linux.vnet.ibm.com>
+This kernel patch allows one to specify one or more trace actions to
+filter on. This is different from trace categories - you can drill down
+to getrq, sleeprq, ...
 
-This patch adds the new api call blk_add_driver_data() to blktrace.
-It allows to trace device driver-specific binary data.
+The associated application patch is next...
 
-Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
-Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+--------------060506090905060607050604
+Content-Type: text/x-diff;
+ name="0002-Allow-one-to-filter-on-specific-trace-actions.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="0002-Allow-one-to-filter-on-specific-trace-actions.patch"
 
+From e82d1d848b1587c5a472ec5af503457d5e1353a1 Mon Sep 17 00:00:00 2001
+From: Alan D. Brunelle <alan.brunelle@hp.com>
+Date: Mon, 21 Jul 2008 14:22:34 -0400
+Subject: [PATCH] Allow one to filter on specific trace actions
+
+
+Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
 ---
- include/linux/blktrace_api.h |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ block/blktrace.c             |    6 ++++++
+ block/compat_ioctl.c         |    2 ++
+ include/linux/blktrace_api.h |    4 ++++
+ 3 files changed, 12 insertions(+), 0 deletions(-)
 
+diff --git a/block/blktrace.c b/block/blktrace.c
+index 91c7f2b..05d08c9 100644
+--- a/block/blktrace.c
++++ b/block/blktrace.c
+@@ -98,6 +98,8 @@ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
+ {
+ 	if (((bt->cat_mask << BLK_TC_SHIFT) & what) == 0)
+ 		return 1;
++	if ((bt->trace_mask & (1 << (what & BLK_TA_MASK))) == 0)
++		return 1;
+ 	if (sector < bt->start_lba || sector > bt->end_lba)
+ 		return 1;
+ 	if (bt->pid && pid != bt->pid)
+@@ -389,6 +391,10 @@ int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
+ 	if (!bt->cat_mask)
+ 		bt->cat_mask = (u16) -1;
+ 
++	bt->trace_mask = buts->trace_mask;
++	if (!bt->trace_mask)
++		bt->trace_mask = (u32) -1;
++
+ 	bt->start_lba = buts->start_lba;
+ 	bt->end_lba = buts->end_lba;
+ 	if (!bt->end_lba)
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+index ef0cc68..3002475 100644
+--- a/block/compat_ioctl.c
++++ b/block/compat_ioctl.c
+@@ -532,6 +532,7 @@ out:
+ struct compat_blk_user_trace_setup {
+ 	char name[32];
+ 	u16 cat_mask;
++	u32 trace_mask;
+ 	u32 buf_size;
+ 	u32 buf_nr;
+ 	compat_u64 start_lba;
+@@ -559,6 +560,7 @@ static int compat_blk_trace_setup(struct block_device *bdev, char __user *arg)
+ 
+ 	buts = (struct blk_user_trace_setup) {
+ 		.cat_mask = cbuts.cat_mask,
++		.trace_mask = cbuts.trace_mask,
+ 		.buf_size = cbuts.buf_size,
+ 		.buf_nr = cbuts.buf_nr,
+ 		.start_lba = cbuts.start_lba,
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index 2abbcc0..e55ae37 100644
 --- a/include/linux/blktrace_api.h
 +++ b/include/linux/blktrace_api.h
-@@ -23,6 +23,7 @@ enum blktrace_cat {
- 	BLK_TC_NOTIFY	= 1 << 10,	/* special message */
- 	BLK_TC_AHEAD	= 1 << 11,	/* readahead */
- 	BLK_TC_META	= 1 << 12,	/* metadata */
-+	BLK_TC_DRV_DATA	= 1 << 13,	/* binary per-driver data */
- 
- 	BLK_TC_END	= 1 << 15,	/* only 16-bits, reminder */
- };
-@@ -49,6 +50,7 @@ enum blktrace_act {
- 	__BLK_TA_SPLIT,			/* bio was split */
- 	__BLK_TA_BOUNCE,		/* bio was bounced */
+@@ -49,6 +49,8 @@ enum blktrace_act {
  	__BLK_TA_REMAP,			/* bio was remapped */
-+	__BLK_TA_DRV_DATA,		/* driver-specific binary data */
  };
  
++#define BLK_TA_MASK            ((1 << BLK_TC_SHIFT) - 1)
++
  /*
-@@ -79,6 +81,7 @@ enum blktrace_notify {
- #define BLK_TA_SPLIT		(__BLK_TA_SPLIT)
- #define BLK_TA_BOUNCE		(__BLK_TA_BOUNCE)
- #define BLK_TA_REMAP		(__BLK_TA_REMAP | BLK_TC_ACT(BLK_TC_QUEUE))
-+#define BLK_TA_DRV_DATA	(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
- 
- #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_TIMESTAMP	(__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
-@@ -312,6 +315,34 @@ static inline void blk_add_trace_remap(s
- 	__blk_add_trace(bt, from, bio->bi_size, bio->bi_rw, BLK_TA_REMAP, !bio_flagged(bio, BIO_UPTODATE), sizeof(r), &r);
- }
- 
-+/**
-+ * blk_add_driver_data - Add binary message with driver-specific data
-+ * @q:		queue the io is for
-+ * @rq:		io request
-+ * @data:	driver-specific data
-+ * @len:	length of driver-specific data
-+ *
-+ * Description:
-+ *     Some drivers might want to write driver-specific data per request.
-+ *
-+ **/
-+static inline void blk_add_driver_data(struct request_queue *q,
-+				       struct request *rq,
-+				       void *data, size_t len)
-+{
-+	struct blk_trace *bt = q->blk_trace;
-+
-+	if (likely(!bt))
-+		return;
-+
-+	if (blk_pc_request(rq))
-+		__blk_add_trace(bt, 0, rq->data_len, 0, BLK_TA_DRV_DATA,
-+				rq->errors, len, data);
-+	else
-+		__blk_add_trace(bt, rq->hard_sector, rq->hard_nr_sectors << 9,
-+				0, BLK_TA_DRV_DATA, rq->errors, len, data);
-+}
-+
- extern int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 			   char __user *arg);
- extern int blk_trace_startstop(struct request_queue *q, int start);
-@@ -325,6 +356,7 @@ extern int blk_trace_remove(struct reque
- #define blk_add_trace_generic(q, rq, rw, what)	do { } while (0)
- #define blk_add_trace_pdu_int(q, what, bio, pdu)	do { } while (0)
- #define blk_add_trace_remap(q, bio, dev, f, t)	do {} while (0)
-+#define blk_add_driver_data(q, rq, data, len)	do {} while (0)
- #define do_blk_trace_setup(q, name, dev, buts)	(-ENOTTY)
- #define blk_trace_setup(q, name, dev, arg)	(-ENOTTY)
- #define blk_trace_startstop(q, start)		(-ENOTTY)
+  * Notify events.
+  */
+@@ -123,6 +125,7 @@ struct blk_trace {
+ 	unsigned long *sequence;
+ 	unsigned char *msg_data;
+ 	u16 cat_mask;
++	u32 trace_mask;
+ 	u64 start_lba;
+ 	u64 end_lba;
+ 	u32 pid;
+@@ -138,6 +141,7 @@ struct blk_trace {
+ struct blk_user_trace_setup {
+ 	char name[BDEVNAME_SIZE];	/* output */
+ 	u16 cat_mask;			/* input */
++	u32 trace_mask;			/* input */
+ 	u32 buf_size;			/* input */
+ 	u32 buf_nr;			/* input */
+ 	u64 start_lba;
+-- 
+1.5.4.3
 
 
+--------------060506090905060607050604--
