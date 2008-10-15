@@ -1,35 +1,42 @@
-From: Jan Blunck <jblunck@suse.de>
-Date: Fri, 26 Sep 2008 08:26:09 +0000
-Subject: Re: [Patch] include blktrace_api.h in headers_install
-Message-Id: <20080926082609.GT15570@bolzano.suse.de>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Date: Wed, 15 Oct 2008 09:35:59 +0000
+Subject: [PATCH] blktrace: Fix documentation for version flag
+Message-Id: <20081015093558.GA9353@schmichrtp.de.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Wed, Jul 16, Martin Peschke wrote:
+blktrace uses the -V flag (uppercase) for printing the version
+information. Fix the man page and the usage information that wrongly
+state the -v flag (lowercase).
 
-> From: Sven Schuetz <sven@linux.vnet.ibm.com>
-> 
-> This header file is of interest for user space programming, i.e.
-> for tools that process blktrace data.
-> 
-> We would like to use it for a tool on-top of blktrace which processes
-> data provided by blktrace. For this purpose, it would be helpful
-> if the blktrace API would make it to /usr/include/linux.
-> 
-> The git tree for the blktrace tools comes with its own copy of this header
-> file. I didn't manage to replace that copy with the file generated 
-> by the patch below yet. A few more cleanups would be needed.
-> For example, the blktrace ioctl numbers, which are currently defined in
-> usr/include/fs.h, might need to be moved. Should be feasible, though.
-> 
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
+ blktrace.c     |    2 +-
+ doc/blktrace.8 |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Any reason why this patch isn't upstream yet?
-
-Regards,
-	Jan
-
--- 
-Jan Blunck <jblunck@suse.de>
+--- a/blktrace.c	2008-10-15 11:12:53.000000000 +0200
++++ b/blktrace.c	2008-10-15 11:14:57.000000000 +0200
+@@ -1756,7 +1756,7 @@ static int net_setup_client(void)
+ 
+ static char usage_str[] = \
+ 	"-d <dev> [ -r debugfs path ] [ -o <output> ] [-k ] [ -w time ]\n" \
+-	"[ -a action ] [ -A action mask ] [ -I  <devs file> ] [ -v ]\n\n" \
++	"[ -a action ] [ -A action mask ] [ -I  <devs file> ] [ -V ]\n\n" \
+ 	"\t-d Use specified device. May also be given last after options\n" \
+ 	"\t-r Path to mounted debugfs, defaults to /sys/kernel/debug\n" \
+ 	"\t-o File(s) to send output to\n" \
+--- a/doc/blktrace.8	2008-10-15 11:12:53.000000000 +0200
++++ b/doc/blktrace.8	2008-10-15 11:15:22.000000000 +0200
+@@ -6,7 +6,7 @@ blktrace \- generate traces of the i/o t
+ 
+ 
+ .SH SYNOPSIS
+-.B blktrace \-d \fIdev\fR [ \-r \fIdebugfs_path\fR ] [ \-o \fIoutput\fR ] [\-k ] [ \-w \fItime\fR ] [ \-a \fIaction\fR ] [ \-A \fIaction_mask\fR ] [ \-v ]
++.B blktrace \-d \fIdev\fR [ \-r \fIdebugfs_path\fR ] [ \-o \fIoutput\fR ] [\-k ] [ \-w \fItime\fR ] [ \-a \fIaction\fR ] [ \-A \fIaction_mask\fR ] [ \-V ]
+ .br
+ 
+ 
