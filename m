@@ -1,35 +1,25 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 16 Oct 2008 08:53:17 +0000
-Subject: Re: [Patch 3/3] driver data: add support to blktrace user space code
-Message-Id: <20081016085317.GX19428@kernel.dk>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Date: Tue, 28 Oct 2008 16:07:52 +0000
+Subject: [Patch 0/6] some blkiomon updates
+Message-Id: <1225210072.1060.28.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1224146144.8197.8.camel@kitka.ibm.com>
-In-Reply-To: <1224146144.8197.8.camel@kitka.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-s390@vger.kernel.org, linux-btrace@vger.kernel.org
+To: linux-btrace@vger.kernel.org
 
-On Thu, Oct 16 2008, Martin Peschke wrote:
-> 
-> On Thu, 2008-10-16 at 08:07 +0200, Jens Axboe wrote:
-> > On Sun, Oct 05 2008, Martin Peschke wrote:
-> > > From: Stefan Raspl <raspl@linux.vnet.ibm.com>
-> > > 
-> > > Adds a new type of action 'drv_data' for blktrace to handle binary
-> > > driver-specific data. Since the data is binary, blkparse will only put it in
-> > > a binary file, not in the regular human-readable output.
-> > 
-> > I wonder if that should display some kind of informational message on
-> > blkparse exit, if you are not dumping binary? Just to notify the user
-> > that there was extra data available, but that it wasn't dumped.
-> 
-> Don't know.
-> 
-> But I can volunteer to send a patch if you think so.
+Jens,
 
-I think it would be beneficial, so if you could that would be great ;)
+I have got some updates, fixes and small enhancements, for blkiomon.
+Please apply.
 
--- 
-Jens Axboe
+Martin
+
+
+[Patch 1/6] blkiomon: fix cross-arch data analysis issue
+[Patch 2/6] blkiomon: fix unit in histogram output
+[Patch 3/6] blkiomon: fix trace debug output
+[Patch 4/6] blkiomon: fix some debug messages
+[Patch 5/6] blkiomon: separate statistics for read and write requests
+[Patch 6/6] blkiomon: add through-put statistics
 
