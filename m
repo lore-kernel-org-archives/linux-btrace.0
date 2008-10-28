@@ -1,95 +1,93 @@
 From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Date: Sun, 05 Oct 2008 13:07:21 +0000
-Subject: [Patch 1/3] driver data: add support to blktrace kernel code
-Message-Id: <1223212041.4591.24.camel@kitka.ibm.com>
+Date: Tue, 28 Oct 2008 16:08:12 +0000
+Subject: [Patch 6/6] blkiomon: add through-put statistics
+Message-Id: <1225210092.1060.34.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1216207530.26621.83.camel@kitka.ibm.com>
-In-Reply-To: <1216207530.26621.83.camel@kitka.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-s390@vger.kernel.org
+To: linux-btrace@vger.kernel.org
 
-From: Stefan Raspl <raspl@linux.vnet.ibm.com>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-This patch adds the new api call blk_add_driver_data() to blktrace.
-It allows to trace device driver-specific binary data.
+Add accounting of per-request throughput in bytes per millisecond
+both for read ad write I/O.
 
-Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
-Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
 ---
- include/linux/blktrace_api.h |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ blkiomon.c |    3 +++
+ blkiomon.h |   10 ++++++++++
+ 2 files changed, 13 insertions(+)
 
---- a/include/linux/blktrace_api.h
-+++ b/include/linux/blktrace_api.h
-@@ -21,6 +21,7 @@ enum blktrace_cat {
- 	BLK_TC_NOTIFY	= 1 << 10,	/* special message */
- 	BLK_TC_AHEAD	= 1 << 11,	/* readahead */
- 	BLK_TC_META	= 1 << 12,	/* metadata */
-+	BLK_TC_DRV_DATA	= 1 << 13,	/* binary per-driver data */
+--- a/blkiomon.c
++++ b/blkiomon.c
+@@ -316,6 +316,7 @@ static int blkiomon_account(struct blk_i
+ 	struct blkiomon_stat *p;
+ 	__u64 d2c = (bit_c->time - bit_d->time) / 1000; /* ns -> us */
+ 	__u32 size = bit_d->bytes;
++	__u64 thrput = size * 1000 / d2c;
  
- 	BLK_TC_END	= 1 << 15,	/* only 16-bits, reminder */
- };
-@@ -47,6 +48,7 @@ enum blktrace_act {
- 	__BLK_TA_SPLIT,			/* bio was split */
- 	__BLK_TA_BOUNCE,		/* bio was bounced */
- 	__BLK_TA_REMAP,			/* bio was remapped */
-+	__BLK_TA_DRV_DATA,		/* driver-specific binary data */
- };
+ 	dstat = blkiomon_get_dstat(bit_d->device);
+ 	if (!dstat)
+@@ -323,9 +324,11 @@ static int blkiomon_account(struct blk_i
+ 	p = &dstat->msg.stat;
  
- /*
-@@ -77,6 +79,7 @@ enum blktrace_notify {
- #define BLK_TA_SPLIT		(__BLK_TA_SPLIT)
- #define BLK_TA_BOUNCE		(__BLK_TA_BOUNCE)
- #define BLK_TA_REMAP		(__BLK_TA_REMAP | BLK_TC_ACT(BLK_TC_QUEUE))
-+#define BLK_TA_DRV_DATA	(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
- 
- #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_TIMESTAMP	(__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
-@@ -307,6 +310,34 @@ static inline void blk_add_trace_remap(s
- 	__blk_add_trace(bt, from, bio->bi_size, bio->bi_rw, BLK_TA_REMAP, !bio_flagged(bio, BIO_UPTODATE), sizeof(r), &r);
+ 	if (BLK_DATADIR(bit_c->action) & BLK_TC_READ) {
++		minmax_account(&p->thrput_r, thrput);
+ 		minmax_account(&p->size_r, size);
+ 		minmax_account(&p->d2c_r, d2c);
+ 	} else if (BLK_DATADIR(bit_c->action) & BLK_TC_WRITE) {
++		minmax_account(&p->thrput_w, thrput);
+ 		minmax_account(&p->size_w, size);
+ 		minmax_account(&p->d2c_w, d2c);
+ 	} else
+--- a/blkiomon.h
++++ b/blkiomon.h
+@@ -38,6 +38,8 @@ struct blkiomon_stat {
+ 	struct minmax size_w;
+ 	struct minmax d2c_r;
+ 	struct minmax d2c_w;
++	struct minmax thrput_r;
++	struct minmax thrput_w;
+ 	__u64 bidir;
+ 	__u32 device;
+ } __attribute__ ((packed));
+@@ -61,6 +63,8 @@ static inline void blkiomon_stat_init(st
+ 	minmax_init(&bstat->size_w);
+ 	minmax_init(&bstat->d2c_r);
+ 	minmax_init(&bstat->d2c_w);
++	minmax_init(&bstat->thrput_r);
++	minmax_init(&bstat->thrput_w);
  }
  
-+/**
-+ * blk_add_driver_data - Add binary message with driver-specific data
-+ * @q:		queue the io is for
-+ * @rq:		io request
-+ * @data:	driver-specific data
-+ * @len:	length of driver-specific data
-+ *
-+ * Description:
-+ *     Some drivers might want to write driver-specific data per request.
-+ *
-+ **/
-+static inline void blk_add_driver_data(struct request_queue *q,
-+				       struct request *rq,
-+				       void *data, size_t len)
-+{
-+	struct blk_trace *bt = q->blk_trace;
-+
-+	if (likely(!bt))
-+		return;
-+
-+	if (blk_pc_request(rq))
-+		__blk_add_trace(bt, 0, rq->data_len, 0, BLK_TA_DRV_DATA,
-+				rq->errors, len, data);
-+	else
-+		__blk_add_trace(bt, rq->hard_sector, rq->hard_nr_sectors << 9,
-+				0, BLK_TA_DRV_DATA, rq->errors, len, data);
-+}
-+
- extern int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 			   char __user *arg);
- extern int blk_trace_startstop(struct request_queue *q, int start);
-@@ -320,6 +351,7 @@ extern int blk_trace_remove(struct reque
- #define blk_add_trace_generic(q, rq, rw, what)	do { } while (0)
- #define blk_add_trace_pdu_int(q, what, bio, pdu)	do { } while (0)
- #define blk_add_trace_remap(q, bio, dev, f, t)	do {} while (0)
-+#define blk_add_driver_data(q, rq, data, len)	do {} while (0)
- #define do_blk_trace_setup(q, name, dev, buts)	(-ENOTTY)
- #define blk_trace_setup(q, name, dev, arg)	(-ENOTTY)
- #define blk_trace_startstop(q, start)		(-ENOTTY)
+ static inline void blkiomon_stat_to_be(struct blkiomon_stat *bstat)
+@@ -71,6 +75,8 @@ static inline void blkiomon_stat_to_be(s
+ 	minmax_to_be(&bstat->size_w);
+ 	minmax_to_be(&bstat->d2c_r);
+ 	minmax_to_be(&bstat->d2c_w);
++	minmax_to_be(&bstat->thrput_r);
++	minmax_to_be(&bstat->thrput_w);
+ 	bstat->bidir = cpu_to_be64(bstat->bidir);
+ 	bstat->time = cpu_to_be64(bstat->time);
+ 	bstat->device = cpu_to_be32(bstat->device);
+@@ -85,6 +91,8 @@ static inline void blkiomon_stat_merge(s
+ 	minmax_merge(&dst->size_w, &src->size_w);
+ 	minmax_merge(&dst->d2c_r, &src->d2c_r);
+ 	minmax_merge(&dst->d2c_w, &src->d2c_w);
++	minmax_merge(&dst->thrput_r, &src->thrput_r);
++	minmax_merge(&dst->thrput_w, &src->thrput_w);
+ 	dst->bidir += src->bidir;
+ }
+ 
+@@ -99,6 +107,8 @@ static inline void blkiomon_stat_print(F
+ 	minmax_print(fp, "sizes write (bytes)", &p->size_w);
+ 	minmax_print(fp, "d2c read (usec)", &p->d2c_r);
+ 	minmax_print(fp, "d2c write (usec)", &p->d2c_w);
++	minmax_print(fp, "throughput read (bytes/msec)", &p->thrput_r);
++	minmax_print(fp, "throughput write (bytes/msec)", &p->thrput_w);
+ 	histlog2_print(fp, "sizes histogram (bytes)", p->size_hist, &size_hist);
+ 	histlog2_print(fp, "d2c histogram (usec)", p->d2c_hist, &d2c_hist);
+ 	fprintf(fp, "bidirectional requests: %ld\n", (unsigned long)p->bidir);
 
 
