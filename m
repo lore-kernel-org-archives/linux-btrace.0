@@ -1,31 +1,22 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 30 Oct 2008 17:25:34 +0000
-Subject: Re: Version 1.0.0
-Message-Id: <20081030172534.GX31673@kernel.dk>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Date: Wed, 29 Oct 2008 15:46:58 +0000
+Subject: blktrace version number
+Message-Id: <20081029154658.GA27173@schmichrtp.de.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20081030140800.GV31673@kernel.dk>
-In-Reply-To: <20081030140800.GV31673@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Thu, Oct 30 2008, Christof Schmitt wrote:
-> On Thu, Oct 30, 2008 at 03:08:00PM +0100, Jens Axboe wrote:
-> > Hi everyone,
-> > 
-> > I've bumped version numbers and tagged version 1.0.0 in the repo. Of
-> > course I had to do one change before doing that, so I updated the red
-> > black tree code to a more recent version that unifies the parent pointer
-> > and color information, saving space in the rb_node. That's quite
-> > important on blktrace, where we can have millions of nodes.
-> > 
-> > Anyway, enjoy :-)
-> 
-> That was a quick response to my request, thanks very much,
+Jens,
 
-You're welcome, it was indeed long overdue so thanks for the nudge.
+do you plan to tag a new version in the blktrace git tree?
 
--- 
-Jens Axboe
+There have been some new features included since version 0.99.3 and
+from time to time people ask which feature is available in which
+version. It would be simpler to say "use version 0.99.4" (or whatever
+the number would be) than "use the latest from the git tree".
 
+thanks,
+
+Christof
