@@ -1,7 +1,7 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Wed, 29 Oct 2008 19:11:22 +0000
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Wed, 29 Oct 2008 19:22:46 +0000
 Subject: Re: blktrace version number
-Message-Id: <20081029191122.GH31673@kernel.dk>
+Message-Id: <4908B806.4050108@hp.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <20081029154658.GA27173@schmichrtp.de.ibm.com>
 In-Reply-To: <20081029154658.GA27173@schmichrtp.de.ibm.com>
@@ -10,31 +10,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Wed, Oct 29 2008, Alan D. Brunelle wrote:
-> Jens Axboe wrote:
-> > On Wed, Oct 29 2008, Christof Schmitt wrote:
-> >> Jens,
-> >>
-> >> do you plan to tag a new version in the blktrace git tree?
-> >>
-> >> There have been some new features included since version 0.99.3 and
-> >> from time to time people ask which feature is available in which
-> >> version. It would be simpler to say "use version 0.99.4" (or whatever
-> >> the number would be) than "use the latest from the git tree".
-> > 
-> > I guess it has been way too long, my intention was to release 1.0
-> > shortly after that :-)
-> > 
-> > I'm fine with doing that - Alan, is btt ready for a 1.0 release?
-> > 
+Jens Axboe wrote:
+> On Wed, Oct 29 2008, Alan D. Brunelle wrote:
+>> Jens Axboe wrote:
+>>> On Wed, Oct 29 2008, Christof Schmitt wrote:
+>>>> Jens,
+>>>>
+>>>> do you plan to tag a new version in the blktrace git tree?
+>>>>
+>>>> There have been some new features included since version 0.99.3 and
+>>>> from time to time people ask which feature is available in which
+>>>> version. It would be simpler to say "use version 0.99.4" (or whatever
+>>>> the number would be) than "use the latest from the git tree".
+>>> I guess it has been way too long, my intention was to release 1.0
+>>> shortly after that :-)
+>>>
+>>> I'm fine with doing that - Alan, is btt ready for a 1.0 release?
+>>>
+>> Hm, actually, btt is at 2.0.5 - I have updated btrecord/btreplay to
+>> 1.0.0 if you'd like me to push that... :-)
 > 
-> Hm, actually, btt is at 2.0.5 - I have updated btrecord/btreplay to
-> 1.0.0 if you'd like me to push that... :-)
+> Heh, nevermind the version of the individual packages. To phrase it a
+> bit more clearly, is there anything you feel that needs to be done
+> before I tag the whole repo as 1.0.0?
+> 
 
-Heh, nevermind the version of the individual packages. To phrase it a
-bit more clearly, is there anything you feel that needs to be done
-before I tag the whole repo as 1.0.0?
 
--- 
-Jens Axboe
+Sure, I think it's probably a good idea...
 
+Alan
