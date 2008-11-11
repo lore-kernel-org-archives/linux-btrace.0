@@ -1,27 +1,35 @@
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Date: Wed, 26 Nov 2008 09:33:46 +0000
-Subject: Re: bad trace magic
-Message-Id: <1227692026.6947.3.camel@kitka.ibm.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Date: Tue, 11 Nov 2008 05:00:02 +0000
+Subject: Recent changes
+Message-Id: <49191152.T+ls3U6vv3VxMXMj%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1227094718.10046.29.camel@kitka.ibm.com>
-In-Reply-To: <1227094718.10046.29.camel@kitka.ibm.com>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+The following changes since commit 07b96824e26286321b99c30526d8d67aca16e584:
+  Jens Axboe (1):
+        Set release version 1.0.0
 
-On Wed, 2008-11-19 at 16:07 +0100, Jens Axboe wrote:
-> So you don't happen to have a stream of data we can inspect _after_ the
-> bad magic occured?
+are available in the git repository at:
 
-Hi Jens,
-any suggestions, a commmand line, for capturing that stream of data?
+  git://git.kernel.dk/blktrace.git master
 
-I have been looking into the kernel side of it, and blktrace/relay
-appear to continue writing data when a bad trace has been detected in
-user space.
+Alan D. Brunelle (3):
+      Moved btrecord/btreplay to version 1.0.0
+      Merge branch 'master' of ssh://alanbrunelle@git.kernel.dk/data/git/blktrace
+      Added in -z to provide running waiting-for-issue latencies
 
-Thanks,
-Martin
-
+ btreplay/btrecord.h |    8 ++++----
+ btt/args.c          |   12 +++++++++++-
+ btt/bt_timeline.c   |    4 ++--
+ btt/devs.c          |    3 +++
+ btt/doc/btt.tex     |   23 +++++++++++++++--------
+ btt/globals.h       |    8 +++++---
+ btt/latency.c       |    7 +++++++
+ btt/trace_issue.c   |    2 ++
+ doc/btt.1           |   15 +++++++++++++--
+ 9 files changed, 62 insertions(+), 20 deletions(-)
