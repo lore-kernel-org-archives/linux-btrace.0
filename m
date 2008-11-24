@@ -1,25 +1,43 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 13 Nov 2008 05:00:01 +0000
-Subject: Recent changes
-Message-Id: <491bb451.c9WxLS0DExKOCX0c%jens.axboe@oracle.com>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Date: Mon, 24 Nov 2008 16:07:31 +0000
+Subject: [Patch] fix blktrace API (missing commit)
+Message-Id: <1227542851.9636.27.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 0f067275d74a96ca9d574e9912a60bfa81b4df97:
-  Alan D. Brunelle (1):
-        Merge branch 'add-P'
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-are available in the git repository at:
+The git commit 11914a53d2ec2974a565311af327b8983d8c820d added __BLK_TA_ABORT
+to blktrace_api.h. A corresponding addition to the blktrace tools repository
+has been missing, breaking the API. Blkparse complained:
+"Bad fs action 40010011"
 
-  git://git.kernel.dk/blktrace.git master
+Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-Alan D. Brunelle (1):
-      gcc 4.3.2 has started to warn about:
+---
+ blktrace_api.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
- btt/output.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+--- a/blktrace_api.h
++++ b/blktrace_api.h
+@@ -48,6 +48,7 @@ enum {
+ 	__BLK_TA_SPLIT,			/* bio was split */
+ 	__BLK_TA_BOUNCE,		/* bio was bounced */
+ 	__BLK_TA_REMAP,			/* bio was remapped */
++	__BLK_TA_ABORT,			/* request aborted */
+ 	__BLK_TA_DRV_DATA,		/* binary driver data */
+ };
+ 
+@@ -78,6 +79,7 @@ enum blktrace_notify {
+ #define BLK_TA_SPLIT		(__BLK_TA_SPLIT)
+ #define BLK_TA_BOUNCE		(__BLK_TA_BOUNCE)
+ #define BLK_TA_REMAP		(__BLK_TA_REMAP | BLK_TC_ACT(BLK_TC_QUEUE))
++#define BLK_TA_ABORT		(__BLK_TA_ABORT | BLK_TC_ACT(BLK_TC_QUEUE))
+ #define BLK_TA_DRV_DATA		(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
+ 
+ #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
+
+
