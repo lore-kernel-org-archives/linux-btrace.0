@@ -1,7 +1,7 @@
 From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Date: Mon, 24 Nov 2008 16:07:31 +0000
-Subject: [Patch] fix blktrace API (missing commit)
-Message-Id: <1227542851.9636.27.camel@kitka.ibm.com>
+Date: Mon, 24 Nov 2008 13:48:10 +0000
+Subject: [Patch] blkiomon: fix min value
+Message-Id: <1227534490.9636.21.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,35 +9,40 @@ Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
 From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Reported-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
 
-The git commit 11914a53d2ec2974a565311af327b8983d8c820d added __BLK_TA_ABORT
-to blktrace_api.h. A corresponding addition to the blktrace tools repository
-has been missing, breaking the API. Blkparse complained:
-"Bad fs action 40010011"
+A couple of min-counters weren't initialised correctly (thrput_r, thrput_w).
+We have got a perfectly working init function for this purpose.
+Removing partially duplicated code.
 
 Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-
+Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
+ 
 ---
- blktrace_api.h |    2 ++
- 1 file changed, 2 insertions(+)
+ blkiomon.c |    6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
---- a/blktrace_api.h
-+++ b/blktrace_api.h
-@@ -48,6 +48,7 @@ enum {
- 	__BLK_TA_SPLIT,			/* bio was split */
- 	__BLK_TA_BOUNCE,		/* bio was bounced */
- 	__BLK_TA_REMAP,			/* bio was remapped */
-+	__BLK_TA_ABORT,			/* request aborted */
- 	__BLK_TA_DRV_DATA,		/* binary driver data */
- };
+--- a/blkiomon.c
++++ b/blkiomon.c
+@@ -168,7 +168,7 @@ static struct dstat *blkiomon_alloc_dsta
+ 		return NULL;
+ 	}
  
-@@ -78,6 +79,7 @@ enum blktrace_notify {
- #define BLK_TA_SPLIT		(__BLK_TA_SPLIT)
- #define BLK_TA_BOUNCE		(__BLK_TA_BOUNCE)
- #define BLK_TA_REMAP		(__BLK_TA_REMAP | BLK_TC_ACT(BLK_TC_QUEUE))
-+#define BLK_TA_ABORT		(__BLK_TA_ABORT | BLK_TC_ACT(BLK_TC_QUEUE))
- #define BLK_TA_DRV_DATA		(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
+-	memset(dstat, 0, sizeof(*dstat));
++	blkiomon_stat_init(&dstat->msg.stat);
+ 	return dstat;
+ }
  
- #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
+@@ -211,10 +211,6 @@ static struct dstat *blkiomon_get_dstat(
+ 		goto out;
+ 
+ 	dstat->msg.stat.device = device;
+-	dstat->msg.stat.size_r.min = -1ULL;
+-	dstat->msg.stat.size_w.min = -1ULL;
+-	dstat->msg.stat.d2c_r.min = -1ULL;
+-	dstat->msg.stat.d2c_w.min = -1ULL;
+ 
+ 	rb_link_node(&dstat->node, search.parent, search.node_ptr);
+ 	rb_insert_color(&dstat->node, &dstat_tree[dstat_curr]);
 
 
