@@ -1,69 +1,98 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Wed, 12 Nov 2008 12:09:29 +0000
-Subject: [PATCH] Fix compiler warning - check return value from ftruncate
-Message-Id: <491AC779.8070301@hp.com>
-MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------030806030003050603020709"
+From: Jan Blunck <jblunck@suse.de>
+Date: Mon, 08 Dec 2008 15:37:28 +0000
+Subject: [PATCH] blkparse: Globally track smallest sequence read
+Message-Id: <20081208153727.GN14520@bolzano.suse.de>
 List-Id: <linux-btrace.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030806030003050603020709
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+When running
 
+ blktrace -d /dev/sda -o - | ./blkparse -i -
 
---------------030806030003050603020709
-Content-Type: text/x-diff;
- name="0001-Fix-compiler-warning-check-return-value-from-ftrun.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: inline;
- filename*0="0001-Fix-compiler-warning-check-return-value-from-ftrun.patc";
- filename*1="h"
+Only a few traces are actually dumped to stdout. Most of the traces are
+stored up and printed only after hitting ^C by forcing show_entries_rb() to
+print them out. I noticed that once pci->smallest_seq_read is zero
+check_sequence always returns 1:
 
+static int check_sequence(struct per_dev_info *pdi, struct trace *t, int
+        force)
+{
+        ...
 
-gcc 4.3.2 has started to warn about:
+        if (expected_sequence < pci->smallest_seq_read) {
+                __t = trace_rb_find_last(pdi, pci, expected_sequence);
+                if (!__t)
+                        goto skip;
 
-gcc -o blktrace.o -c -Wall -O2 -g -W -D_GNU_SOURCE -D_LARGEFILE_SOURCE
--D_FILE_OFFSET_BITS=64 blktrace.c
-blktrace.c: In function ���������tip_ftrunc_final���������:
-blktrace.c:662: warning: ignoring return value of ���������ftruncate���������, declared
-with attribute warn_unused_result
+                __put_trace_last(pdi, __t);
+                return 0;
+        } else if (!force) {
+                return 1;
 
-This simple patch overcomes that - no exit is performed as this is not
-fatal, and the thread will be exitting soon enough.
+       ...
+}
 
-Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
----
- blktrace.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+Here is a patch to fix this. It uses a global variable to keep track of the
+smallest sequence read yet on any cpu.
 
-diff --git a/blktrace.c b/blktrace.c
-index 7e27f14..ad54db5 100644
---- a/blktrace.c
-+++ b/blktrace.c
-@@ -654,12 +654,18 @@ static void tip_ftrunc_final(struct thread_information *tip)
- 	 * truncate to right size and cleanup mmap
- 	 */
- 	if (tip->ofile_mmap && tip->ofile) {
-+		int ret;
- 		int ofd = fileno(tip->ofile);
- 
- 		if (tip->fs_buf)
- 			munmap(tip->fs_buf, tip->fs_buf_len);
- 
--		ftruncate(ofd, tip->fs_size);
-+		ret = ftruncate(ofd, tip->fs_size);
-+		if (ret < 0) {
-+			perror(tip->fn);
-+			fprintf(stderr, "Warning: thread %d ftrunc failed\n",
-+				tip->cpu);
-+		}
- 	}
- }
- 
+Comments?
+
+Cheers,
+Jan
+
 -- 
-1.5.6.3
-
-
---------------030806030003050603020709--
+diff --git a/blkparse.c b/blkparse.c
+index d869da6..f70cd1b 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -262,6 +262,7 @@ static unsigned long long last_allowed_time;
+ static unsigned long long stopwatch_start;	/* start from zero by default */
+ static unsigned long long stopwatch_end = -1ULL;	/* "infinity" */
+ static unsigned long read_sequence;
++static unsigned long smallest_seq_read;
+ 
+ static int per_process_stats;
+ static int per_device_and_cpu_stats = 1;
+@@ -1922,8 +1923,8 @@ static int sort_entries(unsigned long long *youngest)
+ 		if (!pci || pci->cpu != bit->cpu)
+ 			pci = get_cpu_info(pdi, bit->cpu);
+ 
+-		if (bit->sequence < pci->smallest_seq_read)
+-			pci->smallest_seq_read = bit->sequence;
++		if (bit->sequence < smallest_seq_read)
++			smallest_seq_read = bit->sequence;
+ 
+ 		if (check_stopwatch(bit)) {
+ 			bit_free(bit);
+@@ -1994,7 +1995,7 @@ static int check_sequence(struct per_dev_info *pdi, struct trace *t, int force)
+ 		 */
+ 		if (bit->sequence = 1)
+ 			return 0;
+-		if (bit->sequence = pci->smallest_seq_read)
++		if (bit->sequence = smallest_seq_read)
+ 			return 0;
+ 
+ 		return check_cpu_map(pdi);
+@@ -2007,7 +2008,7 @@ static int check_sequence(struct per_dev_info *pdi, struct trace *t, int force)
+ 	 * we may not have seen that sequence yet. if we are not doing
+ 	 * the final run, break and wait for more entries.
+ 	 */
+-	if (expected_sequence < pci->smallest_seq_read) {
++	if (expected_sequence < smallest_seq_read) {
+ 		__t = trace_rb_find_last(pdi, pci, expected_sequence);
+ 		if (!__t)
+ 			goto skip;
+@@ -2535,10 +2536,7 @@ static void do_pipe(int fd)
+ 	fdblock = -1;
+ 	while ((events = read_events(fd, 0, &fdblock)) > 0) {
+ 		read_sequence++;
+-	
+-#if 0
+ 		smallest_seq_read = -1U;
+-#endif
+ 
+ 		if (sort_entries(&youngest))
+ 			break;
