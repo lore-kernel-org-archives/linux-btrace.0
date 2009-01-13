@@ -1,52 +1,27 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Fri, 23 Jan 2009 10:02:27 +0000
-Subject: Re: [PATCH]  Increased limits to allow for large system runs
-Message-Id: <20090123100227.GX30821@kernel.dk>
+Date: Tue, 13 Jan 2009 05:00:02 +0000
+Subject: Recent changes
+Message-Id: <496c1fd2.vI2VnCzeVcnXMQCg%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4978C127.3060307@hp.com>
-In-Reply-To: <4978C127.3060307@hp.com>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Thu, Jan 22 2009, Alan D. Brunelle wrote:
+The following changes since commit ef02006b0131f298595b37afb07562ee50fae5cc:
+  Alan D. Brunelle (1):
+        gcc 4.3.2 has started to warn about:
 
-> On 16-way w/ 104 disks and a 32-way w/ 96 disks, I was getting:
-> 
-> $ sudo blktrace -b 1024 -n 8 -I ../files
-> ./cciss_c1d6.blktrace.10: Too many open files
-> Failed to start worker threads
-> 
-> Due to the nature of our N(cpus) X N(devices) order of file opens, and
-> our N(cpus) X N(devices) X N(buffers) X (buffer size) amount of mmaps()
-> going on we're exceeding both the RLIMIT_NOFILE and RLIMIT_MEMLOCK
-> limits.
-> 
-> This patch raises limits for RLIMIT_NOFILE and RLIMIT_MEMLOCK to
-> "infinity", and allows blktrace to handle the large(ish) systems. (If
-> these settings fail, we "guestimate" about how much we really need.)
+are available in the git repository at:
 
-Thanks Alan, I pushed it out.
+  git://git.kernel.dk/blktrace.git master
 
-> There is still an underlying blktrace and/or kernel problem: The
-> directory /sys/kernel/debug/block/<DSF> where <DSF> is the device that
-> encountered the limit is left behind (not cleaned up correctly). This
-> stops blktrace from running a second time (even on another device):
-> 
-> $  ls /sys/kernel/debug/block
-> cciss_c1d6
-> $ sudo blktrace /dev/sda
-> BLKTRACESETUP: No such file or directory
-> Failed to start trace on /dev/sda
-> 
-> and requires a reboot. (Looking into that next, as this patch - whilst
-> stopping the original problem from happening - does not address the
-> secondary problem. And there may be some other ways for the secondary
-> problem to still occur...)
+Alan D. Brunelle (1):
+      Added no messages option to blkparse.c
 
-Would be nice if you have time to get to the bottom of that!
-
--- 
-Jens Axboe
-
+ blkparse.c       |   20 +++++++++++++++++---
+ doc/blkparse.1   |    9 +++++++++
+ doc/blktrace.tex |    1 +
+ 3 files changed, 27 insertions(+), 3 deletions(-)
