@@ -1,13 +1,26 @@
 From: Arnaldo Carvalho de Melo <acme@redhat.com>
-Date: Fri, 23 Jan 2009 14:06:27 +0000
-Subject: [PATCH tip 2/2] blktrace: Add ftrace plugin
-Message-Id: <20090123140627.GD21737@ghostprotocols.net>
+Date: Fri, 23 Jan 2009 14:42:33 +0000
+Subject: Re: [PATCH tip 2/2] blktrace: Add ftrace plugin
+Message-Id: <20090123144233.GE21737@ghostprotocols.net>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20090123140627.GD21737@ghostprotocols.net>
+In-Reply-To: <20090123140627.GD21737@ghostprotocols.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Jens Axboe <jens.axboe@oracle.com>
 Cc: Ingo Molnar <mingo@elte.hu>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org
+
+Grr, the commit log had a problem where I forgot to add
+the example of how to enable the blk tracer, please use this one
+instead, patch is the same.
+
+- Arnaldo
+
+From b161071999a0bb5af44b40b49afafa8db19a7679 Mon Sep 17 00:00:00 2001
+From: Arnaldo Carvalho de Melo <acme@redhat.com>
+Date: Fri, 23 Jan 2009 11:41:27 -0200
+Subject: [PATCH 2/2] blktrace: Add ftrace plugin
 
 Impact: New way of using the blktrace infrastructure
 
@@ -31,8 +44,11 @@ Using the sysfs interface will only setup the request_queue->blk_trace
 fields, tracing will only take place when the "blk" tracer is selected
 via the ftrace interface, as in the following example:
 
+[root@f10-1 ~]# mount -t debugfs none /d
+[root@f10-1 ~]# echo blk > /d/tracing/current_tracer
+
 To see the trace, one can use the /d/tracing/trace file or the
-/d/tracign/trace_pipe file, with semantics defined in the ftrace
+/d/tracing/trace_pipe file, with semantics defined in the ftrace
 documentation in Documentation/ftrace.txt.
 
 [root@f10-1 ~]# cat /t/trace
