@@ -1,61 +1,68 @@
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Date: Wed, 21 Jan 2009 13:58:30 +0000
-Subject: [Patch] blkiomon: fix min value
-Message-Id: <1232546310.466.24.camel@kitka.ibm.com>
+From: Arnaldo Carvalho de Melo <acme@redhat.com>
+Date: Fri, 23 Jan 2009 14:06:23 +0000
+Subject: [PATCH tip 1/2] ftrace: Add ftrace_vprintk
+Message-Id: <20090123140623.GC21737@ghostprotocols.net>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org
 
-Hi Jens,
-here is one of two fixes, which have not made it into blktrace yet.
-I posted them end of last year
-http://marc.info/?l=linux-btrace&m2753449808364&w=2
+Impact: New API
 
-Please apply. Thanks,
-Martin
-
-
-
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Reported-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
-
-A couple of min-counters weren't initialised correctly (thrput_r,
-thrput_w).
-We have got a perfectly working init function for this purpose.
-Removing partially duplicated code.
-
-Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Signed-off-by: Stefan Raspl <raspl@linux.vnet.ibm.com>
-
+Signed-off-by: Arnaldo Carvalho de Melo <acme@redhat.com>
 ---
- blkiomon.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ include/linux/ftrace.h |    8 ++++++++
+ kernel/trace/trace.c   |    9 +++++++++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
 
---- a/blkiomon.c
-+++ b/blkiomon.c
-@@ -168,7 +168,7 @@ static struct dstat *blkiomon_alloc_dsta
- 		return NULL;
- 	}
-
--	memset(dstat, 0, sizeof(*dstat));
-+	blkiomon_stat_init(&dstat->msg.stat);
- 	return dstat;
+diff --git a/include/linux/ftrace.h b/include/linux/ftrace.h
+index 9f7880d..7840e71 100644
+--- a/include/linux/ftrace.h
++++ b/include/linux/ftrace.h
+@@ -302,6 +302,9 @@ ftrace_special(unsigned long arg1, unsigned long arg2, unsigned long arg3);
+ extern int
+ __ftrace_printk(unsigned long ip, const char *fmt, ...)
+ 	__attribute__ ((format (printf, 2, 3)));
++# define ftrace_vprintk(fmt, ap) __ftrace_printk(_THIS_IP_, fmt, ap)
++extern int
++__ftrace_vprintk(unsigned long ip, const char *fmt, va_list ap);
+ extern void ftrace_dump(void);
+ #else
+ static inline void
+@@ -317,6 +320,11 @@ ftrace_printk(const char *fmt, ...)
+ {
+ 	return 0;
  }
-
-@@ -211,10 +211,6 @@ static struct dstat *blkiomon_get_dstat(
- 		goto out;
-
- 	dstat->msg.stat.device = device;
--	dstat->msg.stat.size_r.min = -1ULL;
--	dstat->msg.stat.size_w.min = -1ULL;
--	dstat->msg.stat.d2c_r.min = -1ULL;
--	dstat->msg.stat.d2c_w.min = -1ULL;
-
- 	rb_link_node(&dstat->node, search.parent, search.node_ptr);
- 	rb_insert_color(&dstat->node, &dstat_tree[dstat_curr]);
-
-
-
++static inline int
++ftrace_vprintk(const char *fmt, va_list ap)
++{
++	return 0;
++}
+ static inline void ftrace_dump(void) { }
+ #endif
+ 
+diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
+index 2129ab9..2f8ac1f 100644
+--- a/kernel/trace/trace.c
++++ b/kernel/trace/trace.c
+@@ -2951,6 +2951,15 @@ int __ftrace_printk(unsigned long ip, const char *fmt, ...)
+ }
+ EXPORT_SYMBOL_GPL(__ftrace_printk);
+ 
++int __ftrace_vprintk(unsigned long ip, const char *fmt, va_list ap)
++{
++	if (!(trace_flags & TRACE_ITER_PRINTK))
++		return 0;
++
++	return trace_vprintk(ip, task_curr_ret_stack(current), fmt, ap);
++}
++EXPORT_SYMBOL_GPL(__ftrace_vprintk);
++
+ static int trace_panic_handler(struct notifier_block *this,
+ 			       unsigned long event, void *unused)
+ {
+-- 
+1.6.0.6
 
