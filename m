@@ -1,7 +1,7 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 22 Jan 2009 05:00:02 +0000
+Date: Sat, 24 Jan 2009 05:00:02 +0000
 Subject: Recent changes
-Message-Id: <4977fd52.kaOjj1waNHBoBuXk%jens.axboe@oracle.com>
+Message-Id: <497aa052.qnaxGTZlTJ4MHO6p%jens.axboe@oracle.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
@@ -10,18 +10,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 19cfaf3f4d8e53ce43cccd809676f8f2a40f0b34:
-  Alan D. Brunelle (1):
-        Added no messages option to blkparse.c
+The following changes since commit 61165962f86cb2de0b163f6083bff5649f692e91:
+  Martin Peschke (1):
+        A couple of min-counters weren't initialised correctly (thrput_r,
 
 are available in the git repository at:
 
   git://git.kernel.dk/blktrace.git master
 
-Martin Peschke (2):
-      The git commit 11914a53d2ec2974a565311af327b8983d8c820d added __BLK_TA_ABORT
-      A couple of min-counters weren't initialised correctly (thrput_r,
+Alan D. Brunelle (2):
+      Increased limits to allow for large system runs
+      Fix btt to handle large numbers of output files
 
- blkiomon.c     |    6 +-----
- blktrace_api.h |    2 ++
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ blktrace.c     |   65 +++++++++++++++++++++++++++++++++++++++++++++++++------
+ btt/aqd.c      |    2 +-
+ btt/args.c     |   10 ++++----
+ btt/bno_dump.c |    2 +-
+ btt/devmap.c   |    2 +-
+ btt/devs.c     |    2 +-
+ btt/globals.h  |    1 +
+ btt/latency.c  |    2 +-
+ btt/misc.c     |   46 ++++++++++++++++++++++++++++++++++++++-
+ btt/output.c   |    4 +-
+ btt/plat.c     |    2 +-
+ btt/seek.c     |    4 +-
+ 12 files changed, 119 insertions(+), 23 deletions(-)
