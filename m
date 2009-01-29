@@ -1,37 +1,31 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Sat, 24 Jan 2009 05:00:02 +0000
-Subject: Recent changes
-Message-Id: <497aa052.qnaxGTZlTJ4MHO6p%jens.axboe@oracle.com>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Thu, 29 Jan 2009 21:28:45 +0000
+Subject: -b vs. -n
+Message-Id: <49821F8D.4050207@hp.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 61165962f86cb2de0b163f6083bff5649f692e91:
-  Martin Peschke (1):
-        A couple of min-counters weren't initialised correctly (thrput_r,
+Has anybody experimented with increasing the _number_ of buffers rather
+than the _size_ of the buffers when confronted with drops? I'm finding
+on a large(ish) system that it is better to have lots of small buffers
+handled by relay rather than fewer larger buffers. In my particular case:
 
-are available in the git repository at:
+16 CPUs
+96 devices
+running some dd's against all the devices...
 
-  git://git.kernel.dk/blktrace.git master
+-b 1024 or -b 2048 still results in drops
 
-Alan D. Brunelle (2):
-      Increased limits to allow for large system runs
-      Fix btt to handle large numbers of output files
+but:
 
- blktrace.c     |   65 +++++++++++++++++++++++++++++++++++++++++++++++++------
- btt/aqd.c      |    2 +-
- btt/args.c     |   10 ++++----
- btt/bno_dump.c |    2 +-
- btt/devmap.c   |    2 +-
- btt/devs.c     |    2 +-
- btt/globals.h  |    1 +
- btt/latency.c  |    2 +-
- btt/misc.c     |   46 ++++++++++++++++++++++++++++++++++++++-
- btt/output.c   |    4 +-
- btt/plat.c     |    2 +-
- btt/seek.c     |    4 +-
- 12 files changed, 119 insertions(+), 23 deletions(-)
+-n 512 -b 16 allows things to run smoother.
+
+I _think_ this may have to do with the way relay reports POLLIN: it does
+it only when a buffer switch happens as opposed to when there is data
+ready. Need to look at this some more, but just wondering if others out
+there have found similar things in their testing...
+
+Alan
