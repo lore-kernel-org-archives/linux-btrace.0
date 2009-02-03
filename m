@@ -1,64 +1,100 @@
-From: Carl Henrik Lunde <chlunde@ping.uio.no>
-Date: Fri, 06 Feb 2009 09:41:35 +0000
-Subject: [PATCH] NUL-terminate user space messages
-Message-Id: <ed038eb20902060141rf0c124o128773ec69f864f1@mail.gmail.com>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Tue, 03 Feb 2009 12:12:34 +0000
+Subject: [PATCH] Provide more information when drops are seen
+Message-Id: <498834B2.6080601@hp.com>
 MIME-Version: 1
-Content-Type: multipart/mixed; boundary="0016e6dd8d7eaf829f04623cd303"
+Content-Type: multipart/mixed; boundary="------------030603090203040505050609"
 List-Id: <linux-btrace.vger.kernel.org>
 To: linux-btrace@vger.kernel.org
 
---0016e6dd8d7eaf829f04623cd303
+This is a multi-part message in MIME format.
+--------------030603090203040505050609
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-Could you consider something like this for inclusion?
 
-Current behavior:
-echo -n "test" > /sys/.../msg
+--------------030603090203040505050609
+Content-Type: text/x-diff;
+ name="0001-Provide-more-information-when-drops-are-seen.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="0001-Provide-more-information-when-drops-are-seen.patch"
 
-result:
-testnux
 
-echo -n "111....111!" [128 characters, the last one !]:
+This will provide the user with the percentage of drops encountered,
+allowing them to know how far off they are in being able to capturing all
+traces. It will also suggest trying to increase _either_ the buffer size
+(-b) or trying more buffers (-n) when drops are found. We have found
+that some times the latter is more helpful than the former.
 
-result, "!" chopped of but no error message:
+The output would now look something like:
 
-"111....111"
+You have 114704 (  0.7%) dropped events
+Consider using a larger buffer size (-b) and/or more buffers (-n)
 
+Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
+---
+ blktrace.c |   19 ++++++++++++++++---
+ 1 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/blktrace.c b/blktrace.c
+index afcc42f..c55b491 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -1321,7 +1321,7 @@ static void show_stats(struct device_information *dips, int ndips, int cpus)
+ 	struct device_information *dip;
+ 	struct thread_information *tip;
+ 	unsigned long long events_processed, data_read;
+-	unsigned long total_drops;
++	unsigned long total_drops, total_events;
+ 	int i, j, no_stdout = 0;
+ 
+ 	if (is_stat_shown())
+@@ -1333,12 +1333,20 @@ static void show_stats(struct device_information *dips, int ndips, int cpus)
+ 	stat_shown = 1;
+ 
+ 	total_drops = 0;
++	total_events = 0;
+ 	__for_each_dip(dip, dips, ndips, i) {
+ 		if (!no_stdout)
+ 			printf("Device: %s\n", dip->path);
+ 		events_processed = 0;
+ 		data_read = 0;
+ 		__for_each_tip(dip, tip, cpus, j) {
++			/*
++			 * Estimate number of events if not known
++			 */
++			if (tip->events_processed == 0)
++				tip->events_processed = tip->data_read /
++						sizeof(struct blk_io_trace);
++
+ 			if (!no_stdout)
+ 				printf("  CPU%3d: %20lu events, %8llu KiB data\n",
+ 			       		tip->cpu, tip->events_processed,
+@@ -1347,14 +1355,19 @@ static void show_stats(struct device_information *dips, int ndips, int cpus)
+ 			data_read += tip->data_read;
+ 		}
+ 		total_drops += dip->drop_count;
++		total_events += (dip->drop_count + events_processed);
+ 		if (!no_stdout)
+ 			printf("  Total:  %20llu events (dropped %lu), %8llu KiB data\n",
+ 					events_processed, dip->drop_count,
+ 					(data_read + 1023) >> 10);
+ 	}
+ 
+-	if (total_drops)
+-		fprintf(stderr, "You have dropped events, consider using a larger buffer size (-b)\n");
++	if (total_drops) {
++		fprintf(stderr, "\nYou have %lu (%5.1lf%%) dropped events\n"
++			        "Consider using a larger buffer size (-b) "
++				"and/or more buffers (-n)\n", total_drops,
++			100.0 * (double)total_drops / (double)total_events);
++	}
+ }
+ 
+ static struct device_information *net_get_dip(struct net_connection *nc,
 -- 
-mvh
-Carl Henrik
+1.5.6.3
 
---0016e6dd8d7eaf829f04623cd303
-Content-Type: application/octet-stream; 
-	name="0001-blktrace-NUL-terminate-user-space-messages.patch"
-Content-Disposition: attachment; 
-	filename="0001-blktrace-NUL-terminate-user-space-messages.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fqunlsmt0
 
-RnJvbSAxZWZlMGM4MjAyYjgwODE2N2ZhNGY3MDFhYzE4Y2Y0ZDZjNzk5YWY5IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBDYXJsIEhlbnJpayBMdW5kZSA8Y2hsdW5kZUBwaW5nLnVpby5u
-bz4KRGF0ZTogV2VkLCA0IEZlYiAyMDA5IDE0OjI4OjUzICswMTAwClN1YmplY3Q6IFtQQVRDSF0g
-YmxrdHJhY2U6IE5VTC10ZXJtaW5hdGUgdXNlciBzcGFjZSBtZXNzYWdlcwoKTWFrZSBzdXJlIG1l
-c3NhZ2VzIGZyb20gdXNlciBzcGFjZSBhcmUgTlVMLXRlcm1pbmF0ZWQgc3RyaW5ncywKb3RoZXJ3
-aXNlIHdlIGNvdWxkIGR1bXAgcmFuZG9tIG1lbW9yeSB0byB0aGUgYmxvY2sgdHJhY2UgZmlsZS4K
-QWRkaXRpb25hbGx5LCBJJ3ZlIGxpbWl0ZWQgdGhlIG1lc3NhZ2UgdG8gQkxLX1ROX01BWF9NU0ct
-MSBjaGFyYWN0ZXJzLApiZWNhdXNlIHRoZSBsYXN0IGNoYXJhY3RlciB3b3VsZCBiZSBzdHJpcHBl
-ZCBieSB2c2NucHJpbnRmIGFueXdheS4KClNpZ25lZC1vZmYtYnk6IENhcmwgSGVucmlrIEx1bmRl
-IDxjaGx1bmRlQHBpbmcudWlvLm5vPgotLS0KIGJsb2NrL2Jsa3RyYWNlLmMgfCAgICA1ICsrKy0t
-CiAxIGZpbGVzIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCmRpZmYg
-LS1naXQgYS9ibG9jay9ibGt0cmFjZS5jIGIvYmxvY2svYmxrdHJhY2UuYwppbmRleCAzOWNjM2Jm
-Li41MTFlMzU3IDEwMDY0NAotLS0gYS9ibG9jay9ibGt0cmFjZS5jCisrKyBiL2Jsb2NrL2Jsa3Ry
-YWNlLmMKQEAgLTI1NSwxMCArMjU1LDEwIEBAIHN0YXRpYyBzc2l6ZV90IGJsa19tc2dfd3JpdGUo
-c3RydWN0IGZpbGUgKmZpbHAsIGNvbnN0IGNoYXIgX191c2VyICpidWZmZXIsCiAJY2hhciAqbXNn
-OwogCXN0cnVjdCBibGtfdHJhY2UgKmJ0OwogCi0JaWYgKGNvdW50ID4gQkxLX1ROX01BWF9NU0cp
-CisJaWYgKGNvdW50ID4gQkxLX1ROX01BWF9NU0cgLSAxKQogCQlyZXR1cm4gLUVJTlZBTDsKIAot
-CW1zZyA9IGttYWxsb2MoY291bnQsIEdGUF9LRVJORUwpOworCW1zZyA9IGttYWxsb2MoY291bnQg
-KyAxLCBHRlBfS0VSTkVMKTsKIAlpZiAobXNnID09IE5VTEwpCiAJCXJldHVybiAtRU5PTUVNOwog
-CkBAIC0yNjcsNiArMjY3LDcgQEAgc3RhdGljIHNzaXplX3QgYmxrX21zZ193cml0ZShzdHJ1Y3Qg
-ZmlsZSAqZmlscCwgY29uc3QgY2hhciBfX3VzZXIgKmJ1ZmZlciwKIAkJcmV0dXJuIC1FRkFVTFQ7
-CiAJfQogCisJbXNnW2NvdW50XSA9ICdcMCc7CiAJYnQgPSBmaWxwLT5wcml2YXRlX2RhdGE7CiAJ
-X190cmFjZV9ub3RlX21lc3NhZ2UoYnQsICIlcyIsIG1zZyk7CiAJa2ZyZWUobXNnKTsKLS0gCjEu
-NS42LnJjMC40Ni5nZDJiMwoK
---0016e6dd8d7eaf829f04623cd303--
+--------------030603090203040505050609--
