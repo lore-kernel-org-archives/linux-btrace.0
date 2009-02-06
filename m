@@ -1,59 +1,75 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Fri, 06 Feb 2009 11:36:32 +0000
-Subject: Re: Question: blktrace server mode & orderly shut down
-Message-Id: <498C20C0.4070508@hp.com>
+From: Carl Henrik Lunde <chlunde@ping.uio.no>
+Date: Fri, 06 Feb 2009 10:24:20 +0000
+Subject: Add NOTIFY to activity mask
+Message-Id: <ed038eb20902060224n230a0a55g88c11edb694ebaf8@mail.gmail.com>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="001636c5a26786443104623d6cac"
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4988C599.6070909@hp.com>
-In-Reply-To: <4988C599.6070909@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Jens Axboe wrote:
-> On Tue, Feb 03 2009, Alan D. Brunelle wrote:
->> According to the recv(2) man page:
->>
->> The return value will be 0 when the peer has performed an orderly
->> shutdown.
->>
->> Yet the code in read_data_net and net_get_header both attempt to re-read
->> from a socket that will _never_ have data. (I hit this problem today on
->> blktrace2 - I've got orderly shut downs in place.)
->>
->> Does this pseudo-patch break something?
->>
->> diff --git a/blktrace.c b/blktrace.c
->> index c55b491..9ef7313 100644
->> --- a/blktrace.c
->> +++ b/blktrace.c
->> @@ -550,7 +550,7 @@ static int read_data_net(struct thread_information
->> *tip, voi
->>                 ret = recv(nc->in_fd, buf, bytes_left, MSG_WAITALL);
->>
->>                 if (!ret)
->> -                       continue;
->> +                       return 0;
->>                 else if (ret < 0) {
->>                         if (errno != EAGAIN) {
->>                                 perror(tip->fn);
->> @@ -1466,8 +1466,7 @@ static int net_get_header(struct net_connection *nc,
->>                         usleep(1000);
->>                         continue;
->>                 } else if (!ret) {
->> -                       usleep(1000);
->> -                       continue;
->> +                       return 0;
->>                 } else {
->>                         p += ret;
->>                         bytes_left -= ret;
-> 
-> My bad, I think the patch looks correct. Feel free to commit it, you can
-> add my acked-by to it.
-> 
+--001636c5a26786443104623d6cac
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-OK, but this patch may not be sufficient: need to look at it some more
-(in particular, just doing this causes other errors to occur because the
-connections still try to be read - typically an infinite hang (reading
-0)). In blktrace2 I'm adding in orderly shutdowns on both ends of the
-socket.
+I couldn't find a way to mask in messages, so I think we need this?
+
+-- 
+mvh
+Carl Henrik
+
+--001636c5a26786443104623d6cac
+Content-Type: application/octet-stream; 
+	name="0001-Add-NOTIFY-to-activity-mask.patch"
+Content-Disposition: attachment; 
+	filename="0001-Add-NOTIFY-to-activity-mask.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fqupjeqp0
+
+RnJvbSAxYmE2NTQ1NzMwZTFhMjVmZWVlYmE3Y2E1OGNkNzg5MDY4ZTdiMjVjIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBDYXJsIEhlbnJpayBMdW5kZSA8Y2hsdW5kZUBwaW5nLnVpby5u
+bz4KRGF0ZTogRnJpLCA2IEZlYiAyMDA5IDEyOjE3OjI1ICswMTAwClN1YmplY3Q6IFtQQVRDSCAx
+LzJdIEFkZCBOT1RJRlkgdG8gYWN0aXZpdHkgbWFzawoKQWxsb3cgbWFza2luZyBpbiBtZXNzYWdl
+cyBieSB1c2luZyAiLWEgbm90aWZ5Ii4KClNpZ25lZC1vZmYtYnk6IENhcmwgSGVucmlrIEx1bmRl
+IDxjaGx1bmRlQHBpbmcudWlvLm5vPgotLS0KIGFjdF9tYXNrLmMgICAgICAgfCAgICAxICsKIGRv
+Yy9ibGt0cmFjZS44ICAgfCAgICAyICsrCiBkb2MvYmxrdHJhY2UudGV4IHwgICAgMSArCiAzIGZp
+bGVzIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQg
+YS9hY3RfbWFzay5jIGIvYWN0X21hc2suYwppbmRleCAxZWI5YzI2Li42ZDVjMTkzIDEwMDY0NAot
+LS0gYS9hY3RfbWFzay5jCisrKyBiL2FjdF9tYXNrLmMKQEAgLTIzLDYgKzIzLDcgQEAgc3RhdGlj
+IHN0cnVjdCBtYXNrX21hcCBtYXNrX21hcHNbXSA9IHsKIAlERUNMQVJFX01BU0tfTUFQKENPTVBM
+RVRFKSwKIAlERUNMQVJFX01BU0tfTUFQKEZTKSwKIAlERUNMQVJFX01BU0tfTUFQKFBDKSwKKwlE
+RUNMQVJFX01BU0tfTUFQKE5PVElGWSksCiAJREVDTEFSRV9NQVNLX01BUChBSEVBRCksCiAJREVD
+TEFSRV9NQVNLX01BUChNRVRBKSwKIAlERUNMQVJFX01BU0tfTUFQKERJU0NBUkQpLApkaWZmIC0t
+Z2l0IGEvZG9jL2Jsa3RyYWNlLjggYi9kb2MvYmxrdHJhY2UuOAppbmRleCA0YjM0ZGZmLi5lNDc4
+NWFmIDEwMDY0NAotLS0gYS9kb2MvYmxrdHJhY2UuOAorKysgYi9kb2MvYmxrdHJhY2UuOApAQCAt
+MTg2LDYgKzE4Niw4IEBAIGxpbmUgb3B0aW9ucy4KIFxmSXN5bmNcZlI6IHN5bmNocm9ub3VzIGF0
+dHJpYnV0ZSAKIC5icgogXGZJd3JpdGVcZlI6IHdyaXRlIHRyYWNlcworLmJyCitcZklub3RpZnlc
+ZlI6IHRyYWNlIG1lc3NhZ2VzCiAuUkUKIAogCmRpZmYgLS1naXQgYS9kb2MvYmxrdHJhY2UudGV4
+IGIvZG9jL2Jsa3RyYWNlLnRleAppbmRleCA3ODFiYjc5Li41NGZlNDUxIDEwMDY0NAotLS0gYS9k
+b2MvYmxrdHJhY2UudGV4CisrKyBiL2RvYy9ibGt0cmFjZS50ZXgKQEAgLTQxMyw2ICs0MTMsNyBA
+QCByZWFkICYgXGVtcGh7cmVhZH0gdHJhY2VzIFxcIFxobGluZQogcmVxdWV1ZSAmIFxlbXBoe3Jl
+cXVldWV9IG9wZXJhdGlvbnMgXFwgXGhsaW5lCiBzeW5jICYgXGVtcGh7c3luY2hyb25vdXN9IGF0
+dHJpYnV0ZSBcXCBcaGxpbmUKIHdyaXRlICYgXGVtcGh7d3JpdGV9IHRyYWNlcyBcXCBcaGxpbmUK
+K25vdGlmeSAmIFxlbXBoe25vdGlmeX0gdHJhY2UgbWVzc2FnZXMgXFwgXGhsaW5lCiBcZW5ke3Rh
+YnVsYXJ9CiAKIFxzdWJzdWJzZWN0aW9ue1xsYWJlbHtzZWM6cmVxdWVzdC10eXBlc31SZXF1ZXN0
+IHR5cGVzfQotLSAKMS42LjEuMi5HSVQKCg==
+--001636c5a26786443104623d6cac
+Content-Type: application/octet-stream; 
+	name="0002-Remove-stray-character-from-documentation.patch"
+Content-Disposition: attachment; 
+	filename="0002-Remove-stray-character-from-documentation.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fqupk4z11
+
+RnJvbSA4ZGZiNDljMzg4ODFiMzg0MGJiZDdmODBiNWE5NzFmZWMzZDVhMGFkIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBDYXJsIEhlbnJpayBMdW5kZSA8Y2hsdW5kZUBwaW5nLnVpby5u
+bz4KRGF0ZTogRnJpLCA2IEZlYiAyMDA5IDEyOjE3OjI2ICswMTAwClN1YmplY3Q6IFtQQVRDSCAy
+LzJdIFJlbW92ZSBzdHJheSBjaGFyYWN0ZXIgZnJvbSBkb2N1bWVudGF0aW9uCgpTaWduZWQtb2Zm
+LWJ5OiBDYXJsIEhlbnJpayBMdW5kZSA8Y2hsdW5kZUBwaW5nLnVpby5ubz4KLS0tCiBkb2MvYmxr
+dHJhY2UuOCB8ICAgIDIgKy0KIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAxIGRl
+bGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RvYy9ibGt0cmFjZS44IGIvZG9jL2Jsa3RyYWNlLjgK
+aW5kZXggZTQ3ODVhZi4uNThlOGY5MCAxMDA2NDQKLS0tIGEvZG9jL2Jsa3RyYWNlLjgKKysrIGIv
+ZG9jL2Jsa3RyYWNlLjgKQEAgLTE2OSw3ICsxNjksNyBAQCBsaW5lIG9wdGlvbnMuCiAuUlMKIFxm
+SWJhcnJpZXJcZlI6IGJhcnJpZXIgYXR0cmlidXRlIAogLmJyCi1cZkljb21wbGV0ZVxmUjogY29t
+cGxldGVkfSBieSBkcml2ZXIKK1xmSWNvbXBsZXRlXGZSOiBjb21wbGV0ZWQgYnkgZHJpdmVyCiAu
+YnIKIFxmSWZzXGZSOiByZXF1ZXN0cyAKIC5icgotLSAKMS42LjEuMi5HSVQKCg==
+--001636c5a26786443104623d6cac--
