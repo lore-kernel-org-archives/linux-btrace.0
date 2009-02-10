@@ -1,82 +1,14 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 19 Feb 2009 09:21:12 +0000
-Subject: Re: [PATCH] Removed empty data files
-Message-Id: <20090219092112.GI30821@kernel.dk>
+From: Melman_Yael@emc.com
+Date: Tue, 10 Feb 2009 17:24:54 +0000
+Subject: Blktrace - does a copy exists for Linux? Fedora?
+Message-Id: <000B351FECDA9F46A8C796980F321808275C11@CORPUSMX100B.corp.emc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <499AC3D5.8050008@hp.com>
-In-Reply-To: <499AC3D5.8050008@hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Tue, Feb 17 2009, Alan D. Brunelle wrote:
-> Does anybody rely upon _all_ of the blktrace.X files being generated
-> (even if they are 0-lengthed)?
 
-If blkparse handles it, I think it's good enough...
-
-> 
-
-> From 1da4effb9b61928b6475ac0cba05a1f32468185e Mon Sep 17 00:00:00 2001
-> From: Alan D. Brunelle <alan.brunelle@hp.com>
-> Date: Tue, 17 Feb 2009 09:01:04 -0500
-> Subject: [PATCH] Removed empty data files
-> 
-> It's not unusual to have lots of empty blktrace files, this unlinks
-> files at the end of the run that are empty.
-> 
-> Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
-> ---
->  blktrace.c |   16 +++++++++++++---
->  1 files changed, 13 insertions(+), 3 deletions(-)
-> 
-> diff --git a/blktrace.c b/blktrace.c
-> index 26b3afd..2695a33 100644
-> --- a/blktrace.c
-> +++ b/blktrace.c
-> @@ -1509,6 +1509,17 @@ static int set_vbuf(struct io_info *iop, int mode, size_t size)
->  	return 0;
->  }
->  
-> +static void iop_close(struct io_info *iop)
-> +{
-> +	if (iop) {
-> +		struct stat buf;
-> +
-> +		fclose(iop->ofp);
-> +		if (!stat(iop->ofn, &buf) && (buf.st_size = 0))
-> +			unlink(iop->ofn);
-> +	}
-> +}
-> +
->  static int iop_open(struct io_info *iop, int cpu)
->  {
->  	iop->ofd = -1;
-> @@ -1525,7 +1536,7 @@ static int iop_open(struct io_info *iop, int cpu)
->  	if (set_vbuf(iop, _IOLBF, FILE_VBUF_SIZE)) {
->  		fprintf(stderr, "set_vbuf for file %s failed: %d/%s\n",
->  			iop->ofn, errno, strerror(errno));
-> -		fclose(iop->ofp);
-> +		iop_close(iop);
->  		return 1;
->  	}
->  
-> @@ -1548,8 +1559,7 @@ static void close_iop(struct io_info *iop)
->  		}
->  	}
->  
-> -	if (iop->ofp)
-> -		fclose(iop->ofp);
-> +	iop_close(iop);
->  	if (iop->obuf)
->  		free(iop->obuf);
->  }
-> -- 
-> 1.5.6.3
-> 
-
-
--- 
-Jens Axboe
-
+How can I get a copy of the blktrace and blkparse programs?
+Best regards,
+Yael
