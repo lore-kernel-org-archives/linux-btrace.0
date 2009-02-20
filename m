@@ -1,17 +1,20 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Thu, 19 Feb 2009 20:33:44 +0000
+From: Steven Whitehouse <swhiteho@redhat.com>
+Date: Fri, 20 Feb 2009 08:16:58 +0000
 Subject: Re: GFS2: Add blktrace support to glocks
-Message-Id: <20090219203344.GO29783@kernel.dk>
+Message-Id: <1235117818.9571.780.camel@quoit>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1235062539.9571.771.camel@quoit> <20090219185919.GB28490@infradead.org>
+References: <1235062539.9571.771.camel@quoit>
+	 <20090219185919.GB28490@infradead.org>
 In-Reply-To: <20090219185919.GB28490@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Steven Whitehouse <swhiteho@redhat.com>, cluster-devel@redhat.com, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org
+Cc: cluster-devel@redhat.com, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org, axboe@kernel.dk
 
-On Thu, Feb 19 2009, Christoph Hellwig wrote:
+Hi,
+
+On Thu, 2009-02-19 at 13:59 -0500, Christoph Hellwig wrote:
 > On Thu, Feb 19, 2009 at 04:55:39PM +0000, Steven Whitehouse wrote:
 > > Hi,
 > > 
@@ -35,12 +38,22 @@ On Thu, Feb 19 2009, Christoph Hellwig wrote:
 > 
 > Umm, why would you put fs internal stuff into blktrace?  Just use
 > the generic ringbuffer directly and trace into that one.
+> 
 
-Agree, some months ago this would have made more sense, since it was
-easy to just piggy back on top of blktrace. But now tracing is easily
-available, so going that route makes more sense now. Especially since
-this lock tracking doesn't need much of what blkparse offers anyway.
+From the patch description:
 
--- 
-Jens Axboe
+Glocks are the cache control subsystem for GFS2. It is very useful
+to be able to trace the state changes of the glocks using the
+same set of sequence numbers as the I/O requests, since this
+allows us to see if there are any ordering errors.
+
+
+Maybe there is a way to keep the sequencing between I/O and glocks some
+other way, but it looked to me like I would lose that if I were to have
+a separate logging system for glocks. So really what I'm saying is that
+logging glocks on their own isn't a lot of use, its only useful when
+combined with I/O logging,
+
+Steve.
+
 
