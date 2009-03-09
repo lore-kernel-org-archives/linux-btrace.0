@@ -1,7 +1,7 @@
-From: Tom Zanussi <tzanussi@gmail.com>
-Date: Mon, 09 Mar 2009 05:10:40 +0000
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Date: Mon, 09 Mar 2009 14:23:24 +0000
 Subject: Re: blktrace / relay: bad trace
-Message-Id: <1236575441.7809.36.camel@charm-linux>
+Message-Id: <1236608604.7354.38.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <1236270223.10040.61.camel@kitka.ibm.com>
 In-Reply-To: <1236270223.10040.61.camel@kitka.ibm.com>
@@ -10,101 +10,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Hi,
+Hello Tom,
+thanks, for your reply.
 
-On Thu, 2009-03-05 at 17:23 +0100, Martin Peschke wrote:
-> Hi,
+On Mon, 2009-03-09 at 00:10 -0500, Tom Zanussi wrote:
+> On Thu, 2009-03-05 at 17:23 +0100, Martin Peschke wrote:
 > 
-> I keep running into bad traces, at least on System z.
-> 
-> (See http://marc.info/?l=linux-btrace&m2709472202537&w=2 for an
-> earlier post).
-> 
-> Looking at the data as read by blktrace from relay files,
-> I found fragments of old traces partially overlaying other traces.
-> 
-> In the hexdump-ed trace below, I have added "|"s as delimiters between
-> traces. The corrupted part of the trace - a fragment containing the
-> sequence number 0x4d1d3 - is in parenthesis.
-> 
-> 12d8ca0 |6561 7407 0005 6440 0000 00fb ef9d 6496  -> sequence 0x56440
-> 12d8cb0  0000 0000 000f 4790 0002 0000 4001 0011
-> 12d8cc0  0000 1445 0080 0020 0000 0001 0000 0018
-> 12d8cd0  0000 0001 0001 007d 0000 0000 0001 3e40
-> 12d8ce0  0000 0000 001b badc|6561 7407 0005 6441  -> sequence 0x56441
-> 12d8cf0  0000 00fb ef9d 79e3 0000 0000 000f 4790
-> 12d8d00  0002 0000 0181 0008 0000 1445 0080 0020
-> 12d8d10  0000 0001 0000 0000|6561 7407 0005 6442  -> sequence 0x56442
-> 12d8d20 (0000 1444 0080 0020 0000 0001 0000 0000
-> 12d8d30 |6561 7407 0004 d1d3 0000 00e3 4a8b 1544  -> sequence 0x4d1d3
-> 12d8d40  0000 0000 0015 5728 0003 0000 4001 0011     old trace!!
-> 12d8d50  0000 1447 0080 0020 0000 0001 0000 0018)
-> 12d8d60 |6561 7407 0005 6443 0000 00fb f04d c32a  -> sequence 0x56443
-> 12d8d70  0000 0000 000f 4928 0000 8000 4001 0011
-> 12d8d80  0000 1445 0080 0020 0000 0001 0000 0018
-> 12d8d90  0000 0001 0001 007f 0000 0000 0000 55d8
-> 12d8da0  0000 0000 0008 1070|6561 7407 0005 6444  -> sequence 0x56444
-> 
-> The same fragment containing sequence 0x4d1d3 originally appeared in
-> this context:
-> 
-> 10d8d70  0000 0000 0013 970e|6561 7407 0004 d1d2  -> sequence 0x4d1d2
-> 10d8d80  0000 00e3 4a82 8773 0000 0000 0039 4d20
-> 10d8d90  0001 0000 0181 0008(0000 1444 0080 0020
-> 10d8da0  0000 0001 0000 0000|6561 7407 0004 d1d3  -> sequence 0x4d1d3
-> 10d8db0  0000 00e3 4a8b 1544 0000 0000 0015 5728
-> 10d8dc0  0003 0000 4001 0011 0000 1447 0080 0020
-> 10d8dd0  0000 0001 0000 0018)0000 0001 0001 0080
-> 10d8de0  0000 0000 0001 156c 0000 0000 001a 10c8
-> 10d8df0 |6561 7407 0004 d1d4 0000 00e3 4a8b 239c  -> sequence 0x4d1d4
-> 10d8e00  0000 0000 0015 5728 0003 0000 0181 0008
-> 10d8e10  0000 1447 0080 0020 0000 0001 0000 0000
-> 
-> Looks like a kernel issue to me, blktrace or relay.
-> 
-> Is there anything I can do in order to help fixing this?
-> Which debug data would be needed?
-> Any idea on what should be done next?
-> 
-> Could this issue be caused by some race in __blk_add_trace()?
-> I don't see one, though...
-> 
-> Or, could it be related to relay subbuffer switching, padding etc.?
-> 
+> It's definitely good to see hexdumps, but it's hard to tell from a
+> single one - the best way to make progress would be to provide enough
+> information for anyone to be able to reproduce it on more common
+> hardware ie. x86/x86_64.
 
-It's definitely good to see hexdumps, but it's hard to tell from a
-single one - the best way to make progress would be to provide enough
-information for anyone to be able to reproduce it on more common
-hardware ie. x86/x86_64.  Does it only happen only on systemZ as far as
-you know (I haven't seen it on x86_64)?  Do you get dropped events every
-time it happens (which would indicate a buffer-full related condition)
-or never?  Does it only happen in pipeline mode or normal to-disk
-logging?  Are you using the default sub-buffer sizes or something else?
-Only logging certain event types?  Is it a recent regression, since it
-doesn't seem to have been a problem before, etc.?
+I run some internal I/O workload generator against an FCP disk with 4
+paths. My blktrace command line:
 
-From looking at the trace, it could be related to some garbage being
-erroneously read from padding that could contain old event data that
-should be skipped over, but it doesn't happen on a sub-buffer boundary
-as I'd expect in that case.  Also I notice that the distance between the
-first event and the second old trace is almost exactly 2Mb, which is
-interesting, but hard to know if it's significant without more examples.
-It may be the relay read producing these effects, but it may also be the
-blktrace userspace buffering of that read data that has a bug.  Also I
-see that the bad trace is one that has a large pdu payload, which is cut
-off in the second trace, which could point to erroneous pdu handling in
-blktrace userspace.
+blktrace -a issue -a complete -o - /dev/sda /dev/sdu /dev/sdao /dev/sdbi
+| blkiomon -I 100 -b blkiomon.out
 
-There are several moving parts here, both in kernel and userspace, that
-could be contributing to the problem - it's hard to tell which one
-without more data and/or the ability to reproduce it and probably
-supplement with some ad hoc tracing from the event write/read paths.
+> Does it only happen only on systemZ as far as
+> you know (I haven't seen it on x86_64)?
 
-Tom
+Don't know yet. I am trying to reproduce the issue on my laptop... but
+it's not quite the same setup.
 
-> I am using a recent git-kernel and a recent blktrace (v2).
-> 
-> Thanks,
-> Martin
-> 
+>  Do you get dropped events every
+> time it happens (which would indicate a buffer-full related condition)
+> or never?
+
+no dropped events
+
+> Does it only happen in pipeline mode or normal to-disk
+> logging?
+
+both
+
+> Are you using the default sub-buffer sizes or something else?
+
+defaults
+
+> Only logging certain event types?
+
+issue/dispatch and complete
+
+> Is it a recent regression, since it
+> doesn't seem to have been a problem before, etc.?
+
+no recent regression - I saw it last summer too
+
+> It may be the relay read producing these effects, but it may also be the
+> blktrace userspace buffering of that read data that has a bug.
+
+I am quite sure it is a kernel issue. I have patched relay in order to
+"poison" relay buffers - 0x55 for re-used buffers, 0x66 for padding,
+0x77 for consumed buffers:
+
+---
+ kernel/relay.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- a/kernel/relay.c
++++ b/kernel/relay.c
+@@ -735,6 +735,8 @@ size_t relay_switch_subbuf(struct rchan_
+ 		old_subbuf = buf->subbufs_produced % buf->chan->n_subbufs;
+ 		buf->padding[old_subbuf] = buf->prev_padding;
+ 		buf->subbufs_produced++;
++		memset((char *)buf->data + buf->offset, 0x66,
++		       buf->prev_padding);
+ 		if (buf->dentry)
+ 			buf->dentry->d_inode->i_size + 				buf->chan->subbuf_size -
+@@ -767,6 +769,8 @@ size_t relay_switch_subbuf(struct rchan_
+ 	if (unlikely(length + buf->offset > buf->chan->subbuf_size))
+ 		goto toobig;
+ 
++	memset(buf->data, 0x55, buf->chan->subbuf_size);
++
+ 	return length;
+ 
+ toobig:
+@@ -1112,6 +1116,7 @@ static int subbuf_read_actor(size_t read
+ 		desc->error = -EFAULT;
+ 		ret = 0;
+ 	}
++	memset(from, 0x77, ret);
+ 	desc->arg.data += ret;
+ 	desc->written += ret;
+ 	desc->count -= ret;
+
+
+This is what I get in user space then:
+
+--- suspiscous pdu_len ---
+magic    0x65617407
+sequence 0x00003baf
+time     0x5555555555555555
+sector   0x5555555555555555
+bytes    0x55555555
+action   0x55555555
+pid      0x55555555
+device   0x55555555
+cpu      0x55555555
+error    0x5555
+pdu_len  0x5555
+
+65617407 00003baf 55555555 55555555 55555555 55555555 55555555 55555555
+55555555 55555555 55555555 55555555
+
+> Also I
+> see that the bad trace is one that has a large pdu payload, which is cut
+> off in the second trace, which could point to erroneous pdu handling in
+> blktrace userspace.
+
+Don't worry about the bad trace. It's junk anyway, because a broken
+pdu_len of the previous trace made blktrace look for the next trace at a
+wrong offset.
+
+
+Martin
 
