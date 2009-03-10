@@ -1,129 +1,104 @@
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Date: Mon, 09 Mar 2009 14:23:24 +0000
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Date: Tue, 10 Mar 2009 17:19:54 +0000
 Subject: Re: blktrace / relay: bad trace
-Message-Id: <1236608604.7354.38.camel@kitka.ibm.com>
+Message-Id: <49B6A13A.9060500@hp.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <1236270223.10040.61.camel@kitka.ibm.com>
 In-Reply-To: <1236270223.10040.61.camel@kitka.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="macroman"
+Content-Transfer-Encoding: base64
 To: linux-btrace@vger.kernel.org
 
-Hello Tom,
-thanks, for your reply.
-
-On Mon, 2009-03-09 at 00:10 -0500, Tom Zanussi wrote:
-> On Thu, 2009-03-05 at 17:23 +0100, Martin Peschke wrote:
-> 
-> It's definitely good to see hexdumps, but it's hard to tell from a
-> single one - the best way to make progress would be to provide enough
-> information for anyone to be able to reproduce it on more common
-> hardware ie. x86/x86_64.
-
-I run some internal I/O workload generator against an FCP disk with 4
-paths. My blktrace command line:
-
-blktrace -a issue -a complete -o - /dev/sda /dev/sdu /dev/sdao /dev/sdbi
-| blkiomon -I 100 -b blkiomon.out
-
-> Does it only happen only on systemZ as far as
-> you know (I haven't seen it on x86_64)?
-
-Don't know yet. I am trying to reproduce the issue on my laptop... but
-it's not quite the same setup.
-
->  Do you get dropped events every
-> time it happens (which would indicate a buffer-full related condition)
-> or never?
-
-no dropped events
-
-> Does it only happen in pipeline mode or normal to-disk
-> logging?
-
-both
-
-> Are you using the default sub-buffer sizes or something else?
-
-defaults
-
-> Only logging certain event types?
-
-issue/dispatch and complete
-
-> Is it a recent regression, since it
-> doesn't seem to have been a problem before, etc.?
-
-no recent regression - I saw it last summer too
-
-> It may be the relay read producing these effects, but it may also be the
-> blktrace userspace buffering of that read data that has a bug.
-
-I am quite sure it is a kernel issue. I have patched relay in order to
-"poison" relay buffers - 0x55 for re-used buffers, 0x66 for padding,
-0x77 for consumed buffers:
-
----
- kernel/relay.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
---- a/kernel/relay.c
-+++ b/kernel/relay.c
-@@ -735,6 +735,8 @@ size_t relay_switch_subbuf(struct rchan_
- 		old_subbuf = buf->subbufs_produced % buf->chan->n_subbufs;
- 		buf->padding[old_subbuf] = buf->prev_padding;
- 		buf->subbufs_produced++;
-+		memset((char *)buf->data + buf->offset, 0x66,
-+		       buf->prev_padding);
- 		if (buf->dentry)
- 			buf->dentry->d_inode->i_size + 				buf->chan->subbuf_size -
-@@ -767,6 +769,8 @@ size_t relay_switch_subbuf(struct rchan_
- 	if (unlikely(length + buf->offset > buf->chan->subbuf_size))
- 		goto toobig;
- 
-+	memset(buf->data, 0x55, buf->chan->subbuf_size);
-+
- 	return length;
- 
- toobig:
-@@ -1112,6 +1116,7 @@ static int subbuf_read_actor(size_t read
- 		desc->error = -EFAULT;
- 		ret = 0;
- 	}
-+	memset(from, 0x77, ret);
- 	desc->arg.data += ret;
- 	desc->written += ret;
- 	desc->count -= ret;
-
-
-This is what I get in user space then:
-
---- suspiscous pdu_len ---
-magic    0x65617407
-sequence 0x00003baf
-time     0x5555555555555555
-sector   0x5555555555555555
-bytes    0x55555555
-action   0x55555555
-pid      0x55555555
-device   0x55555555
-cpu      0x55555555
-error    0x5555
-pdu_len  0x5555
-
-65617407 00003baf 55555555 55555555 55555555 55555555 55555555 55555555
-55555555 55555555 55555555 55555555
-
-> Also I
-> see that the bad trace is one that has a large pdu payload, which is cut
-> off in the second trace, which could point to erroneous pdu handling in
-> blktrace userspace.
-
-Don't worry about the bad trace. It's junk anyway, because a broken
-pdu_len of the previous trace made blktrace look for the next trace at a
-wrong offset.
-
-
-Martin
-
+SGkgTWFydGluIC0KCldoYXQgdmVyc2lvbiBvZiB0aGUga2VybmVsIGFyZSB5b3UgcnVubmluZyBv
+bj8gSSdtIGV4cGVyaWVuY2luZyBzb21lIGJhZApzdHVmZiB0aGUgbGFzdCBjb3VwbGUgb2YgZGF5
+cywgYW5kIGl0J3MgaW4gdGhlIGJsa3RyYWNlL3JlbGF5IGFyZW5hOgpodHRwOi8vbGttbC5vcmcv
+bGttbC8yMDA5LzMvMTAvMzMxIC0gdGhpcyBpcyB3aXRoIDIuNi4yOS1yY1s2N10uLi4KCkZvciBz
+b21lIHJlYXNvbiB0aGUgZmlyc3QgZS1tYWlsIGlzbid0IHNob3dpbmcgdXAgY29ycmVjdGx5IG9u
+IExLTUwgKEkKZ290IGl0IHZpYSBlLW1haWwgT0spLCBhbnl3YXlzLCB0aGF0IHN0YWNrIGxvb2tl
+ZCBsaWtlOgoKLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tCmtlcm5lbCBCVUcg
+YXQgbW0vc2xhYi5jOjMwMDIhCmludmFsaWQgb3Bjb2RlOiAwMDAwIFsjMV0gU01QCmxhc3Qgc3lz
+ZnMgZmlsZTogL3N5cy9kZXZpY2VzL3N5c3RlbS9jcHUvY3B1MTUvY2FjaGUvaW5kZXgyL3NoYXJl
+ZF9jcHVfbWFwCkNQVSA2Ck1vZHVsZXMgbGlua2VkIGluOiB4ZnMgZXhwb3J0ZnMgZnVzZSBleHQy
+IGxvb3AgZG1fbW9kIHNkX21vZCBjcmNfdDEwZGlmCmJueDIgaXBtaV9zaSBzZyBxbGEyeHh4IHNo
+cGNocCBzY3NpX3RyYW5zcG9ydF9mYyBzcl9tb2QgcnRjX2Ntb3MgYnV0dG9uCmNvbnRhaW5lciBp
+cG1pX21zZ2hhbmRsZXIgaHBpbG8gaHB3ZHQgcnRjX2NvcmUgcGNpX2hvdHBsdWcgcGNzcGtyCnJ0
+Y19saWIgY2Ryb20gc2NzaV90Z3Qgc2VyaW9fcmF3IHVzYmhpZCBoaWQgZWhjaV9oY2QgdWhjaV9o
+Y2Qgb2hjaV9oY2QKdXNiY29yZSBlZGQgZXh0MyBtYmNhY2hlIGpiZCBmYW4gaWRlX3BjaV9nZW5l
+cmljIGFtZDc0eHggaWRlX2NvcmUKcGF0YV9hbWQgdGhlcm1hbCBwcm9jZXNzb3IgdGhlcm1hbF9z
+eXMgaHdtb24gY2Npc3MgYXRhX2dlbmVyaWMgbGliYXRhCnNjc2lfbW9kClBpZDogMTEzNDYsIGNv
+bW06IGJsa3RyYWNlIFRhaW50ZWQ6IEcgICAgQiAgICAgIDIuNi4yOS1yYzcgIzMgUHJvTGlhbnQK
+REw1ODUgRzUKUklQOiAwMDEwOls8ZmZmZmZmZmY4MDJjNTA5OT5dICBbPGZmZmZmZmZmODAyYzUw
+OTk+XQpjYWNoZV9hbGxvY19yZWZpbGwrMHgxMDcvMHgyMjkKUlNQOiAwMDE4OmZmZmY4ODA4MTM4
+NGQ5ZTggIEVGTEFHUzogMDAwMTAwNDYKUkFYOiAwMDAwMDAwMDAwMDAwMDcwIFJCWDogZmZmZjg4
+MTg3ZmMwMTM0MCBSQ1g6IDAwMDAwMDAwMDAwMDAwMTUKUkRYOiBmZmZmODgxODdjMDMyMDAwIFJT
+STogZmZmZjg4MTg3YzY4MjAwMCBSREk6IGZmZmY4ODE4N2ZjMDEzNTAKUkJQOiBmZmZmODgwODEz
+ODRkYTI4IFIwODogZmZmZjg4MTg3ZmMwMTM2MCBSMDk6IDAwMDAwMDAwMDAwMDAwZDIKUjEwOiBm
+ZmZmODgxN2Y0YjllYWJmIFIxMTogMDAwMDAwMDAwMDAwMDAwYSBSMTI6IGZmZmY4ODE4N2M3NjJj
+MDAKUjEzOiAwMDAwMDAwMDAwMDAwMDI3IFIxNDogZmZmZjg4MDg3ZmMwMDA0MCBSMTU6IDAwMDAw
+MDAwMDAwNDkyZDAKRlM6ICAwMDAwN2YzYjJkNjgwNmYwKDAwMDApIEdTOmZmZmY4ODE4N2M3Njcx
+YzAoMDAwMCkga25sR1M6MDAwMDAwMDAwMDAwMDAwMApDUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAw
+MDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDNiCkNSMjogMDAwMDdmM2IyZDAyMmYzMCBDUjM6IDAwMDAw
+MDE4M2M4ODMwMDAgQ1I0OiAwMDAwMDAwMDAwMDAwNmUwCkRSMDogMDAwMDAwMDAwMDAwMDAwMCBE
+UjE6IDAwMDAwMDAwMDAwMDAwMDAgRFIyOiAwMDAwMDAwMDAwMDAwMDAwCkRSMzogMDAwMDAwMDAw
+MDAwMDAwMCBEUjY6IDAwMDAwMDAwZmZmZjBmZjAgRFI3OiAwMDAwMDAwMDAwMDAwNDAwClByb2Nl
+c3MgYmxrdHJhY2UgKHBpZDogMTEzNDYsIHRocmVhZGluZm8gZmZmZjg4MDgxMzg0YzAwMCwgdGFz
+awpmZmZmODgwODJlNWFlMTQwKQpTdGFjazoKIGZmZmY4ODA4MTM4NGRhNzggZmZmZmZmZmY4MDJi
+NzA2MSAwMDAwMDAwMjEzODRkYTE4IDAwMDAwMDAwMDAwMDAwMDIKIGZmZmY4ODA4N2ZjMDAwNDAg
+MDAwMDAwMDAwMDAwODBkMCAwMDAwMDAwMDAwMDAwMjkyIGZmZmY4ODE4MWY5OTJlYzAKIGZmZmY4
+ODA4MTM4NGRhNjggZmZmZmZmZmY4MDJjNGNiMSAwMDAwMDAwMDc3YzZjOTEwIGZmZmY4ODE4N2E4
+OWZjODAKQ2FsbCBUcmFjZToKIFs8ZmZmZmZmZmY4MDJiNzA2MT5dID8gYWxsb2Nfdm1hcF9hcmVh
+KzB4MWZlLzB4MjExCiBbPGZmZmZmZmZmODAyYzRjYjE+XSBrbWVtX2NhY2hlX2FsbG9jX25vZGUr
+MHg5YS8weGU2CiBbPGZmZmZmZmZmODAyODlhNDk+XSA/IHJlbGF5X29wZW5fYnVmKzB4OWYvMHgy
+M2MKIFs8ZmZmZmZmZmY4MDJjNTZhMj5dIF9fa21hbGxvY19ub2RlKzB4NDMvMHg0NQogWzxmZmZm
+ZmZmZjgwMmI3OWFmPl0gX192bWFsbG9jX2FyZWFfbm9kZSsweDc2LzB4MTRiCiBbPGZmZmZmZmZm
+ODAyODlhNDk+XSA/IHJlbGF5X29wZW5fYnVmKzB4OWYvMHgyM2MKIFs8ZmZmZmZmZmY4MDJiN2Iw
+MD5dIF9fdm1hbGxvY19ub2RlKzB4N2MvMHg4YwogWzxmZmZmZmZmZjgwMjg5YTQ5Pl0gPyByZWxh
+eV9vcGVuX2J1ZisweDlmLzB4MjNjCiBbPGZmZmZmZmZmODAyYjdjMzQ+XSB2bWFsbG9jKzB4MWYv
+MHgyMQogWzxmZmZmZmZmZjgwMjg5YTQ5Pl0gcmVsYXlfb3Blbl9idWYrMHg5Zi8weDIzYwogWzxm
+ZmZmZmZmZjgwMjhhNGIzPl0gcmVsYXlfb3BlbisweDE0NC8weDIxOAogWzxmZmZmZmZmZjgwMzZh
+NjQzPl0gZG9fYmxrX3RyYWNlX3NldHVwKzB4MWE0LzB4NTliCiBbPGZmZmZmZmZmODAzNmFhN2U+
+XSBibGtfdHJhY2Vfc2V0dXArMHg0NC8weDc1CiBbPGZmZmZmZmZmODAzNmFkNTY+XSBibGtfdHJh
+Y2VfaW9jdGwrMHg5YS8weGNmCiBbPGZmZmZmZmZmODAyZDQ2ODU+XSA/IHBhdGhfcHV0KzB4MmMv
+MHgzMAogWzxmZmZmZmZmZjgwMzYxZGQ4Pl0gYmxrZGV2X2lvY3RsKzB4ODAzLzB4ODUzCiBbPGZm
+ZmZmZmZmODAyZDYxNWI+XSA/IHB1dG5hbWUrMHgzMC8weDM5CiBbPGZmZmZmZmZmODAyZDgwYmU+
+XSA/IHVzZXJfcGF0aF9hdCsweDVkLzB4OGMKIFs8ZmZmZmZmZmY4MDJlMmU2Nz5dID8gbW50cHV0
+X25vX2V4cGlyZSsweDMxLzB4MThmCiBbPGZmZmZmZmZmODAyZDQ2ODU+XSA/IHBhdGhfcHV0KzB4
+MmMvMHgzMAogWzxmZmZmZmZmZjgwMmYxMGYzPl0gYmxvY2tfaW9jdGwrMHgzOC8weDNjCiBbPGZm
+ZmZmZmZmODAyZDk2OTA+XSB2ZnNfaW9jdGwrMHgyYS8weDc4CiBbPGZmZmZmZmZmODAyZDliMjQ+
+XSBkb192ZnNfaW9jdGwrMHg0NDYvMHg0ODIKIFs8ZmZmZmZmZmY4MDI0ZmY0Nj5dID8gZG9fc2ln
+YWN0aW9uKzB4MTY2LzB4MTg3CiBbPGZmZmZmZmZmODAyZDliYjU+XSBzeXNfaW9jdGwrMHg1NS8w
+eDc3CiBbPGZmZmZmZmZmODAyMGM0MmE+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWIK
+Q29kZTogMDAgMDAgMDAgNDggOGIgMzMgNDggMzkgZGUgNzUgMTQgNDggOGIgNzMgMjAgYzcgNDMg
+NjAgMDEgMDAgMDAgMDAKNGMgMzkgYzYgMGYgODQgYTYgMDAgMDAgMDAgOGIgNDYgMjAgNDEgM2Ig
+ODYgMTggMTAgMDAgMDAgNzIgMzMgPDBmPiAwYgplYiBmZSBmZiBjMCA0MSA4YiAwYyAyNCA0MSA4
+YiA5NiAwYyAxMCAwMCAwMCA4OSA0NiAyMCA4YgpSSVAgIFs8ZmZmZmZmZmY4MDJjNTA5OT5dIGNh
+Y2hlX2FsbG9jX3JlZmlsbCsweDEwNy8weDIyOQogUlNQIDxmZmZmODgwODEzODRkOWU4PgpocHdk
+dDogQW4gTk1JIG9jY3VycmVkLCBidXQgdW5hYmxlIHRvIGRldGVybWluZSBzb3VyY2UuCmhwd2R0
+OiBBbiBOTUkgb2NjdXJyZWQsIGJ1dCB1bmFibGUgdG8gZGV0ZXJtaW5lIHNvdXJjZS4KaHB3ZHQ6
+IEFuIE5NSSBvY2N1cnJlZCwgYnV0IHVuYWJsZSB0byBkZXRlcm1pbmUgc291cmNlLgpocHdkdDog
+QW4gTk1JIG9jY3VycmVkLCBidXQgdW5hYmxlIHRvIGRldGVybWluZSBzb3VyY2UuCmhwd2R0OiBB
+biBOTUkgb2NjdXJyZWQsIGJ1dCB1bmFibGUgdG8gZGV0ZXJtaW5lIHNvdXJjZS4KaHB3ZHQ6IEFu
+IE5NSSBvY2N1cnJlZCwgYnV0IHVuYWJsZSB0byBkZXRlcm1pbmUgc291cmNlLgpocHdkdDogQW4g
+Tk1JIG9jY3VycmVkLCBidXQgdW5hYmxlIHRvIGRldGVybWluZSBzb3VyY2UuCmhwd2R0OiBBbiBO
+TUkgb2NjdXJyZWQsIGJ1dCB1bmFibGUgdG8gZGV0ZXJtaW5lIHNvdXJjZS4KaHB3ZHQ6IEFuIE5N
+SSBvY2N1cnJlZCwgYnV0IHVuYWJsZSB0byBkZXRlcm1pbmUgc291cmNlLgpocHdkdDogQW4gTk1J
+IG9jY3VycmVkLCBidXQgdW5hYmxlIHRvIGRldGVybWluZSBzb3VyY2UuCmhwd2R0OiBBbiBOTUkg
+b2NjdXJyZWQsIGJ1dCB1bmFibGUgdG8gZGV0ZXJtaW5lIHNvdXJjZS4KaHB3ZHQ6IEFuIE5NSSBv
+Y2N1cnJlZCwgYnV0IHVuYWJsZSB0byBkZXRlcm1pbmUgc291cmNlLgpocHdkdDogQW4gTk1JIG9j
+Y3VycmVkLCBidXQgdW5hYmxlIHRvIGRldGVybWluZSBzb3VyY2UuCmhwd2R0OiBBbiBOTUkgb2Nj
+dXJyZWQsIGJ1dCB1bmFibGUgdG8gZGV0ZXJtaW5lIHNvdXJjZS4KaHB3ZHQ6IEFuIE5NSSBvY2N1
+cnJlZCwgYnV0IHVuYWJsZSB0byBkZXRlcm1pbmUgc291cmNlLgpJbml0aWFsaXppbmcgY2dyb3Vw
+IHN1YnN5cyBjcHVzZXQKSW5pdGlhbGl6aW5nIGNncm91cCBzdWJzeXMgY3B1CkxpbnV4IHZlcnNp
+b24gMi42LjI5LXJjNyAocm9vdEBzZWF0cG9zdCkgKGdjYyB2ZXJzaW9uIDQuMy4yCltnY2MtNF8z
+LWJyYW5jaCByZXZpc2lvbiAxNDEyOTFdIChTVVNFIExpbnV4KSApICMzIFNNUCBUdWUgTWFyIDEw
+CjEwOjE1OjA3IEVEVCAyMDA5CkNvbW1hbmQgbGluZTogcm9vdD0vZGV2L2NjaXNzL2MwZDJwMyB0
+ZXh0IHJlc3VtZT0vZGV2L2NjaXNzL2MwZDJwMgp2Z2E9MHgzMTcgY29uc29sZT10dHlTMSwxMTUy
+MDBOOCBlbGV2YXRvct5hZGxpbmUgc3lzcnE9MSByZXNldF9kZXZpY2VzCmlycXBvbGwgbWF4Y3B1
+cz0xICBtZW1tYXA9ZXhhY3RtYXAgbWVtbWFwZDBLQDBLIG1lbW1hcBMwNDEyS0AxNzAyNEsKZWxm
+Y29yZWhkchQ3NDM2SyBtZW1tYXAySyMyMDk1NDE2SwpLRVJORUwgc3VwcG9ydGVkIGNwdXM6CiAg
+SW50ZWwgR2VudWluZUludGVsCiAgQU1EIEF1dGhlbnRpY0FNRAogIENlbnRhdXIgQ2VudGF1ckhh
+dWxzCgpBbGFuCi0tClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
+ICJ1bnN1YnNjcmliZSBsaW51eC1idHJhY2UiIGluCnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
+YWpvcmRvbW9Admdlci5rZXJuZWwub3JnCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92
+Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA==
