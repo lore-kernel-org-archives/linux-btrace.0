@@ -1,25 +1,46 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Fri, 27 Mar 2009 05:00:02 +0000
-Subject: Recent changes
-Message-Id: <20090327050002.9B55837A23E@kernel.dk>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Date: Mon, 23 Mar 2009 14:53:11 +0000
+Subject: [Patch] fix
+Message-Id: <1237819991.5624.20.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit cfa089d429acfcb5a21be63ded7f943287401fef:
-  Carl Henrik Lunde (1):
-        Add NOTIFY to activity mask
+Jens,
 
-are available in the git repository at:
+Tom fixed my "boken trace magic" issue. Please apply.
 
-  git://git.kernel.dk/blktrace.git master
+Thanks,
+Martin
 
-Eric Sandeen (1):
-      fix trivial typo in manpage
 
- doc/blktrace.8 |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+From: Tom Zanussi <tzanussi@gmail.com>
+
+Blktrace failed to lock reader threads on the cpu used by the corresponding
+writer. This resulted in stale data being consumed when blktrace accidently
+read at a position that was being written to at the same time. This issue
+surfaced as "bad trace magic" warnings emitted by blktrace tools.
+
+The problem occured on an SMP System z machine. The patch fixes the issue.
+
+Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+
+---
+ blktrace.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -610,7 +610,7 @@ static int lock_on_cpu(int cpu)
+ 
+ 	CPU_ZERO(&cpu_mask);
+ 	CPU_SET(cpu, &cpu_mask);
+-	if (sched_setaffinity(getpid(), sizeof(cpu_mask), &cpu_mask) < 0)
++	if (sched_setaffinity(0, sizeof(cpu_mask), &cpu_mask) < 0)
+ 		return errno;
+ 
+ 	return 0;
+
+
