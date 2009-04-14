@@ -1,165 +1,106 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Thu, 30 Apr 2009 17:15:50 +0000
-Subject: [PATCH] Converted to using the correct remap entries
-Message-Id: <49F9DCC6.3030505@hp.com>
-MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------030507020508000307020302"
+From: Li Zefan <lizf@cn.fujitsu.com>
+Date: Tue, 14 Apr 2009 06:00:05 +0000
+Subject: [PATCH 3/3] blktrace: add trace/ to /sys/block/sda
+Message-Id: <49E42665.6020506@cn.fujitsu.com>
 List-Id: <linux-btrace.vger.kernel.org>
-To: linux-btrace@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------030507020508000307020302
-Content-Type: text/plain; charset=ISO-8859-1
+References: <49E42620.4050701@cn.fujitsu.com>
+In-Reply-To: <49E42620.4050701@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Arnaldo Carvalho de Melo <acme@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Shawn Du <duyuyang@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-btrace@vger.kernel.org
 
+Impact: allow ftrace-plugin blktrace to trace device-mapper devices
 
---------------030507020508000307020302
-Content-Type: text/x-diff;
- name="0001-Converted-to-using-the-correct-remap-entries.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="0001-Converted-to-using-the-correct-remap-entries.patch"
+To trace a single partition:
+  # echo 1 > /sys/block/sda/sda1/enable
+To trace the whole sda instead:
+  # echo 1 > /sys/block/sda/enable
 
-From ba8b1a0720c0342f397c3cd12f9531b53906c451 Mon Sep 17 00:00:00 2001
-From: Alan D. Brunelle <alan.brunelle@hp.com>
-Date: Thu, 30 Apr 2009 13:10:31 -0400
-Subject: [PATCH] Converted to using the correct remap entries
+Thus we also fix an issue reported by Ted, that ftrace-plugin blktrace
+can't be used to trace device-mapper devices.
 
-This follows the kernel changes to the blk_io_trace_remap structure to
-better align the names of the structure elements with the real intent of
-"from" and "to" (devices & sectors).
+Now:
 
-See the kernel patches @
+  # echo 1 > /sys/block/dm-0/trace/enable
+  echo: write error: No such device or address
+  # mount -t ext4 /dev/dm-0 /mnt
+  # echo 1 > /sys/block/dm-0/trace/enable
+  # echo blk > /debug/tracing/current_tracer
 
-http://lkml.org/lkml/2009/4/30/340
-http://lkml.org/lkml/2009/4/30/341
-
-(Note: since the ABI order didn't change, old user code will work with
-the new kernel code & vice versa.)
-
-Signed-off-by: Alan D. Brunelle <alan.brunelle@hp.com>
+Reported-by: Theodore Tso <tytso@mit.edu>
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
 ---
- blkparse_fmt.c    |   27 ++++++++++++++++-----------
- blktrace_api.h    |    4 ++--
- btt/trace_remap.c |    9 ++++-----
- 3 files changed, 22 insertions(+), 18 deletions(-)
+ block/blk-sysfs.c            |    7 ++++++-
+ include/linux/blktrace_api.h |    6 ++++++
+ kernel/trace/blktrace.c      |    5 +++++
+ 3 files changed, 17 insertions(+), 1 deletions(-)
 
-diff --git a/blkparse_fmt.c b/blkparse_fmt.c
-index 83a8504..ed6cd5c 100644
---- a/blkparse_fmt.c
-+++ b/blkparse_fmt.c
-@@ -152,11 +152,11 @@ static unsigned int get_pdu_int(struct blk_io_trace *t)
- static void get_pdu_remap(struct blk_io_trace *t, struct blk_io_trace_remap *r)
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 73f36be..8653d71 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -387,16 +387,21 @@ struct kobj_type blk_queue_ktype = {
+ int blk_register_queue(struct gendisk *disk)
  {
- 	struct blk_io_trace_remap *__r = pdu_start(t);
--	__u64 sector = __r->sector;
-+	__u64 sector_from = __r->sector_from;
+ 	int ret;
++	struct device *dev = disk_to_dev(disk);
  
--	r->device = be32_to_cpu(__r->device);
- 	r->device_from = be32_to_cpu(__r->device_from);
--	r->sector = be64_to_cpu(sector);
-+	r->device_to   = be32_to_cpu(__r->device_to);
-+	r->sector_from = be64_to_cpu(sector_from);
- }
+ 	struct request_queue *q = disk->queue;
  
- static void print_field(char *act, struct per_cpu_info *pci,
-@@ -284,20 +284,24 @@ static void process_default(char *act, struct per_cpu_info *pci,
- 			    struct blk_io_trace *t, unsigned long long elapsed,
- 			    int pdu_len, unsigned char *pdu_buf)
- {
--	struct blk_io_trace_remap r = { .device = 0, };
-+	struct blk_io_trace_remap r = { .device_from = 0, };
- 	char rwbs[6];
- 	char *name;
+ 	if (WARN_ON(!q))
+ 		return -ENXIO;
  
- 	fill_rwbs(rwbs, t);
- 
-+	 /*
-+	  * For remaps we have to modify the device using the remap structure
-+	  * passed up.
-+	  */
-+	 if (act[0] == 'A') {
-+		 get_pdu_remap(t, &r);
-+		 t->device = r.device_to;
-+	 }
++	ret = blk_trace_init_sysfs(dev);
++	if (ret)
++		return ret;
 +
- 	/*
- 	 * The header is always the same
- 	 */
--	if (act[0] == 'A') {	/* Remap */
--		get_pdu_remap(t, &r);
--		t->device = r.device_from;
--	}
--
- 	fprintf(ofp, "%3d,%-3d %2d %8d %5d.%09lu %5u %2s %3s ",
- 		MAJOR(t->device), MINOR(t->device), pci->cpu, t->sequence,
- 		(int) SECONDS(t->time), (unsigned long) NANO_SECONDS(t->time),
-@@ -388,10 +392,11 @@ static void process_default(char *act, struct per_cpu_info *pci,
- 		break;
+ 	if (!q->request_fn)
+ 		return 0;
  
- 	case 'A': 	/* remap */
-+		get_pdu_remap(t, &r);
- 		fprintf(ofp, "%llu + %u <- (%d,%d) %llu\n",
- 			(unsigned long long) t->sector, t_sec(t),
--			MAJOR(r.device), MINOR(r.device),
--			(unsigned long long) r.sector);
-+			MAJOR(r.device_from), MINOR(r.device_from),
-+			(unsigned long long) r.sector_from);
- 		break;
+-	ret = kobject_add(&q->kobj, kobject_get(&disk_to_dev(disk)->kobj),
++	ret = kobject_add(&q->kobj, kobject_get(&dev->kobj),
+ 			  "%s", "queue");
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index 6b2c87e..b5d1ca4 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -198,6 +198,7 @@ extern int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
+ 			   char __user *arg);
+ extern int blk_trace_startstop(struct request_queue *q, int start);
+ extern int blk_trace_remove(struct request_queue *q);
++extern int blk_trace_init_sysfs(struct device *dev);
  
- 	case 'X': 	/* Split */
-diff --git a/blktrace_api.h b/blktrace_api.h
-index 7218845..ba9ee60 100644
---- a/blktrace_api.h
-+++ b/blktrace_api.h
-@@ -110,9 +110,9 @@ struct blk_io_trace {
-  * The remap event
-  */
- struct blk_io_trace_remap {
--	__u32 device;
- 	__u32 device_from;
--	__u64 sector;
-+	__u32 device_to;
-+	__u64 sector_from;
- };
+ extern struct attribute_group blk_trace_attr_group;
  
- /*
-diff --git a/btt/trace_remap.c b/btt/trace_remap.c
-index 8739cda..560ae2b 100644
---- a/btt/trace_remap.c
-+++ b/btt/trace_remap.c
-@@ -22,9 +22,9 @@
+@@ -211,6 +212,11 @@ extern struct attribute_group blk_trace_attr_group;
+ #define blk_trace_remove(q)			(-ENOTTY)
+ #define blk_add_trace_msg(q, fmt, ...)		do { } while (0)
  
- static inline void cvt_pdu_remap(struct blk_io_trace_remap *rp)
- {
--	rp->device = be32_to_cpu(rp->device);
- 	rp->device_from = be32_to_cpu(rp->device_from);
--	rp->sector = be64_to_cpu(rp->sector);
-+	rp->device_to   = be32_to_cpu(rp->device_to);
-+	rp->sector_from = be64_to_cpu(rp->sector_from);
++static inline int blk_trace_init_sysfs(struct device *dev)
++{
++	return 0;
++}
++
+ #endif /* CONFIG_BLK_DEV_IO_TRACE */
+ #endif /* __KERNEL__ */
+ #endif
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index d109898..8e7c5da 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1644,3 +1644,8 @@ out:
+ 	return ret ? ret : count;
  }
  
- /*
-@@ -43,15 +43,14 @@ void trace_remap(struct io *a_iop)
- 	rp = a_iop->pdu;
- 	cvt_pdu_remap(rp);
- 
--	a_iop->t.device = rp->device_from;
- 	if (!io_setup(a_iop, IOP_A))
- 		goto out;
- 
--	q_dip = __dip_find(rp->device);
-+	q_dip = __dip_find(rp->device_from);
- 	if (!q_dip)
- 		goto out;
- 
--	q_iop = dip_find_sec(q_dip, IOP_Q, rp->sector);
-+	q_iop = dip_find_sec(q_dip, IOP_Q, rp->sector_from);
- 	if (q_iop)
- 		update_q2a(q_iop, tdelta(q_iop->t.time, a_iop->t.time));
- 
++int blk_trace_init_sysfs(struct device *dev)
++{
++	return sysfs_create_group(&dev->kobj, &blk_trace_attr_group);
++}
++
 -- 
-1.6.0.4
+1.5.4.rc3
 
-
---------------030507020508000307020302--
