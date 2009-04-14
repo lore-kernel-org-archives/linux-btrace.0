@@ -1,62 +1,38 @@
-From: Ingo Molnar <mingo@elte.hu>
-Date: Tue, 14 Apr 2009 08:09:19 +0000
+From: Li Zefan <lizf@cn.fujitsu.com>
+Date: Tue, 14 Apr 2009 08:14:03 +0000
 Subject: Re: PATCH 1/3] blktrace: support per-partition tracing
-Message-Id: <20090414080919.GB27003@elte.hu>
+Message-Id: <49E445CB.4030001@cn.fujitsu.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <49E42620.4050701@cn.fujitsu.com>
-In-Reply-To: <49E42620.4050701@cn.fujitsu.com>
+References: <49E42620.4050701@cn.fujitsu.com> <20090414075947.GA27003@elte.hu>
+In-Reply-To: <20090414075947.GA27003@elte.hu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizf@cn.fujitsu.com>, Steven Rostedt <rostedt@goodmis.org>, Tom Zanussi <tzanussi@gmail.com>
+To: Ingo Molnar <mingo@elte.hu>
 Cc: Jens Axboe <jens.axboe@oracle.com>, Arnaldo Carvalho de Melo <acme@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Shawn Du <duyuyang@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-btrace@vger.kernel.org
 
-
-* Li Zefan <lizf@cn.fujitsu.com> wrote:
-
-> From: Shawn Du <duyuyang@gmail.com>
+>> @@ -193,6 +194,7 @@ extern void __trace_note_message(struct blk_trace *, const char *fmt, ...);
+>>  extern void blk_add_driver_data(struct request_queue *q, struct request *rq,
+>>  				void *data, size_t len);
+>>  extern int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
+>> +			   struct block_device *bdev,
+>>  			   char __user *arg);
+>>  extern int blk_trace_startstop(struct request_queue *q, int start);
+>>  extern int blk_trace_remove(struct request_queue *q);
 > 
-> Though one can specify '-d /dev/sda1' when using blktrace, it 
-> still traces the whole sda.
+> Small detail: you forgot about the !CONFIG_BLK_DEV_IO_TRACE case 
+> here, the wrapper macros there need to be updated.
 > 
-> To support per-partition tracing, when we start tracing, we 
-> initialize bt->start_lba and bt->end_lba to the start and end 
-> sector of that partition.
+
+Ah, sorry..
+
+> (no need to resend - i fixed this up in the 1/3 and 3/3 patches)
 > 
-> Note some actions are per device, thus we don't filter 0-sector 
-> events.
-> 
-> The original patch and discussion can be found here:
-> 	http://marc.info/?l=linux-btrace&m2949374214540&w=2
-> 
-> Signed-off-by: Shawn Du <duyuyang@gmail.com>
-> Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
 
-Thanks - beyond the small detail i mailed about a few minutes ago 
-the series looks good: i'll queue this up in tracing/blktrace unless 
-Jens has second thoughts.
+and thanks! (But I think only 1/3 patch needs to be fixed)
 
-Lets note that this approach still has the (long existing) 
-limitation that only one device can be block-traced at a time.
+The 3rd patch can be for 2.6.30, if Ted or somene else wants to use
+ftrace-plugin blktrace to trace dm devices in 2.6.30.
 
-Furthermore, various other aspects of act_log_check() itself could 
-be expressed in terms of per tracepoint filters as well: the PID 
-filter field for example - which is supported in the ioctl ABI but 
-currently not exposed in the user-space blktrace utility. Same goes 
-for the action mask which is frequently used.
-
-But before we can lift all these limitations and can have equivalent 
-functionality in the generic event tracer we still need more filter 
-engine infrastructure work (range operators and dev_t field 
-support). Plus TRACE_EVENT() based blk tracepoints.
-
-Once we have that, the conversion will be straightforward: all 
-existing filter functionality of blktrace is static, so it will map 
-directly to new-style filter expressions. That will give us block 
-tracing for an arbitrary number of block devices (including the 
-basic mode of 'trace all block IO in the system') and a much wider 
-range of filtering capabilities.
-
-Thanks,
-
-	Ingo
+--
+Zefan
