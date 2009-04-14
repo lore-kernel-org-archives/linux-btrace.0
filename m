@@ -1,45 +1,78 @@
 From: Ingo Molnar <mingo@elte.hu>
-Date: Tue, 14 Apr 2009 08:34:53 +0000
+Date: Tue, 14 Apr 2009 08:38:56 +0000
 Subject: Re: PATCH 1/3] blktrace: support per-partition tracing
-Message-Id: <20090414083453.GE27003@elte.hu>
+Message-Id: <20090414083856.GF27003@elte.hu>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <49E42620.4050701@cn.fujitsu.com> <20090414075947.GA27003@elte.hu> <49E445CB.4030001@cn.fujitsu.com>
-In-Reply-To: <49E445CB.4030001@cn.fujitsu.com>
+References: <49E42620.4050701@cn.fujitsu.com> <20090414080919.GB27003@elte.hu> <49E448F6.5010506@cn.fujitsu.com>
+In-Reply-To: <49E448F6.5010506@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizf@cn.fujitsu.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Arnaldo Carvalho de Melo <acme@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Shawn Du <duyuyang@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-btrace@vger.kernel.org
+Cc: Steven Rostedt <rostedt@goodmis.org>, Tom Zanussi <tzanussi@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, Arnaldo Carvalho de Melo <acme@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Shawn Du <duyuyang@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-btrace@vger.kernel.org
 
 
 * Li Zefan <lizf@cn.fujitsu.com> wrote:
 
-> >> @@ -193,6 +194,7 @@ extern void __trace_note_message(struct blk_trace *, const char *fmt, ...);
-> >>  extern void blk_add_driver_data(struct request_queue *q, struct request *rq,
-> >>  				void *data, size_t len);
-> >>  extern int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
-> >> +			   struct block_device *bdev,
-> >>  			   char __user *arg);
-> >>  extern int blk_trace_startstop(struct request_queue *q, int start);
-> >>  extern int blk_trace_remove(struct request_queue *q);
+> Ingo Molnar wrote:
+> > * Li Zefan <lizf@cn.fujitsu.com> wrote:
 > > 
-> > Small detail: you forgot about the !CONFIG_BLK_DEV_IO_TRACE case 
-> > here, the wrapper macros there need to be updated.
+> >> From: Shawn Du <duyuyang@gmail.com>
+> >>
+> >> Though one can specify '-d /dev/sda1' when using blktrace, it 
+> >> still traces the whole sda.
+> >>
+> >> To support per-partition tracing, when we start tracing, we 
+> >> initialize bt->start_lba and bt->end_lba to the start and end 
+> >> sector of that partition.
+> >>
+> >> Note some actions are per device, thus we don't filter 0-sector 
+> >> events.
+> >>
+> >> The original patch and discussion can be found here:
+> >> 	http://marc.info/?l=linux-btrace&m2949374214540&w=2
+> >>
+> >> Signed-off-by: Shawn Du <duyuyang@gmail.com>
+> >> Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+> > 
+> > Thanks - beyond the small detail i mailed about a few minutes ago 
+> > the series looks good: i'll queue this up in tracing/blktrace unless 
+> > Jens has second thoughts.
+> > 
+> > Lets note that this approach still has the (long existing) 
+> > limitation that only one device can be block-traced at a time.
 > > 
 > 
-> Ah, sorry..
+> No, both userspace blktrace and ftrace-plugin trace can trace
+> more than one device at a time.
 > 
-> > (no need to resend - i fixed this up in the 1/3 and 3/3 patches)
+>  # btrace /dev/sda /dev/dm-0
+> 
+> or
+> 
+>  # echo 1 > /sys/block/sda/trace/enable
+>  # echo 1 > /sys/block/dm-0/trace/enable
+
+When they are independent - but not multiple partitions at a time:
+
+ [root@aldebaran ~]# echo 1 > /sys/block/sda/sda1/trace/enable 
+ [root@aldebaran ~]# echo 1 > /sys/block/sda/sda2/trace/enable 
+ -bash: echo: write error: Device or resource busy
+ [root@aldebaran ~]#
+
+Nor did i see any "trace all block IO in the system" kind of 
+functionality in blktrace. (or maybe there's one that i missed?)
+
+> > Furthermore, various other aspects of act_log_check() itself 
+> > could be expressed in terms of per tracepoint filters as well: 
+> > the PID filter field for example - which is supported in the 
+> > ioctl ABI but currently not exposed in the user-space blktrace 
+> > utility. Same goes for the action mask which is frequently used.
 > > 
 > 
-> and thanks! (But I think only 1/3 patch needs to be fixed)
+> Actually action mask can be specified by 'blktrace -a/-A 
+> mask/mask_name'
 
-3/3 had context dependencies - no functionality dependency.
-
-> The 3rd patch can be for 2.6.30, if Ted or somene else wants to 
-> use ftrace-plugin blktrace to trace dm devices in 2.6.30.
-
-ok, good point - we can cherry-pick it over into tracing/urgent 
-after Ted reports back his experiences with these changes.
+Yes, this is what i meant by "which is frequently used".
 
 	Ingo
