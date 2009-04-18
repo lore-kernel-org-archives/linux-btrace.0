@@ -1,7 +1,7 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Tue, 07 Apr 2009 04:00:03 +0000
+Date: Sat, 18 Apr 2009 04:00:02 +0000
 Subject: Recent changes
-Message-Id: <20090407040003.7987037A16C@kernel.dk>
+Message-Id: <20090418040002.BE5AE37A0CD@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
@@ -10,20 +10,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit d8ba9b683e1a341ab72c40836c05a360875c2e5e:
-  Eric Sandeen (1):
-        fix trivial typo in manpage
+The following changes since commit bb4a66074cecd59afc37f0053fdf42661503f51c:
+  Alan D. Brunelle (1):
+        Fixed plug/unplug logic in btt
 
 are available in the git repository at:
 
   git://git.kernel.dk/blktrace.git master
 
-Alan D. Brunelle (2):
-      Working on fixing % time q plugged
-      Fixed plug/unplug logic in btt
+Jeff Moyer (1):
+      handle race to mkdir at startup
 
- btt/devs.c       |   19 ++++++++++++-------
- btt/globals.h    |    4 ++--
- btt/output.c     |   17 +++++++++--------
- btt/trace_plug.c |    3 ++-
- 4 files changed, 25 insertions(+), 18 deletions(-)
+ blktrace.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
