@@ -1,31 +1,43 @@
-From: <raksac@yahoo.com>
-Date: Fri, 03 Apr 2009 21:01:10 +0000
-Subject: how would this happen
-Message-Id: <644473.76414.qm@web30205.mail.mud.yahoo.com>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Date: Mon, 20 Apr 2009 14:07:11 +0000
+Subject: [Patch] fix off-by-one issues in blkiomon.h
+Message-Id: <1240236431.4039.5.camel@kitka.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-Using blktrace with a device having ext2fs I get a
-good picture -
+Fix two off-by-one issues. Last bucket of histogram was ommitted by mistake
+when being converted to big-endian or when being merged with another bucket.
 
-issuing pid->block xlation->completion
+Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-From above given a block # using debugfs
-(icheck/ncheck) we can reverse lookup a file name to
-which the IO was performed. This seems to be helpful
-when the file is persistent beyond the blktrace
-collection session i.e. during blkparse.
+---
+ stats.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-For short lived files (temp files which would be
-removed from namespace prior to blkparse run) how can
-we get the block->file mapping with blktrace.
+--- a/stats.h
++++ b/stats.h
+@@ -124,7 +124,7 @@ static inline void histlog2_merge(struct
+ {
+ 	int i;
+ 
+-	for (i = 0; i < h->num - 1; i++)
++	for (i = 0; i < h->num; i++)
+ 		dst[i] += src[i];
+ }
+ 
+@@ -132,7 +132,7 @@ static inline void histlog2_to_be(__u32 
+ {
+ 	int i;
+ 
+-	for (i = 0; i < h->num - 1; i++)
++	for (i = 0; i < h->num; i++)
+ 		a[i] = cpu_to_be32(a[i]);
+ }
+ 
 
-Thanks,
-Rakesh
 
-
-      
