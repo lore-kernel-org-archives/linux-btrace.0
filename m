@@ -1,7 +1,7 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Date: Sat, 18 Apr 2009 04:00:02 +0000
+Date: Wed, 22 Apr 2009 04:00:02 +0000
 Subject: Recent changes
-Message-Id: <20090418040002.BE5AE37A0CD@kernel.dk>
+Message-Id: <20090422040002.45F9837A133@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
@@ -10,16 +10,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit bb4a66074cecd59afc37f0053fdf42661503f51c:
-  Alan D. Brunelle (1):
-        Fixed plug/unplug logic in btt
+The following changes since commit 60886290e2ba6ddae1213f3a13929193180c8c55:
+  Jeff Moyer (1):
+        handle race to mkdir at startup
 
 are available in the git repository at:
 
   git://git.kernel.dk/blktrace.git master
 
-Jeff Moyer (1):
-      handle race to mkdir at startup
+Martin Peschke (2):
+      fix include statement in stats.h
+      fix off-by-one issues in blkiomon.h
 
- blktrace.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ stats.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
