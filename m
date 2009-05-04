@@ -1,140 +1,80 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Mon, 11 May 2009 06:41:34 +0000
-Subject: Re: [PATCH] blkiomon: fix unaligned accesses on ia64
-Message-Id: <20090511064134.GE4694@kernel.dk>
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Mon, 04 May 2009 20:40:53 +0000
+Subject: [PATCH] fix up btrace options & manpage
+Message-Id: <49FF52D5.70607@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4A0205FD.7070004@redhat.com>
-In-Reply-To: <4A0205FD.7070004@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Fri, May 08 2009, Eric Sandeen wrote:
-> Martin Peschke wrote:
-> > Eric,
-> > I think you have got a valid point. But I would like to make two small
-> > changes to you patch:
-> > 
-> > A new blkiomon version number is needed then. Not a perfect solution for
-> > reflecting this change, but good enough at least for our tool that
-> > consumes blkiomon data through a message queue.
-> > 
-> > Moving the __u32 device member instead of a new padding field should be
-> > fine.
-> > 
-> > I have tested the patch below. If it's fine with you, please just push
-> > it upstream through Jens.
-> > 
-> > Thanks,
-> > Martin
-> > 
-> >
-> > 
-> > Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-> 
-> Thanks Martin -
-> 
-> Sure, that way looks fine to me too.  I suppose adding the explicit pad
-> doesn't actually change anything on most architectures, so maybe that's
-> a little safer without the version bump, but probably best to be
-> explicit about it as you have done.
-> 
-> Jens, want to pick up this patch instead, then?
+The btrace script & man page didn't quite match for options,
+and the btrace script was missing a few options in the getopts
+specification (b&n).  Also, there seems to be no such thing as
+a "summarize" option anywhere, so remove it.
 
-Yep, added. Thanks guys!
+Reported-by: /Milos Malik <mmalik@redhat.com <mailto:mmalik@redhat.com>>/
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> 
-> Thanks,
-> -Eric
-> 
-> 
-> > ---
-> >  blkiomon.c |    2 +-
-> >  blkiomon.h |    4 ++--
-> >  2 files changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > --- a/blkiomon.h
-> > +++ b/blkiomon.h
-> > @@ -34,6 +34,7 @@ struct blkiomon_stat {
-> >  	__u64 time;
-> >  	__u32 size_hist[BLKIOMON_SIZE_BUCKETS];
-> >  	__u32 d2c_hist[BLKIOMON_D2C_BUCKETS];
-> > +	__u32 device;
-> >  	struct minmax size_r;
-> >  	struct minmax size_w;
-> >  	struct minmax d2c_r;
-> > @@ -41,8 +42,7 @@ struct blkiomon_stat {
-> >  	struct minmax thrput_r;
-> >  	struct minmax thrput_w;
-> >  	__u64 bidir;
-> > -	__u32 device;
-> > -} __attribute__ ((packed));
-> > +};
-> >  
-> >  static struct histlog2 size_hist = {
-> >  	.first = 0,
-> > --- a/blkiomon.c
-> > +++ b/blkiomon.c
-> > @@ -71,7 +71,7 @@ struct output {
-> >  	int pipe;
-> >  };
-> >  
-> > -static char blkiomon_version[] = "0.2";
-> > +static char blkiomon_version[] = "0.3";
-> >  
-> >  static FILE *ifp;
-> >  static int interval = -1;
-> > 
-> > 
-> > 
-> > 
-> > On Wed, 2009-05-06 at 16:49 -0500, Eric Sandeen wrote: 
-> >> commit 7aa3ebcec011bfe9cc60d6476252c03376a37551 packed
-> >> the blkiomon_stat structure so that traces from one 
-> >> arch could be analyzed on another (in truth only x86
-> >> is different, at least from x86_64/ia64/ppc/ppc64/s390/s390x)
-> >>
-> >> Rather than packing it, which generates unaligned access
-> >> warnings on ia64, just pad the structure out so that it's
-> >> naturally aligned on all arches.
-> >>
-> >> Martin, care to test this to be sure it still works for
-> >> you?  (I'm not sure if we might also need a 4 byte pad on 
-> >> the end of the structure to align the containing structure...)
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> diff --git a/blkiomon.h b/blkiomon.h
-> >> index 2e430a6..ae48b4c 100644
-> >> --- a/blkiomon.h
-> >> +++ b/blkiomon.h
-> >> @@ -34,6 +34,7 @@ struct blkiomon_stat {
-> >>  	__u64 time;
-> >>  	__u32 size_hist[BLKIOMON_SIZE_BUCKETS];
-> >>  	__u32 d2c_hist[BLKIOMON_D2C_BUCKETS];
-> >> +	__u32 pad; /* Align the structure */
-> >>  	struct minmax size_r;
-> >>  	struct minmax size_w;
-> >>  	struct minmax d2c_r;
-> >> @@ -42,7 +43,7 @@ struct blkiomon_stat {
-> >>  	struct minmax thrput_w;
-> >>  	__u64 bidir;
-> >>  	__u32 device;
-> >> -} __attribute__ ((packed));
-> >> +};
-> >>
-> >>  static struct histlog2 size_hist = {
-> >>  	.first = 0,
-> >>
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(this goes after the general manpage cleanup I sent, sorry,
+should have been a series in retrospect)
 
--- 
-Jens Axboe
+
+diff --git a/btrace b/btrace
+index f902707..45c10cf 100644
+--- a/btrace
++++ b/btrace
+@@ -8,11 +8,10 @@
+ 
+ TRACEOPTS=""
+ PARSEOPTS="-b100000"
+-SUMMARIZE=""
+-USAGE="Usage: btrace [-s] [-t] [-S] [-w N] [-a <trace>...] [-r <dbg mnt]<dev>..."
++USAGE="Usage: btrace [-s] [-t] [-w N] [-n N] [-b N] [-a <trace>...] [-r <dbg mnt>] <dev>..."
+ DIRNAME=`dirname $0`
+ 
+-while getopts "a:r:stSw:hv" c
++while getopts "a:w:n:b:r:sthv" c
+ do
+ 	case $c in
+ 	a)	TRACEOPTS=$TRACEOPTS" -a "$OPTARG" ";;
+@@ -24,13 +23,11 @@ do
+ 	t)	PARSEOPTS=$PARSEOPTS" -t";;
+ 	h)	PARSEOPTS=$PARSEOPTS" -h";;
+ 	v)	PARSEOPTS=$PARSEOPTS" -v";;
+-	S)	SUMMARIZE="";;
+ 	\?)	echo $USAGE 1>&2
+ 		exit 2
+ 		;;
+ 	esac
+ done
+-PARSEOPTS="${PARSEOPTS} ${SUMMARIZE}"
+ 
+ shift `expr $OPTIND - 1`
+ if [ $# -eq 0 ]; then
+diff --git a/doc/btrace.8 b/doc/btrace.8
+index 1e6c06d..a1f34c2 100644
+--- a/doc/btrace.8
++++ b/doc/btrace.8
+@@ -6,7 +6,7 @@ btrace \- perform live tracing for block devices
+ 
+ 
+ .SH SYNOPSIS
+-.B btrace [\-s] [\-t] [\-w \fIN\fN] [\-n \fIN\fR] [\-b \fIN\fR]  [\-a <\fItrace\fR>...] <\fIdev\fR>...
++.B btrace [\-s] [\-t] [\-w \fIN\fN] [\-n \fIN\fR] [\-b \fIN\fR] [\-r \fI<dbg mnt>\fR] [\-a <\fItrace\fR>...] <\fIdev\fR>...
+ .br
+ 
+ 
+@@ -41,6 +41,10 @@ Specifies buffer size for event extraction (scaled by 1024) (see
+ \fIblktrace\fR (8)).
+ 
+ .HP 4
++.B \-r \fI<dbg mnt>\fR
++Specifies the debugfs mountpoint.
++
++.HP 4
+ .B \-a <\fItrace\fR>...
+ Adds mask to current filter (see \fIblktrace\fR (8)).
+ 
 
