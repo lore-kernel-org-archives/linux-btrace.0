@@ -1,43 +1,52 @@
-From: Stefan Raspl <raspl@linux.vnet.ibm.com>
-Date: Tue, 19 May 2009 07:59:08 +0000
-Subject: [Patch updated] blktrace: remove debugfs entries on bad path
-Message-Id: <4A1266CC.5040801@linux.vnet.ibm.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Thu, 07 May 2009 16:08:25 +0000
+Subject: [PATCH] blkrawverify: warn and return error if no traces are found
+Message-Id: <4A030779.7090707@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: mingo@redhat.com, Li Zefan <lizf@cn.fujitsu.com>, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, linux-btrace@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-btrace@vger.kernel.org
 
-debugfs directory entries for devices are not removed on some
-of the failure pathes in do_blk_trace_setup().
-One way to reproduce is to start blktrace on multiple devices
-with insufficient Vmalloc space: Devices will fail with
-a message like this:
+blkrawverify is prints no errors and returns success if the
+requested tracefiles aren't found:
 
-	BLKTRACESETUP(2) /dev/sdu failed: 5/Input/output error
+# blkrawverify foobar
+Verifying foobar
+# echo $?
+0
 
-If so, the respective entries in debugfs
-(e.g. /sys/kernel/debug/block/sdu) will remain and subsequent
-attempts to start blktrace on the respective devices will not
-succeed due to existing directories.
+With this change it's a bit more informative:
 
+# ./blkrawverify foobar
+Verifying foobar
+No tracefiles found for foobar
+# echo $?
+1
 
+Resolves Red Hat Bugzilla #499581
 
-Acked-by: Li Zefan <lizf@cn.fujitsu.com>
-Signed-off-by: Stefan Raspl <stefan.raspl@linux.vnet.ibm.com>
-
-
+Reported-by: Milos Malik <mmalik@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- kernel/trace/blktrace.c |    1 +
- 1 file changed, 1 insertion(+)
 
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -262,6 +262,7 @@ static void blk_trace_free(struct blk_tr
- {
- 	debugfs_remove(bt->msg_file);
- 	debugfs_remove(bt->dropped_file);
-+	debugfs_remove(bt->dir);
- 	relay_close(bt->rchan);
- 	free_percpu(bt->sequence);
- 	free_percpu(bt->msg_data);
+Index: blktrace/blkrawverify.c
+=================================--- blktrace.orig/blkrawverify.c
++++ blktrace/blkrawverify.c
+@@ -296,8 +296,14 @@ int main(int argc, char *argv[])
+ 		printf("Verifying %s\n", devname); fflush(stdout);
+ 		for (cpu = 0; ; cpu++) {
+ 			sprintf(fname, "%s.blktrace.%d", devname, cpu);
+-			if (stat(fname, &st) < 0)
++			if (stat(fname, &st) < 0) {
++				if (cpu = 0) {
++					fprintf(stderr, "No tracefiles found for %s\n",
++						devname);
++					rval = 1;
++				}
+ 				break;
++			}
+ 			printf("    CPU %d ", cpu); fflush(stdout);
+ 			nbad = process(&ofp, devname, fname, cpu);
+ 			if (nbad) {
+
