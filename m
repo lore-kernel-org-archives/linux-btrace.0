@@ -1,54 +1,31 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Wed, 13 May 2009 04:00:02 +0000
-Subject: Recent changes
-Message-Id: <20090513040002.1D3F537A0FD@kernel.dk>
+From: Stefan Raspl <raspl@linux.vnet.ibm.com>
+Date: Mon, 18 May 2009 12:59:17 +0000
+Subject: [Patch] Remove debugfs entries on bad path
+Message-Id: <4A115BA5.6090905@linux.vnet.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-btrace@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
 
-The following changes since commit b5f8804a588fffdea10a0cd46a36fc196acea9f2:
-  Martin Peschke (1):
-        fix off-by-one issues in blkiomon.h
+debugfs directory entries for devices are not removed on bad path.
+If so, subsequent attempts to start blktrace on the respective
+devices will not succeed due to existing directories.
 
-are available in the git repository at:
+Signed-off-by: Stefan Raspl <stefan.raspl@linux.vnet.ibm.com>
 
-  git://git.kernel.dk/blktrace.git master
+---
+ kernel/trace/blktrace.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Alan D. Brunelle (1):
-      Converted to using the correct remap entries
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -262,6 +262,7 @@ static void blk_trace_free(struct blk_tr
+ {
+ 	debugfs_remove(bt->msg_file);
+ 	debugfs_remove(bt->dropped_file);
++	debugfs_remove(bt->dir);
+ 	relay_close(bt->rchan);
+ 	free_percpu(bt->sequence);
+ 	free_percpu(bt->msg_data);
 
-Eric Sandeen (5):
-      fix max-pkts option inconsistencies
-      more manpage fixups
-      fix up btrace options & manpage
-      blkiomon manpage and usage reference invalid "msg-queue-name" option
-      blkrawverify: warn and return error if no traces are found
-
-Jens Axboe (1):
-      Version 1.0.1
-
-Martin Peschke (1):
-      blkiomon: fix unaligned accesses on ia64
-
- blkiomon.c          |    4 ++--
- blkiomon.h          |    4 ++--
- blkparse.c          |    2 +-
- blkparse_fmt.c      |   27 ++++++++++++++++-----------
- blkrawverify.c      |    8 +++++++-
- blktrace_api.h      |    4 ++--
- btrace              |    7 ++-----
- btreplay/btrecord.c |    2 +-
- btt/trace_remap.c   |    9 ++++-----
- doc/blkiomon.8      |    4 ++--
- doc/blkparse.1      |    9 +--------
- doc/blkrawverify.1  |    2 +-
- doc/bno_plot.1      |    2 +-
- doc/btrace.8        |   20 ++++++++++++--------
- doc/btrecord.8      |   12 ++++++------
- doc/btreplay.8      |   10 ++++------
- doc/btt.1           |    3 ++-
- 17 files changed, 66 insertions(+), 63 deletions(-)
