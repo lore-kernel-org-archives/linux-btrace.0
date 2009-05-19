@@ -1,45 +1,43 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Date: Mon, 04 May 2009 21:04:51 +0000
-Subject: [PATCH] blkiomon manpage and usage reference invalid "msg-queue-name"
-Message-Id: <49FF5873.5050307@redhat.com>
+From: Stefan Raspl <raspl@linux.vnet.ibm.com>
+Date: Tue, 19 May 2009 07:59:08 +0000
+Subject: [Patch updated] blktrace: remove debugfs entries on bad path
+Message-Id: <4A1266CC.5040801@linux.vnet.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: mingo@redhat.com, Li Zefan <lizf@cn.fujitsu.com>, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, linux-btrace@vger.kernel.org, linux-kernel@vger.kernel.org
 
-the blkiomon usage text and man page reference a
-"msg-queue-name" option, but getopts is only looking
-for "msg-qeueue" - fix the docs to match the code.
+debugfs directory entries for devices are not removed on some
+of the failure pathes in do_blk_trace_setup().
+One way to reproduce is to start blktrace on multiple devices
+with insufficient Vmalloc space: Devices will fail with
+a message like this:
 
-Reported-by: Milos Malik <mmalik@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+	BLKTRACESETUP(2) /dev/sdu failed: 5/Input/output error
+
+If so, the respective entries in debugfs
+(e.g. /sys/kernel/debug/block/sdu) will remain and subsequent
+attempts to start blktrace on the respective devices will not
+succeed due to existing directories.
+
+
+
+Acked-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Stefan Raspl <stefan.raspl@linux.vnet.ibm.com>
+
+
 ---
+ kernel/trace/blktrace.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/blkiomon.c b/blkiomon.c
-index c3c1b11..7e3aa46 100644
---- a/blkiomon.c
-+++ b/blkiomon.c
-@@ -600,7 +600,7 @@ static char usage_str[] = "\n\nblkiomon " \
- 	"[ -h <file>         | --human-readable=<file> ]\n" \
- 	"[ -b <file>         | --binary=<file> ]\n" \
- 	"[ -D <file>         | --debug=<file> ]\n" \
--	"[ -Q <path name>    | --msg-queue-name=<path name>]\n" \
-+	"[ -Q <path name>    | --msg-queue=<path name>]\n" \
- 	"[ -q <msg queue id> | --msg-queue-id=<msg queue id>]\n" \
- 	"[ -m <msg id>       | --msg-id=<msg id>]\n" \
- 	"[ -V                | --version ]\n\n" \
-diff --git a/doc/blkiomon.8 b/doc/blkiomon.8
-index 0bc109c..dbed0df 100644
---- a/doc/blkiomon.8
-+++ b/doc/blkiomon.8
-@@ -57,7 +57,7 @@ Output file for debugging data. Use '\-' for stdout.
- 
- \-Q \fIpath_name\fR
- .br
--\-\-msg\-queue\-name=\fIpath_name\fR
-+\-\-msg\-queue=\fIpath_name\fR
- .RS
- Sets \fIpath_name\fR as path name for existing message queue to be used
- for binary output.
-
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -262,6 +262,7 @@ static void blk_trace_free(struct blk_tr
+ {
+ 	debugfs_remove(bt->msg_file);
+ 	debugfs_remove(bt->dropped_file);
++	debugfs_remove(bt->dir);
+ 	relay_close(bt->rchan);
+ 	free_percpu(bt->sequence);
+ 	free_percpu(bt->msg_data);
