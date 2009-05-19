@@ -1,43 +1,34 @@
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Date: Mon, 20 Apr 2009 14:07:11 +0000
-Subject: [Patch] fix off-by-one issues in blkiomon.h
-Message-Id: <1240236431.4039.5.camel@kitka.ibm.com>
+From: Stefan Raspl <raspl@linux.vnet.ibm.com>
+Date: Tue, 19 May 2009 06:46:57 +0000
+Subject: Re: [Patch] blktrace: remove debugfs entries on bad path
+Message-Id: <4A1255E1.1060301@linux.vnet.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <4A115BA5.6090905@linux.vnet.ibm.com> <4A1207DE.4000409@cn.fujitsu.com>
+In-Reply-To: <4A1207DE.4000409@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: Li Zefan <lizf@cn.fujitsu.com>
+Cc: linux-btrace@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
 
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Li Zefan wrote:
+> A better title:
+> 	[Patch] blktrace: remove debugfs entries on bad path
+> 
+> Stefan Raspl wrote:
+>> debugfs directory entries for devices are not removed on bad path.
+> 
+> Can you be more elaborate on how to reproduce this issue?
 
-Fix two off-by-one issues. Last bucket of histogram was ommitted by mistake
-when being converted to big-endian or when being merged with another bucket.
+It can happen for most bad pathes within do_blk_trace_setup(). One
+way to trigger is to set the Vmalloc space via the respective kernel
+parameter to a value that is so small that it will not suffice for
+the 2MB per device and cpu that is required. For instance, set
+vmallocM and start blktrace on a system with 2 cpus on 7 devices.
+Depending on how much Vmalloc space is still free, the final 2 or 3
+devices will fail with a message like this:
 
-Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+	BLKTRACESETUP(2) /dev/sdu failed: 5/Input/output error
 
----
- stats.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- a/stats.h
-+++ b/stats.h
-@@ -124,7 +124,7 @@ static inline void histlog2_merge(struct
- {
- 	int i;
- 
--	for (i = 0; i < h->num - 1; i++)
-+	for (i = 0; i < h->num; i++)
- 		dst[i] += src[i];
- }
- 
-@@ -132,7 +132,7 @@ static inline void histlog2_to_be(__u32 
- {
- 	int i;
- 
--	for (i = 0; i < h->num - 1; i++)
-+	for (i = 0; i < h->num; i++)
- 		a[i] = cpu_to_be32(a[i]);
- }
- 
-
-
+Best regards,
+Stefan Raspl
