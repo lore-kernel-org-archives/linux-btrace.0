@@ -1,42 +1,32 @@
-From: Li Zefan <lizf@cn.fujitsu.com>
-Date: Tue, 19 May 2009 01:14:06 +0000
-Subject: Re: [Patch] Remove debugfs entries on bad path
-Message-Id: <4A1207DE.4000409@cn.fujitsu.com>
+From: Vikram Oberoi <voberoi@gmail.com>
+Date: Sun, 31 May 2009 23:25:02 +0000
+Subject: Questions about btt output
+Message-Id: <d66e59810905311625j59b9fe56n8d256b38469c7772@mail.gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4A115BA5.6090905@linux.vnet.ibm.com>
-In-Reply-To: <4A115BA5.6090905@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: raspl@linux.vnet.ibm.com
-Cc: linux-btrace@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
+To: linux-btrace@vger.kernel.org
 
-A better title:
-	[Patch] blktrace: remove debugfs entries on bad path
+Hey folks,
 
-Stefan Raspl wrote:
-> debugfs directory entries for devices are not removed on bad path.
+I have three specific questions about btt's output. I've searched the
+list, Google, and read the user guide, but I'm still not completely
+sure what the answers are. I'm finally posting my questions here, and
+I hope I'm not in the wrong place or going against etiquette by doing
+so! Please let me know if I am. Here are my questions:
 
-Can you be more elaborate on how to reproduce this issue?
+Under "Device Merge Information", are BLKmin/BLKavg/BLKmax the
+min/avg/max I/O size in *number of filesystem blocks* (in my case, 4
+KB each) being *issued to the device*?
 
-> If so, subsequent attempts to start blktrace on the respective
-> devices will not succeed due to existing directories.
-> 
-> Signed-off-by: Stefan Raspl <stefan.raspl@linux.vnet.ibm.com>
-> 
-> ---
->  kernel/trace/blktrace.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- a/kernel/trace/blktrace.c
-> +++ b/kernel/trace/blktrace.c
-> @@ -262,6 +262,7 @@ static void blk_trace_free(struct blk_tr
->  {
->  	debugfs_remove(bt->msg_file);
->  	debugfs_remove(bt->dropped_file);
-> +	debugfs_remove(bt->dir);
->  	relay_close(bt->rchan);
->  	free_percpu(bt->sequence);
->  	free_percpu(bt->msg_data);
-> 
+Under "Device Seek Information", is the mean seek distance *the
+average number of 512 byte disk sectors* over which the disk head had
+to move before beginning its next IO? Finally, are the median and mode
+also *distances*? If so, I find it hard to believe that my mean seek
+distance is regularly in the tens or hundreds of thousands of disk
+sectors when the mode -- always 0 -- constitutes over 95% of my seek
+distances. Or is there a gap in my understanding here?
 
+Thanks,
+Vikram
