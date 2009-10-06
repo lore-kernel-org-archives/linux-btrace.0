@@ -1,23 +1,32 @@
-From: "M. Mohan Kumar" <mohan@in.ibm.com>
-Date: Wed, 16 Sep 2009 14:36:03 +0000
-Subject: Re: blktrace -k
-Message-Id: <200909161954.03815.mohan@in.ibm.com>
+From: Simon Kirby <sim@hostway.ca>
+Date: Tue, 06 Oct 2009 18:53:37 +0000
+Subject: lots of unplugged by timer normal or abnormal?
+Message-Id: <20091006185337.GF26949@hostway.ca>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <200909161712.15652.mohan@in.ibm.com>
-In-Reply-To: <200909161712.15652.mohan@in.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
->
-> No, the -k option just cleans up the kernel state (typically from a
-> previously aborted blktrace run that failed to clean up the state). It
-> doesn't do anything with user-level processes running blktrace.
->
+Hello,
 
-Does it mean that one has to explicitly kill the existing blktrace process by 
-Ctrl+C or kill?
+I was just testing out blktrace/blkparse/btrace on a box that is hitting
+some performance walls, and noticed that there are a fair amonut of "UT"
+events (unplug by timer).  Is this normal/expected?  For example:
 
-Regards,
-M. Mohan Kumar
+[sroot@nas04:/root]# btrace /dev/etherd/e7.0 | grep T
+152,32   4     1379     3.582513494     0 UT   N [swapper] 8
+152,32   1     1289     4.329760067     0 UT   N [swapper] 1
+152,32   3     1132     4.362257911     0 UT   N [swapper] 3
+152,32   7     1070     4.375258374     0 UT   N [swapper] 1
+152,32   3     1146     4.382260172     0 UT   N [swapper] 5
+152,32   1     1318     4.417759727  2830 UT   N [nfsd] 3
+152,32   5     1003     4.498757105     0 UT   N [swapper] 1
+152,32   1     1368     4.517761127     0 UT   N [swapper] 1
+152,32   0     1133     4.585522116     0 UT   N [swapper] 5
+
+This is on 2.6.30.5 with the 2.6.30.6 XFS patches.
+
+Cheers,
+
+Simon-
