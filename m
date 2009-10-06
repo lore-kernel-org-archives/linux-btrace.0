@@ -1,7 +1,7 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Date: Tue, 06 Oct 2009 19:50:45 +0000
+From: Simon Kirby <sim@hostway.ca>
+Date: Tue, 06 Oct 2009 20:08:03 +0000
 Subject: Re: lots of unplugged by timer normal or abnormal?
-Message-Id: <1254858645.4852.87.camel@cail>
+Message-Id: <20091006200803.GA22261@hostway.ca>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <20091006185337.GF26949@hostway.ca>
 In-Reply-To: <20091006185337.GF26949@hostway.ca>
@@ -10,38 +10,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Tue, 2009-10-06 at 11:53 -0700, Simon Kirby wrote:
-> Hello,
-> 
-> I was just testing out blktrace/blkparse/btrace on a box that is hitting
-> some performance walls, and noticed that there are a fair amonut of "UT"
-> events (unplug by timer).  Is this normal/expected?  For example:
-> 
-> [sroot@nas04:/root]# btrace /dev/etherd/e7.0 | grep T
-> 152,32   4     1379     3.582513494     0 UT   N [swapper] 8
-> 152,32   1     1289     4.329760067     0 UT   N [swapper] 1
-> 152,32   3     1132     4.362257911     0 UT   N [swapper] 3
-> 152,32   7     1070     4.375258374     0 UT   N [swapper] 1
-> 152,32   3     1146     4.382260172     0 UT   N [swapper] 5
-> 152,32   1     1318     4.417759727  2830 UT   N [nfsd] 3
-> 152,32   5     1003     4.498757105     0 UT   N [swapper] 1
-> 152,32   1     1368     4.517761127     0 UT   N [swapper] 1
-> 152,32   0     1133     4.585522116     0 UT   N [swapper] 5
-> 
-> This is on 2.6.30.5 with the 2.6.30.6 XFS patches.
-> 
-> Cheers,
-> 
-> Simon-
+On Tue, Oct 06, 2009 at 03:50:45PM -0400, Alan D. Brunelle wrote:
 
-Hello Simon- 
+> This looks pretty bad - could you tell me what distro you are running on
+> as a base? And did this happen before 2.6.30.5 (the poor performance)?
+> And could you provide a more complete snippet of blktrace output
+> (showing a handful of complete ops)?
 
-This looks pretty bad - could you tell me what distro you are running on
-as a base? And did this happen before 2.6.30.5 (the poor performance)?
-And could you provide a more complete snippet of blktrace output
-(showing a handful of complete ops)?
+Hi, Alan!
 
-Thanks,
-Alan D. Brunelle
-Hewlett-Packard
+The poor performance has been ongoing for some time (these boxes were
+built circa 2.6.26, and we hit a number of issues along the way -- 2.6.30
+was the first stable kernel for serving files via nfsd, even with EXT3).
 
+I'm figuring the majority of the performance issue are actually with the
+AOE driver or the Coraid queue scheduling or RAID implementation, but I
+figured that unplugging by timer maybe shouldn't happen even regardless
+of how slow the underlying "device" is, hence my email.
+
+It's amd64 Debian lenny (not sure why that matters), 16 GB of RAM, about
+and a whole bunch of AOE storage, chopped up via DM, mostly using XFS as
+a file system, served via knfsd.  "iostat -x -k 1" shows 100% utilization
+fairly often for this particular device.
+
+It's possible that this is just aggravated by memory allocator latency or
+something, causing the unplug timer to trigger.  I was just wondering if
+this is normal behaviour.
+
+blktrace snippets seem pretty massive:
+
+[sroot@nas04:/root/trace]# blktrace -w 10 /dev/etherd/e7.0
+Device: /dev/etherd/e7.0
+  CPU  0:                    0 events,      843 KiB data
+  CPU  1:                    0 events,      709 KiB data
+  CPU  2:                    0 events,      712 KiB data
+  CPU  3:                    0 events,      752 KiB data
+  CPU  4:                    0 events,      714 KiB data
+  CPU  5:                    0 events,      713 KiB data
+  CPU  6:                    0 events,      619 KiB data
+  CPU  7:                    0 events,      732 KiB data
+  Total:                     0 events (dropped 0),     5791 KiB data
+
+I've saved that here:
+
+http://0x.ca/sim/ref/2.6.30.5-hw-fixedxfs/nas04_blktrace_snippet.tgz
+
+...which can be extracted and read with "blkparse etherd_e7.0".
+
+Cheers,
+
+Simon-
