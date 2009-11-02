@@ -1,39 +1,21 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Sat, 10 Oct 2009 04:00:04 +0000
-Subject: Recent changes
-Message-Id: <20091010040004.0DC0F37A0B7@kernel.dk>
+From: dhsharp@google.com
+Date: Mon, 02 Nov 2009 22:39:28 +0000
+Subject: [PATCH] blktrace: triggered output: with '-t' option, trigger output on SIGUSR1
+Message-Id: <1257201569-8551-1-git-send-email-dhsharp@google.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit a155ab989ffc8b9cf95a631309e9a825d04bcc68:
-  Alan D. Brunelle (1):
-        btt: better data file naming
+This patch adds a triggering mechanism so that traces are read from the kernel
+ring buffer only on SIGUSR1.  In this way, we can detect an "interesting" event
+(slow, etc) and then dump the most recent traces which should hopefully be
+related to that event. The number of traces can be controlled by the buffer
+size and number parameters.
 
-are available in the git repository at:
+Please CC me on replies.
 
-  git://git.kernel.dk/blktrace.git master
+Thanks,
+David Sharp
 
-Alan D. Brunelle (1):
-      btt: Added in I/O activity per device and system-wide
-
- btt/Makefile         |    2 +-
- btt/args.c           |   12 +-
- btt/bt_timeline.c    |    5 +-
- btt/btt_plot.py      |  102 +-
- btt/devs.c           |    2 +
- btt/doc/Makefile     |    2 +-
- btt/doc/btt.tex      |   73 +-
- btt/doc/live.eps     |65949 ++++++++++++++++++++++++++++++++++++++++++++++++++
- btt/globals.h        |   16 +-
- btt/output.c         |   34 +
- btt/p_live.c         |  202 +
- btt/trace_complete.c |    1 +
- doc/btt.1            |   10 +
- 13 files changed, 66380 insertions(+), 30 deletions(-)
- create mode 100644 btt/doc/live.eps
- create mode 100644 btt/p_live.c
