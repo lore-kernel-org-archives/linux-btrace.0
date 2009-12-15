@@ -1,66 +1,72 @@
 From: Edward Shishkin <edward@redhat.com>
-Date: Tue, 15 Dec 2009 17:48:12 +0000
-Subject: [patch 5/5] blktrace: update blkiomon doc
-Message-Id: <4B27CBDC.7080002@redhat.com>
+Date: Tue, 15 Dec 2009 17:47:59 +0000
+Subject: [patch 3/5] blktrace: add back conversion
+Message-Id: <4B27CBCF.8070101@redhat.com>
 MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------050403010205090704090301"
+Content-Type: multipart/mixed; boundary="------------040904010106000103050709"
 List-Id: <linux-btrace.vger.kernel.org>
 To: linux-btrace@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------050403010205090704090301
+--------------040904010106000103050709
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
 
---------------050403010205090704090301
+--------------040904010106000103050709
 Content-Type: text/plain;
- name="blktrace-fix-499398.patch"
+ name="blktrace-fix-502889.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="blktrace-fix-499398.patch"
+ filename="blktrace-fix-502889.patch"
 
-Fixup for 499398.
+Fixup for bz 502889.
 
-Description of problem:
+Problem:
+when executing with /dev/cciss/foo (long path names)
+btreplay complains (No such file or directory).
 
-blkiomon does not understand the output of blktrace when
-working with logical volume device (it is quiet, while
-working with physical device it prints IO statistics as
-expected).
+Bug: 
+Missed back conversion of erscores to slashes.
 
-BUG (or design feature?):
-/dev/dm-* and /dev/md* don't see BLK_TC_COMPLETE actions:
-
-        /* we need an older D trace and a younger C trace */
-        if (t_old->bit.action & BLK_TC_ACT(BLK_TC_ISSUE) &&
-            t_young->bit.action & BLK_TC_ACT(BLK_TC_COMPLETE)) {
-                /* matching D and C traces - update statistics */
-                match++;
-                blkiomon_account(&t_old->bit, &t_young->bit);
-                blkiomon_free_trace(t_stored);
-                return t;
-        }
-
-Possible solution:
-Update documentation.
+Solution:
+Convert underscores to slashes to restore device
+names that have larger paths.
 
 Signed-off-by: Edward Shishkin <edward@redhat.com>
 ---
- doc/blkiomon.8 |    2 ++
- 1 file changed, 2 insertions(+)
+ btreplay/btreplay.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
---- blktrace.orig/doc/blkiomon.8
-+++ blktrace/doc/blkiomon.8
-@@ -17,6 +17,8 @@ blkiomon is a block device I/O monitor. 
- request size and request latency statistics from blktrace data. It provides
- histograms as well as data that can be used to calculate min, max, average
- and variance. For this purpose, it consumes D and C traces read from stdin.
-+Note, that this doesn't work for logical volumes, as high-level drivers
-+don't see the completion of the events (C).
+--- blktrace.orig/btreplay/btreplay.c
++++ blktrace/btreplay/btreplay.c
+@@ -1314,6 +1314,8 @@ static void reset_input_file(struct thr_
+  */
+ static void *replay_sub(void *arg)
+ {
++        int i;
++	char *mdev;
+ 	char path[MAXPATHLEN];
+ 	struct io_bunch bunch;
+ 	struct thr_info *tip = arg;
+@@ -1321,8 +1323,15 @@ static void *replay_sub(void *arg)
  
- There are options for binary output and human-readable output to files and
- stdout. Output to a message queue is supported as well.
+ 	pin_to_cpu(tip);
+ 
+-	sprintf(path, "/dev/%s", map_dev(tip->devnm));
+-
++	mdev = map_dev(tip->devnm);
++	sprintf(path, "/dev/%s", mdev);
++	/*
++	 * convert underscores to slashes to
++	 * restore device names that have larger paths
++	 */
++	for (i = 0; i < strlen(mdev); i++)
++	        if (path[strlen("/dev/") + i] == '_')
++		        path[strlen("/dev/") + i] = '/';
+ #ifdef O_NOATIME
+ 	oflags = O_NOATIME;
+ #else
 
---------------050403010205090704090301--
+--------------040904010106000103050709--
