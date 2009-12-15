@@ -1,72 +1,78 @@
 From: Edward Shishkin <edward@redhat.com>
-Date: Tue, 15 Dec 2009 17:47:59 +0000
-Subject: [patch 3/5] blktrace: add back conversion
-Message-Id: <4B27CBCF.8070101@redhat.com>
+Date: Tue, 15 Dec 2009 17:47:53 +0000
+Subject: [patch 2/5] blktrace: print correct usage
+Message-Id: <4B27CBC9.50409@redhat.com>
 MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------040904010106000103050709"
+Content-Type: multipart/mixed; boundary="------------020709040506040406060403"
 List-Id: <linux-btrace.vger.kernel.org>
 To: linux-btrace@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------040904010106000103050709
+--------------020709040506040406060403
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
 
---------------040904010106000103050709
+--------------020709040506040406060403
 Content-Type: text/plain;
- name="blktrace-fix-502889.patch"
+ name="blktrace-fix-498898.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="blktrace-fix-502889.patch"
+ filename="blktrace-fix-498898.patch"
 
-Fixup for bz 502889.
+Fixup for 498898:
 
 Problem:
-when executing with /dev/cciss/foo (long path names)
-btreplay complains (No such file or directory).
-
-Bug: 
-Missed back conversion of erscores to slashes.
+When somebody runs blktrace without parameters, it
+shows the usage message. The usage message suggests
+that version number "x.y.z" is a required parameter,
+which is not true.
 
 Solution:
-Convert underscores to slashes to restore device
-names that have larger paths.
+Don't print version number when running
+blktrace, blkparce, btt without parameters.
 
 Signed-off-by: Edward Shishkin <edward@redhat.com>
 ---
- btreplay/btreplay.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ blkparse.c |    2 +-
+ blktrace.c |    2 +-
+ btt/args.c |    3 +--
+ 3 files changed, 3 insertions(+), 4 deletions(-)
 
---- blktrace.orig/btreplay/btreplay.c
-+++ blktrace/btreplay/btreplay.c
-@@ -1314,6 +1314,8 @@ static void reset_input_file(struct thr_
-  */
- static void *replay_sub(void *arg)
+--- blktrace.orig/blkparse.c
++++ blktrace/blkparse.c
+@@ -2696,7 +2696,7 @@ static char usage_str[] =    "\n\n" \
+ 
+ static void usage(char *prog)
  {
-+        int i;
-+	char *mdev;
- 	char path[MAXPATHLEN];
- 	struct io_bunch bunch;
- 	struct thr_info *tip = arg;
-@@ -1321,8 +1323,15 @@ static void *replay_sub(void *arg)
+-	fprintf(stderr, "Usage: %s %s %s", prog, blkparse_version, usage_str);
++	fprintf(stderr, "Usage: %s %s", prog, usage_str);
+ }
  
- 	pin_to_cpu(tip);
+ int main(int argc, char *argv[])
+--- blktrace.orig/blktrace.c
++++ blktrace/blktrace.c
+@@ -493,7 +493,7 @@ static inline void pdc_nev_update(struct
  
--	sprintf(path, "/dev/%s", map_dev(tip->devnm));
--
-+	mdev = map_dev(tip->devnm);
-+	sprintf(path, "/dev/%s", mdev);
-+	/*
-+	 * convert underscores to slashes to
-+	 * restore device names that have larger paths
-+	 */
-+	for (i = 0; i < strlen(mdev); i++)
-+	        if (path[strlen("/dev/") + i] == '_')
-+		        path[strlen("/dev/") + i] = '/';
- #ifdef O_NOATIME
- 	oflags = O_NOATIME;
- #else
+ static void show_usage(char *prog)
+ {
+-	fprintf(stderr, "Usage: %s %s %s", prog, blktrace_version, usage_str);
++	fprintf(stderr, "Usage: %s %s", prog, usage_str);
+ }
+ 
+ /*
+--- blktrace.orig/btt/args.c
++++ blktrace/btt/args.c
+@@ -244,8 +244,7 @@ static char usage_str[] = \
+ 
+ static void usage(char *prog)
+ {
+-	fprintf(stderr, "Usage: %s %s %s", prog, bt_timeline_version,
+-		usage_str);
++	fprintf(stderr, "Usage: %s %s", prog, usage_str);
+ }
+ 
+ static FILE *setup_ofile(char *fname)
 
---------------040904010106000103050709--
+--------------020709040506040406060403--
