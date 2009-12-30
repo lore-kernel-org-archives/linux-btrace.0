@@ -1,78 +1,43 @@
-From: Edward Shishkin <edward@redhat.com>
-Date: Tue, 15 Dec 2009 17:47:53 +0000
-Subject: [patch 2/5] blktrace: print correct usage
-Message-Id: <4B27CBC9.50409@redhat.com>
-MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------020709040506040406060403"
+From: Simon Kirby <sim@hostway.ca>
+Date: Wed, 30 Dec 2009 01:41:02 +0000
+Subject: Oops on blktrace
+Message-Id: <20091230014102.GA7296@hostway.ca>
 List-Id: <linux-btrace.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020709040506040406060403
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello,
 
+I just experienced an Oops while running blktrace on a 2.6.30.9 kernel
+(production system).  There was no camera handy and no serial console
+or crash dump log, so all we could get remotely was a function backtrace
+copied by hand:
 
+  memset_c
+  relay_open_buf
+  relay_open
+  do_blk_trace_setup
+  blk_trace_setup
+  disk_name | HEX/HEX
+  blk_trace_ioctl
+  find_get_page
+  blkdev_ioctrl
+  filemap_fault
+  unlock_page
+  __do_fault
+  block_ioctl
+  vfs_ioctl
+  do_vfs_ioctl
+  sys_ioctl
+  system_call_fastpath
 
---------------020709040506040406060403
-Content-Type: text/plain;
- name="blktrace-fix-498898.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="blktrace-fix-498898.patch"
+At the time I had just run "blktrace /dev/etherd/e10.1" (an AOE device),
+having recently run "btrace -t /dev/etherd/e10.1" and similar with no
+problem.  I've since tried to reproduce this crash to no avail.  Have
+there been any similar experiences or related fixes since 2.6.30.9?
 
-Fixup for 498898:
+Cheers,
 
-Problem:
-When somebody runs blktrace without parameters, it
-shows the usage message. The usage message suggests
-that version number "x.y.z" is a required parameter,
-which is not true.
-
-Solution:
-Don't print version number when running
-blktrace, blkparce, btt without parameters.
-
-Signed-off-by: Edward Shishkin <edward@redhat.com>
----
- blkparse.c |    2 +-
- blktrace.c |    2 +-
- btt/args.c |    3 +--
- 3 files changed, 3 insertions(+), 4 deletions(-)
-
---- blktrace.orig/blkparse.c
-+++ blktrace/blkparse.c
-@@ -2696,7 +2696,7 @@ static char usage_str[] =    "\n\n" \
- 
- static void usage(char *prog)
- {
--	fprintf(stderr, "Usage: %s %s %s", prog, blkparse_version, usage_str);
-+	fprintf(stderr, "Usage: %s %s", prog, usage_str);
- }
- 
- int main(int argc, char *argv[])
---- blktrace.orig/blktrace.c
-+++ blktrace/blktrace.c
-@@ -493,7 +493,7 @@ static inline void pdc_nev_update(struct
- 
- static void show_usage(char *prog)
- {
--	fprintf(stderr, "Usage: %s %s %s", prog, blktrace_version, usage_str);
-+	fprintf(stderr, "Usage: %s %s", prog, usage_str);
- }
- 
- /*
---- blktrace.orig/btt/args.c
-+++ blktrace/btt/args.c
-@@ -244,8 +244,7 @@ static char usage_str[] = \
- 
- static void usage(char *prog)
- {
--	fprintf(stderr, "Usage: %s %s %s", prog, bt_timeline_version,
--		usage_str);
-+	fprintf(stderr, "Usage: %s %s", prog, usage_str);
- }
- 
- static FILE *setup_ofile(char *fname)
-
---------------020709040506040406060403--
+Simon-
