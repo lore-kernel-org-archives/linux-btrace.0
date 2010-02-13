@@ -1,25 +1,32 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Tue, 23 Feb 2010 05:00:02 +0000
-Subject: Recent changes
-Message-Id: <20100223050002.B24AA37A0C2@kernel.dk>
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Sat, 13 Feb 2010 18:32:27 +0000
+Subject: [PATCH] add libpthread to btreplay/Makefile LIBS
+Message-Id: <4B76F03B.7040206@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 2e37a10ee8b470b805e7c26c703073dbc54ca84e:
-  Alan D. Brunelle (1):
-        btt: Added in I/O activity per device and system-wide
+Fedora linking changes picked this up:
 
-are available in the git repository at:
+/usr/bin/ld: btreplay.o: undefined reference to symbol 'pthread_create@@GLIBC_2.2.5'
+/usr/bin/ld: note: 'pthread_create@@GLIBC_2.2.5' is defined in DSO /lib64/libpthread.so.0 so try adding it to the linker command line
 
-  git://git.kernel.dk/blktrace.git master
+See also https://bugzilla.redhat.com/show_bug.cgi?idV4775
 
-Eric Sandeen (1):
-      add libpthread to btreplay/Makefile LIBS
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
- btreplay/Makefile |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Index: blktrace-1.0.1/btreplay/Makefile
+=================================--- blktrace-1.0.1.orig/btreplay/Makefile
++++ blktrace-1.0.1/btreplay/Makefile
+@@ -13,7 +13,7 @@ XCFLAGS	= -D_GNU_SOURCE -D_LARGEFILE_SOU
+ override CFLAGS += $(INCS) $(XCFLAGS) $(OCFLAGS)
+ 
+ PROGS	= btrecord btreplay
+-LIBS	= -laio -lrt
++LIBS	= -laio -lrt -lpthread
+ 
+ all: depend $(PROGS)
+
