@@ -1,27 +1,47 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Tue, 20 Apr 2010 07:51:06 +0000
-Subject: Re: [patch 0/5] pending series of blktrace update
-Message-Id: <20100420075106.GE27497@kernel.dk>
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Mon, 19 Apr 2010 17:13:38 +0000
+Subject: Re: [PATCH] blkparse: exit with error if no tracefiles found
+Message-Id: <4BCC8F42.5000708@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4B27CBBE.5040102@redhat.com>
-In-Reply-To: <4B27CBBE.5040102@redhat.com>
+References: <4A0B46BD.4030202@redhat.com>
+In-Reply-To: <4A0B46BD.4030202@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Mon, Apr 19 2010, Eric Sandeen wrote:
-> Edward Shishkin wrote:
-> > Hello.
-> > Please, consider..
-> > 
-> > Thanks,
-> > Edward.
+Eric Sandeen wrote:
+> If no tracefiles are found, exit with non-0 status
 > 
-> Jens, ping on these too? :)
+> Resolves Red Hat Bugzilla #500118
+> 
+> Reported-by: Milos Malik <mmalik@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-Applied 1-3, and 5. #4 is broken.
+Re-ping on this?
 
--- 
-Jens Axboe
+Thanks,
+-Eric
+
+> 
+> diff --git a/blkparse.c b/blkparse.c
+> index eec4952..db6a418 100644
+> --- a/blkparse.c
+> +++ b/blkparse.c
+> @@ -2518,6 +2518,12 @@ static int do_file(void)
+>  
+>  		for (cpu = 0; setup_file(pdi, cpu); cpu++)
+>  			;
+> +
+> +		if (!cpu) {
+> +			fprintf(stderr,"No input files found for %s\n",
+> +				pdi->name);
+> +			return 1;
+> +		}
+>  	}
+>  
+>  	/*
+> 
+> 
 
