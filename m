@@ -1,103 +1,42 @@
-From: Edward Shishkin <edward@redhat.com>
-Date: Tue, 20 Apr 2010 13:27:41 +0000
-Subject: [patch] blktrace: disable kill option - take 2
-Message-Id: <4BCDABCD.4050800@redhat.com>
-MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------040508090106040306030507"
+From: Jens Axboe <jens.axboe@oracle.com>
+Date: Tue, 20 Apr 2010 13:41:29 +0000
+Subject: Re: [patch] blktrace: disable kill option - take 2
+Message-Id: <20100420134129.GO27497@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <4BCDABCD.4050800@redhat.com>
+In-Reply-To: <4BCDABCD.4050800@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040508090106040306030507
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, Apr 20 2010, Edward Shishkin wrote:
+>
 
+> Fixup for 513950.
+> 
+> Problem:
+> 'blktrace -d <device> -k' does not kill a running
+> backgound trace. Executing 'blktrace -d <device> -k'
+> for the second time results in "BLKTRACETEARDOWN:
+> Invalid argument" message and then each run of
+> blktrace on that machine prints the following output:
+> BLKTRACESETUP: No such file or directory.
+> 
+> The bug:
+> The option -k results in clobbering information
+> about running trace by kernel (blk_trace_remove),
+> while resources (files open in debugfs by the running
+> background blktrace) are not released.
+> 
+> Solution:
+> Update documentation:
+> Undocument the non-working "kill" option. Advise
+> to send SIGINT signall via kill(1) to the running
+> background blktrace for its correct termination.
 
+Applied, thanks.
 
---------------040508090106040306030507
-Content-Type: text/plain;
- name="blktrace-fix-513950.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="blktrace-fix-513950.patch"
+-- 
+Jens Axboe
 
-Fixup for 513950.
-
-Problem:
-'blktrace -d <device> -k' does not kill a running
-backgound trace. Executing 'blktrace -d <device> -k'
-for the second time results in "BLKTRACETEARDOWN:
-Invalid argument" message and then each run of
-blktrace on that machine prints the following output:
-BLKTRACESETUP: No such file or directory.
-
-The bug:
-The option -k results in clobbering information
-about running trace by kernel (blk_trace_remove),
-while resources (files open in debugfs by the running
-background blktrace) are not released.
-
-Solution:
-Update documentation:
-Undocument the non-working "kill" option. Advise
-to send SIGINT signall via kill(1) to the running
-background blktrace for its correct termination.
-
-Signed-off-by: Edward Shishkin <edward@redhat.com>
----
- blktrace.c     |    1 -
- doc/blktrace.8 |   24 ++++--------------------
- 2 files changed, 4 insertions(+), 21 deletions(-)
-
---- blktrace.orig/blktrace.c
-+++ blktrace/blktrace.c
-@@ -442,7 +442,6 @@ static char usage_str[] = \
- 	"\t-r Path to mounted debugfs, defaults to /sys/kernel/debug\n" \
- 	"\t-o File(s) to send output to\n" \
- 	"\t-D Directory to prepend to output file names\n" \
--	"\t-k Kill a running trace\n" \
- 	"\t-w Stop after defined time, in seconds\n" \
- 	"\t-a Only trace specified actions. See documentation\n" \
- 	"\t-A Give trace mask as a single value. See documentation\n" \
---- blktrace.orig/doc/blktrace.8
-+++ blktrace/doc/blktrace.8
-@@ -66,19 +66,10 @@ blktrace may also be run concurrently wi
- .TP 2
- \- 
- The default behaviour for blktrace is to run forever until explicitly
--killed by the user (via a control-C, or kill utility invocation).
--There are two ways to modify this:
--
--.TP 5
--  1. 
--You may utilise the blktrace utility itself to kill
--a running trace -- via the \fB\-k\fR option.
--
--.TP 5
--  2.
--You can specify a run-time duration for blktrace via the
--\fB\-w\fR option -- then blktrace will run for the specified number
--of seconds, and then halt.
-+killed by the user (via a control-C, or sending SIGINT signal to the
-+process via invocation the kill (1) utility). Also you can specify a
-+run-time duration for blktrace via the \fB\-w\fR option -- then
-+blktrace will run for the specified number of seconds, and then halt.
- 
- 
- .SH OPTIONS
-@@ -119,13 +110,6 @@ Adds \fIdev\fR as a device to trace  
- Adds the devices found in \fIfile\fR as devices to trace
- .RE
- 
--\-k 
--.br
--\-\-kill 
--.RS
--Kill on-going trace  
--.RE
--
- \-n \fInum\-sub\fR 
- .br
- \-\-num\-sub=\fInum-sub\fR    
-
---------------040508090106040306030507--
