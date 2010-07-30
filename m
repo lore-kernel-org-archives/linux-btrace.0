@@ -1,7 +1,7 @@
 From: "Alan D. Brunelle" <alan.brunelle@hp.com>
-Date: Fri, 30 Jul 2010 14:45:25 +0000
+Date: Fri, 30 Jul 2010 14:47:02 +0000
 Subject: Re: [patch 4/6] blktrace: blktrace documentation update
-Message-Id: <4C52E585.9070104@hp.com>
+Message-Id: <4C52E5E6.8050604@hp.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <4C52DC05.1090201@redhat.com>
 In-Reply-To: <4C52DC05.1090201@redhat.com>
@@ -20,8 +20,18 @@ On 07/30/2010 10:38 AM, Alan D. Brunelle wrote:
 > 'w' / 'stopwatch'
 >
 > for this patch, could you add those and resend?
+>
+> Thanks,
+> Alan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+Oh, and your patch does have the 'w' 'stopwatch' in it (missed it during 
+review). <sigh>
 
-Actually, just add in the 'w' / 'stopwatch' one - I see that you had 
-previously removed the documentation for 'k' in commit
+Acked-by: Alan D. Brunelle <alan.brunelle@hp.com>
 
-fb7f86674a516ddff0d60bfab3bd284a4812075f
+(Although that "approval" doesn't mean much after I messed up so bad 
+with the review... ;-) )
