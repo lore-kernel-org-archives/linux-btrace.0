@@ -1,60 +1,84 @@
 From: Edward Shishkin <edward@redhat.com>
-Date: Tue, 20 Apr 2010 13:27:08 +0000
-Subject: Re: [patch 4/5] blktrace: disable kill option
-Message-Id: <4BCDABAC.8040401@redhat.com>
+Date: Fri, 30 Jul 2010 14:04:24 +0000
+Subject: [patch 2/6] blktrace: blkiomon documentation update
+Message-Id: <4C52DBE8.4020206@redhat.com>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="------------070208000206090401040608"
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4B27CBD6.6060807@redhat.com>
-In-Reply-To: <4B27CBD6.6060807@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Jens Axboe wrote:
-> On Tue, Dec 15 2009, Edward Shishkin wrote:
->   
->
->   
->> Fixup for 513950.
->>
->> Problem:
->> 'blktrace -d <device> -k' does not kill a running
->> backgound trace. Executing 'blktrace -d <device> -k'
->> for the second time results in "BLKTRACETEARDOWN:
->> Invalid argument" message and then each run of
->> blktrace on that machine prints the following output:
->> BLKTRACESETUP: No such file or directory.
->>
->> The bug:
->> The option -k results in clobbering information
->> about running trace by kernel (blk_trace_remove),
->> while resources (files open in debugfs by the running
->> background blktrace) are not released.
->>
->> Solution:
->> . Disable non-working "kill" option;
->> . Update documentation, advise to send SIGINT signal
->>   via kill(1) to the running background blktrace for
->>   its correct termination.
->>     
->
-> Patch does not compile:
->
-> gcc -o blktrace.o -c -Wall -O2 -g -W -D_GNU_SOURCE -D_LARGEFILE_SOURCE
-> -D_FILE_OFFSET_BITSd blktrace.c
-> blktrace.c:446: error: stray ?#? in program
-> blktrace.c:453: error: expected ?,? or ?;? before ?if?
-> blktrace.c:454: error: stray ?#? in program
-> make: *** [blktrace.o] Error 1
->
->
->         "\t-D Directory to prepend to output file names\n" \
-> #if KILL_OPT_ENABLED
->         "\t-k Kill a running trace\n" \
-> #endif /* KILL_OPT_ENABLED */
->         "\t-w Stop after defined time, in seconds\n" \
->   
-oops, sorry: wrong stuff.
-I'll resend the correct one.
+This is a multi-part message in MIME format.
+--------------070208000206090401040608
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Edward.
+
+-- 
+Edward O. Shishkin
+Principal Software Engineer
+Red Hat Czech
+
+
+--------------070208000206090401040608
+Content-Type: text/plain;
+ name="9-blktrace-fix-595419.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="9-blktrace-fix-595419.patch"
+
+Fixup for 595419.
+
+Document blkiomon option -d (--dump-lldd).
+Add drv_data mask description to blktrace man page.
+
+Signed-off-by: Edward Shishkin <edward@redhat.com>
+---
+
+--- blktrace-1.0.1.orig/blkiomon.c
++++ blktrace-1.0.1/blkiomon.c
+@@ -599,6 +599,7 @@
+ 	"-I <interval>       | --interval=<interval>\n" \
+ 	"[ -h <file>         | --human-readable=<file> ]\n" \
+ 	"[ -b <file>         | --binary=<file> ]\n" \
++	"[ -d <file>         | --dump-lldd=<file> ]\n" \
+ 	"[ -D <file>         | --debug=<file> ]\n" \
+ 	"[ -Q <path name>    | --msg-queue=<path name>]\n" \
+ 	"[ -q <msg queue id> | --msg-queue-id=<msg queue id>]\n" \
+--- blktrace-1.0.1.orig/doc/blkiomon.8
++++ blktrace-1.0.1/doc/blkiomon.8
+@@ -7,7 +7,7 @@
+ 
+ .SH SYNOPSIS
+ .B blkiomon \-I \fIinterval\fR [ \-h \fIfile\fR ] [ \-b \fIfile\fR ]
+-[ \-D \fIfile\fR ] [ \-Q \fIpath_name\fR
++[ \-d \fIfile\fR ] [ \-D \fIfile\fR ] [ \-Q \fIpath_name\fR
+ \-q \fImsg_queue_id\fR \-m \fImsg_id\fR ] [ \-V ]
+ .br
+ 
+@@ -50,6 +50,13 @@
+ Binary output file. Use '\-' for stdout.
+ .RE
+ 
++\-d \fIfile\fR
++.br
++\-\-dump-lldd=\fIfile\fR
++.RS
++Output file for data emitted by low level device driver.
++.RE
++
+ \-D \fIfile\fR
+ .br
+ \-\-debug=\fIfile\fR
+--- blktrace-1.0.1.orig/doc/blktrace.8
++++ blktrace-1.0.1/doc/blktrace.8
+@@ -172,6 +172,8 @@
+ \fIwrite\fR: write traces
+ .br
+ \fInotify\fR: trace messages
++.br
++\fIdrv_data\fR: additional driver specific trace
+ .RE
+ 
+ 
+
+--------------070208000206090401040608--
