@@ -1,7 +1,7 @@
 From: Jens Axboe <jaxboe@fusionio.com>
-Date: Wed, 12 Jan 2011 05:00:02 +0000
+Date: Sat, 15 Jan 2011 05:00:03 +0000
 Subject: Recent changes
-Message-Id: <20110112050002.D8AE237A2F7@kernel.dk>
+Message-Id: <20110115050003.7EB8B37A2F9@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
@@ -10,24 +10,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit a788dfde86dfaff8f1c277a233f92c1822e06b76:
+The following changes since commit 5480f591a58df0e873ab80ba21e7b81b9a6fa0c5:
 
-  Fixed build warning for btreplay (2010-11-29 10:34:30 -0500)
+  Merge branch 'master' of ssh://router.home.kernel.dk/data/git/blktrace (2011-01-11 08:36:21 +0100)
 
 are available in the git repository at:
+
   git://git.kernel.dk/blktrace.git master
 
-Jens Axboe (1):
-      Merge branch 'master' of ssh://router.home.kernel.dk/data/git/blktrace
-
 Tao Ma (1):
-      blkparse: Fix blktrace output pipe broken in the new kernel
+      blkiomon: Fix an output error
 
- blkparse.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ stats.h |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
 ---
 
 Diff of recent changes:
 
-Too large to post
+diff --git a/stats.h b/stats.h
+index fdedf27..5b9a313 100644
+--- a/stats.h
++++ b/stats.h
+@@ -75,6 +75,9 @@ static inline void minmax_to_be(struct minmax *mm)
+ 
+ static inline double minmax_avg(struct minmax *mm)
+ {
++	if (!mm->num)
++		return 0;
++
+ 	return (mm->sum / (double)mm->num);
+ }
+ 
+@@ -82,6 +85,9 @@ static inline double minmax_var(struct minmax *mm)
+ {
+ 	double num = (double)mm->num;
+ 
++	if (!mm->num)
++		return 0;
++
+ 	return ((mm->sos - ((mm->sum * mm->sum) / num)) / num);
+ }
+ 
