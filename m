@@ -1,22 +1,29 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Wed, 09 Feb 2011 09:17:14 +0000
-Subject: Re: [PATCH] blktrace: break mlock in case of is_done.
-Message-Id: <4D525B9A.9040007@kernel.dk>
+From: Mehrnoosh Sameki <mehrnush89@gmail.com>
+Date: Sun, 06 Feb 2011 17:58:36 +0000
+Subject: Questions about btreplay
+Message-Id: <AANLkTim+DS8x4=04YNMfZAtYJFycZgy54YsrWYEhTZa-@mail.gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1296379106-6009-1-git-send-email-tm@tao.ma>
-In-Reply-To: <1296379106-6009-1-git-send-email-tm@tao.ma>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 2011-02-09 10:14, Tao Ma wrote:
-> Hi Jens,
->     any comments about the 3 patches I sent about 2 weeks ago?
+Hello,
 
-Sorry, they dropped out of scope. They all look fine, I'll apply them
-now. Thanks!
+I am currently using "btreplay and btrecord" along with "blktrace" in
+order to replay the traces taken by blktrace.
+Since both reads and writes are important for me to cover,I use the -W
+option of btreplay to enable the writes.While replaying big traces,I
+faced the problem of its huge number of files written in a place I
+don't know and thus it made my file system unknown.
+Where does btreplay do the writing transactions while we enable its
+write option?
+Your reply will be appreciated.
 
+Regards
 -- 
-Jens Axboe
-
+Mehrnoosh Sameki
+Bachelor Student,
+Computer Engineering Department,
+Sharif University of Technology,
+Tehran, Iran
