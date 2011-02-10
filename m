@@ -1,60 +1,126 @@
-From: Hsiao Su <Hsiao.Su@marklogic.com>
-Date: Fri, 11 Feb 2011 18:37:45 +0000
-Subject: RE: replaying blktrace using fio on a different device
-Message-Id: <E9E9B636B25C054B8E6B9131614B925A037FD72D@EXCHG-BE.marklogic.com>
+From: Jens Axboe <jaxboe@fusionio.com>
+Date: Thu, 10 Feb 2011 05:00:04 +0000
+Subject: Recent changes
+Message-Id: <20110210050004.5732D37A2C9@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <E9E9B636B25C054B8E6B9131614B925A037FD544@EXCHG-BE.marklogic.com>
-In-Reply-To: <E9E9B636B25C054B8E6B9131614B925A037FD544@EXCHG-BE.marklogic.com>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="windows-1254"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-CkJ5IGFuYWx5c2lzLCBJIG1lYW4gdGhhdCBmaW8gd291bGQgb3V0cHV0IHRocm91Z2hwdXQgbnVt
-YmVycyAoc3VjaCBhcyBtYi9zLCBpb3BzKSBhbmQgbGF0ZW5jeSBudW1iZXJzIChzbGF0IC0gc3Vi
-bWlzc2lvbiBsYXRlbmN5LCBjbGF0IC0gY29tcGxldGlvbiBsYXRlbmN5KQoKLS0tCkhzaWFvICJT
-aGFvIiBTdQo2NTAgMjg3IDI1NDUgKFcpCgoKLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KRnJv
-bTogQWxpcmV6YSBIYWdoZG9vc3QgW21haWx0bzpoYWdoZG9vc3RAZ21haWwuY29tXSAKU2VudDog
-RnJpZGF5LCBGZWJydWFyeSAxMSwgMjAxMSAxMDoyMyBBTQpUbzogSHNpYW8gU3UKQ2M6IGxpbnV4
-LWJ0cmFjZUB2Z2VyLmtlcm5lbC5vcmcKU3ViamVjdDogUmU6IHJlcGxheWluZyBibGt0cmFjZSB1
-c2luZyBmaW8gb24gYSBkaWZmZXJlbnQgZGV2aWNlCgpXaGF0IGtpbmcgb2YgYW5hbHlzaXMgeW91
-IGRpZCB5b3UgbWVhbiA/CgpBbGlyZXphIEhhZ2hkb29zdAoKCgpPbiBGcmksIEZlYiAxMSwgMjAx
-MSBhdCAyMToxNiwgSHNpYW8gU3UgPEhzaWFvLlN1QG1hcmtsb2dpYy5jb20+IHdyb3RlOgo+Cj4g
-RGlkbid0IGtub3cgYWJvdXQgYnRyZXBsYXkuIMKgQnV0IEkganVzdCByZWFkIGl0cyBtYW4gcGFn
-ZS4gwqBMb29rcyBsaWtlIGJ0cmVwbGF5IHdpbGwgb25seSByZXBsYXkgdGhlIHdvcmtsb2FkLCBi
-dXQgZG9lcyBub3QgcHJvdmlkZSBhbnkgYW5hbHlzaXMuIMKgSXQgY2FuIHJlcGxheSB3b3JrbG9h
-ZCBvbiBhIGRpZmZlcmVudCBkZXZpY2UuCj4KPiBJbiBmaW8sIHRoZXJlJ3MgYSBwYXJhbWV0ZXIg
-Y2FsbGVkIHJlYWRfaW9sb2csIHdoZXJlIHlvdSBjYW4gc3BlY2lmeSBibGt0cmFjZSdzIGJpbmFy
-eSBvdXRwdXQgZmlsZXMuIMKgRmlvIHdpbGwgcmVwbGF5IHRoaXMgd29ya2xvYWQgYW5kIHByb3Zp
-ZGUgYW5hbHlzaXMuCj4KPiBJbiBmaW8gdjEuNTAsIHRoZXJlJ3MgYW4gYWRkaXRpb25hbCBwYXJh
-bWV0ZXIgY2FsbGVkIHJlcGxheV9yZWRpcmVjdC4gwqBZb3UgY2FuIHVzZSB0aGlzIHRvIHNwZWNp
-ZnkgYSBkaWZmZXJlbnQgZGV2aWNlLiDCoE5vdGUgdGhhdCB0aGlzIGlzIG5vdCBkb2N1bWVudGVk
-IGluIGZpbydzIG1hbiBwYWdlLCBidXQgaXQgaXMgZG9jdW1lbnRlZCBpbiB0aGUgSE9XVE8gZmls
-ZS4gwqBJIGZvdW5kIHRoaXMgb3B0aW9uIGJ5IHNlYXJjaCBhcmNoaXZlcyBvZiB0aGlzIG1haWxp
-bmcgbGlzdC4KPgo+IC0tLQo+IEhzaWFvICJTaGFvIiBTdQo+IDY1MCAyODcgMjU0NSAoVykKPgo+
-Cj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KPiBGcm9tOiBBbGlyZXphIEhhZ2hkb29zdCBb
-bWFpbHRvOmhhZ2hkb29zdEBnbWFpbC5jb21dCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDEw
-LCAyMDExIDk6MjcgUE0KPiBUbzogSHNpYW8gU3UKPiBDYzogbGludXgtYnRyYWNlQHZnZXIua2Vy
-bmVsLm9yZwo+IFN1YmplY3Q6IFJlOiByZXBsYXlpbmcgYmxrdHJhY2UgdXNpbmcgZmlvIG9uIGEg
-ZGlmZmVyZW50IGRldmljZQo+Cj4gV2h5IHlvdSBkbyBub3QgdXNlIGJ0cmVwbHkgPyBpdCBoYXMg
-YSBtYXBwaW5nIGRldmljZSBvcHRpb24uCj4gV291bGQgeW91IHBsZWFzZSBsZXQgbWUga25vdyBo
-b3cgeW91IHJlcGx5IGEgdHJhY2UgdXNpbmcgZmlvID8KPgo+Cj4gQWxpcmV6YSBIYWdoZG9vc3QK
-PiBHcmFkdWF0ZSBTdHVkZW50Cj4gRGVwYXJ0bWVudCBvZiBDb21wdXRlciBFbmdpbmVlcmluZwo+
-IFNoYXJpZiBVbml2ZXJzaXR5IG9mIFRlY2hub2xvZ3kKPiBodHRwOi8vY2Uuc2hhcmlmLmVkdS9+
-aGFnaGRvb3N0Cj4gUGhvbmU6ICg5OCkgKDIxKSA2NjE2IDY2ODkKPgo+Cj4KPgo+Cj4gT24gRnJp
-LCBGZWIgMTEsIDIwMTEgYXQgMDI6NTcsIEhzaWFvIFN1IDxIc2lhby5TdUBtYXJrbG9naWMuY29t
-PiB3cm90ZToKPiA+Cj4gPiBEb2VzIGFueW9uZSBrbm93IGlmIHRoaXMgaXMgcG9zc2libGU/wqAg
-SSdkIGxpa2UgdG8gcmVjb3JkIGlvIHdvcmtsb2FkIHVzaW5nIGJsa3RyYWNlIGZvciBvbmUgZGV2
-aWNlLCBhbmQgdGhlbiB1c2UgZmlvIHRvIHJlcGxheSBpdCBvbiBhIGRpZmZlcmVudCBkZXZpY2Ug
-dGhhdCdzIG9uIGEgZGlmZmVyZW50IG1hY2hpbmUuCj4gPgo+ID4gTXkgYnJpZWYgZXhwZXJpbWVu
-dCBzZWVtcyB0byBzYXkgbm8uwqAgSWYgSSByZWNvcmQgaXQgdXNpbmcgL2Rldi9zZGEsIHRoZW4g
-d2hlbiByZXBsYXlpbmcgaXQsIC9kZXYvc2RhIG11c3QgYmUgdGhlcmUuCj4gPgo+ID4gQmFzaWNh
-bGx5LCBJJ20gdHJ5aW5nIHRvIHNlZSBob3cgdHdvIGRpZmZlcmVudCBpbyBzdWJzeXN0ZW1zIG1l
-YXN1cmUgdXAsIHVzaW5nIGEgcmVhbCBhcHBsaWNhdGlvbidzIHdvcmtsb2FkLgo+ID4KPiA+IC0t
-LQo+ID4gSHNpYW8gIlNoYW8iIFN1Cj4gPiA2NTAgMjg3IDI1NDUgKFcpCj4gPgo+ID4KPiA+IC0t
-Cj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJz
-Y3JpYmUgbGludXgtYnRyYWNlIiBpbgo+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9y
-ZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBodHRwOi8v
-dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPiA+Cv/06Lp7Lm7HK4m3n66JrYYr
-JYrL/7Hp3bYXpYp3/7p7Lm7HK4m3pYp7sf27a2nH/4p7YXm6HcqH2pnrLGoHraJmo6K3aJqP74Hq
-/5Hq53pf6K4DKK3pmo6K3aJqIp36GrYbbaf//74Hq/5Hq53p/6K4P5mo6K3aJqP4p36P4Qo=
+The following changes since commit b7e74b0087fe5d687c6a43a01a2e02d60b618ae0:
+
+  blkiomon: Fix an output error (2011-01-14 09:06:03 +0100)
+
+are available in the git repository at:
+  git://git.kernel.dk/blktrace.git master
+
+Tao Ma (3):
+      blktrace: break mlock in case of is_done.
+      blktrace: remove unused idx from devpath.
+      gitignore: add blkiomon to .gitignore.
+
+ .gitignore |    3 +++
+ blktrace.c |   25 +++++++++++++++++--------
+ 2 files changed, 20 insertions(+), 8 deletions(-)
+
+---
+
+Diff of recent changes:
+
+diff --git a/.gitignore b/.gitignore
+index 9038778..2436e34 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -3,6 +3,9 @@
+ blkparse
+ blktrace
+ blkrawverify
++blkiomon
++btreplay/btrecord
++btreplay/btreplay
+ doc/.depend
+ verify_blkparse
+ btt/btt
+diff --git a/blktrace.c b/blktrace.c
+index 4cccb7c..18c5157 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -93,7 +93,7 @@ struct devpath {
+ 	char *path;			/* path to device special file */
+ 	char *buts_name;		/* name returned from bt kernel code */
+ 	struct pdc_stats *stats;
+-	int fd, idx, ncpus;
++	int fd, ncpus;
+ 	unsigned long long drops;
+ 
+ 	/*
+@@ -721,18 +721,24 @@ static void *my_mmap(void *addr, size_t length, int prot, int flags, int fd,
+ 	return new;
+ }
+ 
+-static int my_mlock(const void *addr, size_t len)
++static int my_mlock(struct tracer *tp,
++		    const void *addr, size_t len)
+ {
+-	int ret;
++	int ret, retry = 0;
+ 
+ 	do {
+ 		ret = mlock(addr, len);
++		if ((retry >= 10) && tp && tp->is_done)
++			break;
++		retry++;
+ 	} while (ret < 0 && handle_mem_failure(len));
+ 
+ 	return ret;
+ }
+ 
+-static int setup_mmap(int fd, unsigned int maxlen, struct mmap_info *mip)
++static int setup_mmap(int fd, unsigned int maxlen,
++		      struct mmap_info *mip,
++		      struct tracer *tp)
+ {
+ 	if (mip->fs_off + maxlen > mip->fs_buf_len) {
+ 		unsigned long nr = max(16, mip->buf_nr);
+@@ -759,7 +765,10 @@ static int setup_mmap(int fd, unsigned int maxlen, struct mmap_info *mip)
+ 			perror("setup_mmap: mmap");
+ 			return 1;
+ 		}
+-		my_mlock(mip->fs_buf, mip->fs_buf_len);
++		if (my_mlock(tp, mip->fs_buf, mip->fs_buf_len) < 0) {
++			perror("setup_mlock: mlock");
++			return 1;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -1239,7 +1248,7 @@ static int add_devpath(char *path)
+ 	memset(dpp, 0, sizeof(*dpp));
+ 	dpp->path = strdup(path);
+ 	dpp->fd = fd;
+-	dpp->idx = ndevs++;
++	ndevs++;
+ 	list_add_tail(&dpp->head, &devpaths);
+ 
+ 	return 0;
+@@ -1683,7 +1692,7 @@ static int handle_pfds_file(struct tracer *tp, int nevs, int force_read)
+ 		if (pfd->revents & POLLIN || force_read) {
+ 			mip = &iop->mmap_info;
+ 
+-			ret = setup_mmap(iop->ofd, buf_size, mip);
++			ret = setup_mmap(iop->ofd, buf_size, mip, tp);
+ 			if (ret < 0) {
+ 				pfd->events = 0;
+ 				break;
+@@ -2381,7 +2390,7 @@ static void net_client_read_data(struct cl_conn *nc, struct devpath *dpp,
+ 	struct io_info *iop = &dpp->ios[bnh->cpu];
+ 	struct mmap_info *mip = &iop->mmap_info;
+ 
+-	if (setup_mmap(iop->ofd, bnh->len, &iop->mmap_info)) {
++	if (setup_mmap(iop->ofd, bnh->len, &iop->mmap_info, NULL)) {
+ 		fprintf(stderr, "ncd(%s:%d): mmap failed\n",
+ 			nc->ch->hostname, nc->fd);
+ 		exit(1);
