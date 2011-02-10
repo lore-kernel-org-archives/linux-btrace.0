@@ -1,45 +1,26 @@
-From: Tao Ma <tm@tao.ma>
-Date: Sun, 30 Jan 2011 09:18:25 +0000
-Subject: [PATCH] blktrace: remove unused idx from devpath.
-Message-Id: <1296379106-6009-2-git-send-email-tm@tao.ma>
+From: Hsiao Su <Hsiao.Su@marklogic.com>
+Date: Thu, 10 Feb 2011 23:27:05 +0000
+Subject: replaying blktrace using fio on a different device
+Message-Id: <E9E9B636B25C054B8E6B9131614B925A037FD544@EXCHG-BE.marklogic.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 To: linux-btrace@vger.kernel.org
 
-From: Tao Ma <boyu.mt@taobao.com>
 
-idx isn't used, so remove it.
+Does anyone know if this is possible?=A0 I'd like to record io workload usi=
+ng blktrace for one device, and then use fio to replay it on a different de=
+vice that's on a different machine.
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Tao Ma <boyu.mt@taobao.com>
+My brief experiment seems to say no.=A0 If I record it using /dev/sda, then=
+ when replaying it, /dev/sda must be there.
+
+Basically, I'm trying to see how two different io subsystems measure up, us=
+ing a real application's workload.
+
 ---
- blktrace.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Hsiao "Shao" Su
+650 287 2545 (W)
 
-diff --git a/blktrace.c b/blktrace.c
-index 4cccb7c..851b8a8 100644
---- a/blktrace.c
-+++ b/blktrace.c
-@@ -93,7 +93,7 @@ struct devpath {
- 	char *path;			/* path to device special file */
- 	char *buts_name;		/* name returned from bt kernel code */
- 	struct pdc_stats *stats;
--	int fd, idx, ncpus;
-+	int fd, ncpus;
- 	unsigned long long drops;
- 
- 	/*
-@@ -1239,7 +1239,7 @@ static int add_devpath(char *path)
- 	memset(dpp, 0, sizeof(*dpp));
- 	dpp->path = strdup(path);
- 	dpp->fd = fd;
--	dpp->idx = ndevs++;
-+	ndevs++;
- 	list_add_tail(&dpp->head, &devpaths);
- 
- 	return 0;
--- 
-1.6.3.GIT
 
