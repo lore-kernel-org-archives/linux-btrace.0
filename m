@@ -1,71 +1,60 @@
-From: Alireza Haghdoost <haghdoost@gmail.com>
-Date: Fri, 11 Feb 2011 18:35:23 +0000
-Subject: Re: replaying blktrace using fio on a different device
-Message-Id: <AANLkTikDCE1jpLG8NTuYPLk5oaoisD=azqu0sZ+=y3fQ@mail.gmail.com>
+From: Hsiao Su <Hsiao.Su@marklogic.com>
+Date: Fri, 11 Feb 2011 18:37:45 +0000
+Subject: RE: replaying blktrace using fio on a different device
+Message-Id: <E9E9B636B25C054B8E6B9131614B925A037FD72D@EXCHG-BE.marklogic.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <E9E9B636B25C054B8E6B9131614B925A037FD544@EXCHG-BE.marklogic.com>
 In-Reply-To: <E9E9B636B25C054B8E6B9131614B925A037FD544@EXCHG-BE.marklogic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="windows-1254"
+Content-Transfer-Encoding: base64
 To: linux-btrace@vger.kernel.org
 
-What king of analysis you did you mean ?
-
-Alireza Haghdoost
-
-
-
-On Fri, Feb 11, 2011 at 21:16, Hsiao Su <Hsiao.Su@marklogic.com> wrote:
->
-> Didn't know about btreplay.  But I just read its man page.  Looks like btreplay will only replay the workload, but does not provide any analysis.  It can replay workload on a different device.
->
-> In fio, there's a parameter called read_iolog, where you can specify blktrace's binary output files.  Fio will replay this workload and provide analysis.
->
-> In fio v1.50, there's an additional parameter called replay_redirect.  You can use this to specify a different device.  Note that this is not documented in fio's man page, but it is documented in the HOWTO file.  I found this option by search archives of this mailing list.
->
-> ---
-> Hsiao "Shao" Su
-> 650 287 2545 (W)
->
->
-> -----Original Message-----
-> From: Alireza Haghdoost [mailto:haghdoost@gmail.com]
-> Sent: Thursday, February 10, 2011 9:27 PM
-> To: Hsiao Su
-> Cc: linux-btrace@vger.kernel.org
-> Subject: Re: replaying blktrace using fio on a different device
->
-> Why you do not use btreply ? it has a mapping device option.
-> Would you please let me know how you reply a trace using fio ?
->
->
-> Alireza Haghdoost
-> Graduate Student
-> Department of Computer Engineering
-> Sharif University of Technology
-> http://ce.sharif.edu/~haghdoost
-> Phone: (98) (21) 6616 6689
->
->
->
->
->
-> On Fri, Feb 11, 2011 at 02:57, Hsiao Su <Hsiao.Su@marklogic.com> wrote:
-> >
-> > Does anyone know if this is possible?  I'd like to record io workload using blktrace for one device, and then use fio to replay it on a different device that's on a different machine.
-> >
-> > My brief experiment seems to say no.  If I record it using /dev/sda, then when replaying it, /dev/sda must be there.
-> >
-> > Basically, I'm trying to see how two different io subsystems measure up, using a real application's workload.
-> >
-> > ---
-> > Hsiao "Shao" Su
-> > 650 287 2545 (W)
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+CkJ5IGFuYWx5c2lzLCBJIG1lYW4gdGhhdCBmaW8gd291bGQgb3V0cHV0IHRocm91Z2hwdXQgbnVt
+YmVycyAoc3VjaCBhcyBtYi9zLCBpb3BzKSBhbmQgbGF0ZW5jeSBudW1iZXJzIChzbGF0IC0gc3Vi
+bWlzc2lvbiBsYXRlbmN5LCBjbGF0IC0gY29tcGxldGlvbiBsYXRlbmN5KQoKLS0tCkhzaWFvICJT
+aGFvIiBTdQo2NTAgMjg3IDI1NDUgKFcpCgoKLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KRnJv
+bTogQWxpcmV6YSBIYWdoZG9vc3QgW21haWx0bzpoYWdoZG9vc3RAZ21haWwuY29tXSAKU2VudDog
+RnJpZGF5LCBGZWJydWFyeSAxMSwgMjAxMSAxMDoyMyBBTQpUbzogSHNpYW8gU3UKQ2M6IGxpbnV4
+LWJ0cmFjZUB2Z2VyLmtlcm5lbC5vcmcKU3ViamVjdDogUmU6IHJlcGxheWluZyBibGt0cmFjZSB1
+c2luZyBmaW8gb24gYSBkaWZmZXJlbnQgZGV2aWNlCgpXaGF0IGtpbmcgb2YgYW5hbHlzaXMgeW91
+IGRpZCB5b3UgbWVhbiA/CgpBbGlyZXphIEhhZ2hkb29zdAoKCgpPbiBGcmksIEZlYiAxMSwgMjAx
+MSBhdCAyMToxNiwgSHNpYW8gU3UgPEhzaWFvLlN1QG1hcmtsb2dpYy5jb20+IHdyb3RlOgo+Cj4g
+RGlkbid0IGtub3cgYWJvdXQgYnRyZXBsYXkuIMKgQnV0IEkganVzdCByZWFkIGl0cyBtYW4gcGFn
+ZS4gwqBMb29rcyBsaWtlIGJ0cmVwbGF5IHdpbGwgb25seSByZXBsYXkgdGhlIHdvcmtsb2FkLCBi
+dXQgZG9lcyBub3QgcHJvdmlkZSBhbnkgYW5hbHlzaXMuIMKgSXQgY2FuIHJlcGxheSB3b3JrbG9h
+ZCBvbiBhIGRpZmZlcmVudCBkZXZpY2UuCj4KPiBJbiBmaW8sIHRoZXJlJ3MgYSBwYXJhbWV0ZXIg
+Y2FsbGVkIHJlYWRfaW9sb2csIHdoZXJlIHlvdSBjYW4gc3BlY2lmeSBibGt0cmFjZSdzIGJpbmFy
+eSBvdXRwdXQgZmlsZXMuIMKgRmlvIHdpbGwgcmVwbGF5IHRoaXMgd29ya2xvYWQgYW5kIHByb3Zp
+ZGUgYW5hbHlzaXMuCj4KPiBJbiBmaW8gdjEuNTAsIHRoZXJlJ3MgYW4gYWRkaXRpb25hbCBwYXJh
+bWV0ZXIgY2FsbGVkIHJlcGxheV9yZWRpcmVjdC4gwqBZb3UgY2FuIHVzZSB0aGlzIHRvIHNwZWNp
+ZnkgYSBkaWZmZXJlbnQgZGV2aWNlLiDCoE5vdGUgdGhhdCB0aGlzIGlzIG5vdCBkb2N1bWVudGVk
+IGluIGZpbydzIG1hbiBwYWdlLCBidXQgaXQgaXMgZG9jdW1lbnRlZCBpbiB0aGUgSE9XVE8gZmls
+ZS4gwqBJIGZvdW5kIHRoaXMgb3B0aW9uIGJ5IHNlYXJjaCBhcmNoaXZlcyBvZiB0aGlzIG1haWxp
+bmcgbGlzdC4KPgo+IC0tLQo+IEhzaWFvICJTaGFvIiBTdQo+IDY1MCAyODcgMjU0NSAoVykKPgo+
+Cj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KPiBGcm9tOiBBbGlyZXphIEhhZ2hkb29zdCBb
+bWFpbHRvOmhhZ2hkb29zdEBnbWFpbC5jb21dCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDEw
+LCAyMDExIDk6MjcgUE0KPiBUbzogSHNpYW8gU3UKPiBDYzogbGludXgtYnRyYWNlQHZnZXIua2Vy
+bmVsLm9yZwo+IFN1YmplY3Q6IFJlOiByZXBsYXlpbmcgYmxrdHJhY2UgdXNpbmcgZmlvIG9uIGEg
+ZGlmZmVyZW50IGRldmljZQo+Cj4gV2h5IHlvdSBkbyBub3QgdXNlIGJ0cmVwbHkgPyBpdCBoYXMg
+YSBtYXBwaW5nIGRldmljZSBvcHRpb24uCj4gV291bGQgeW91IHBsZWFzZSBsZXQgbWUga25vdyBo
+b3cgeW91IHJlcGx5IGEgdHJhY2UgdXNpbmcgZmlvID8KPgo+Cj4gQWxpcmV6YSBIYWdoZG9vc3QK
+PiBHcmFkdWF0ZSBTdHVkZW50Cj4gRGVwYXJ0bWVudCBvZiBDb21wdXRlciBFbmdpbmVlcmluZwo+
+IFNoYXJpZiBVbml2ZXJzaXR5IG9mIFRlY2hub2xvZ3kKPiBodHRwOi8vY2Uuc2hhcmlmLmVkdS9+
+aGFnaGRvb3N0Cj4gUGhvbmU6ICg5OCkgKDIxKSA2NjE2IDY2ODkKPgo+Cj4KPgo+Cj4gT24gRnJp
+LCBGZWIgMTEsIDIwMTEgYXQgMDI6NTcsIEhzaWFvIFN1IDxIc2lhby5TdUBtYXJrbG9naWMuY29t
+PiB3cm90ZToKPiA+Cj4gPiBEb2VzIGFueW9uZSBrbm93IGlmIHRoaXMgaXMgcG9zc2libGU/wqAg
+SSdkIGxpa2UgdG8gcmVjb3JkIGlvIHdvcmtsb2FkIHVzaW5nIGJsa3RyYWNlIGZvciBvbmUgZGV2
+aWNlLCBhbmQgdGhlbiB1c2UgZmlvIHRvIHJlcGxheSBpdCBvbiBhIGRpZmZlcmVudCBkZXZpY2Ug
+dGhhdCdzIG9uIGEgZGlmZmVyZW50IG1hY2hpbmUuCj4gPgo+ID4gTXkgYnJpZWYgZXhwZXJpbWVu
+dCBzZWVtcyB0byBzYXkgbm8uwqAgSWYgSSByZWNvcmQgaXQgdXNpbmcgL2Rldi9zZGEsIHRoZW4g
+d2hlbiByZXBsYXlpbmcgaXQsIC9kZXYvc2RhIG11c3QgYmUgdGhlcmUuCj4gPgo+ID4gQmFzaWNh
+bGx5LCBJJ20gdHJ5aW5nIHRvIHNlZSBob3cgdHdvIGRpZmZlcmVudCBpbyBzdWJzeXN0ZW1zIG1l
+YXN1cmUgdXAsIHVzaW5nIGEgcmVhbCBhcHBsaWNhdGlvbidzIHdvcmtsb2FkLgo+ID4KPiA+IC0t
+LQo+ID4gSHNpYW8gIlNoYW8iIFN1Cj4gPiA2NTAgMjg3IDI1NDUgKFcpCj4gPgo+ID4KPiA+IC0t
+Cj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJz
+Y3JpYmUgbGludXgtYnRyYWNlIiBpbgo+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9y
+ZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBodHRwOi8v
+dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPiA+Cv/06Lp7Lm7HK4m3n66JrYYr
+JYrL/7Hp3bYXpYp3/7p7Lm7HK4m3pYp7sf27a2nH/4p7YXm6HcqH2pnrLGoHraJmo6K3aJqP74Hq
+/5Hq53pf6K4DKK3pmo6K3aJqIp36GrYbbaf//74Hq/5Hq53p/6K4P5mo6K3aJqP4p36P4Qo=
