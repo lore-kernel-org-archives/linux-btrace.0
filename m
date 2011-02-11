@@ -1,49 +1,71 @@
-From: Hsiao Su <Hsiao.Su@marklogic.com>
-Date: Fri, 11 Feb 2011 17:46:23 +0000
-Subject: RE: replaying blktrace using fio on a different device
-Message-Id: <E9E9B636B25C054B8E6B9131614B925A037FD6DA@EXCHG-BE.marklogic.com>
+From: Alireza Haghdoost <haghdoost@gmail.com>
+Date: Fri, 11 Feb 2011 18:35:23 +0000
+Subject: Re: replaying blktrace using fio on a different device
+Message-Id: <AANLkTikDCE1jpLG8NTuYPLk5oaoisD=azqu0sZ+=y3fQ@mail.gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <E9E9B636B25C054B8E6B9131614B925A037FD544@EXCHG-BE.marklogic.com>
 In-Reply-To: <E9E9B636B25C054B8E6B9131614B925A037FD544@EXCHG-BE.marklogic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="windows-1254"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 To: linux-btrace@vger.kernel.org
 
-CkRpZG4ndCBrbm93IGFib3V0IGJ0cmVwbGF5LiAgQnV0IEkganVzdCByZWFkIGl0cyBtYW4gcGFn
-ZS4gIExvb2tzIGxpa2UgYnRyZXBsYXkgd2lsbCBvbmx5IHJlcGxheSB0aGUgd29ya2xvYWQsIGJ1
-dCBkb2VzIG5vdCBwcm92aWRlIGFueSBhbmFseXNpcy4gIEl0IGNhbiByZXBsYXkgd29ya2xvYWQg
-b24gYSBkaWZmZXJlbnQgZGV2aWNlLgoKSW4gZmlvLCB0aGVyZSdzIGEgcGFyYW1ldGVyIGNhbGxl
-ZCByZWFkX2lvbG9nLCB3aGVyZSB5b3UgY2FuIHNwZWNpZnkgYmxrdHJhY2UncyBiaW5hcnkgb3V0
-cHV0IGZpbGVzLiAgRmlvIHdpbGwgcmVwbGF5IHRoaXMgd29ya2xvYWQgYW5kIHByb3ZpZGUgYW5h
-bHlzaXMuCgpJbiBmaW8gdjEuNTAsIHRoZXJlJ3MgYW4gYWRkaXRpb25hbCBwYXJhbWV0ZXIgY2Fs
-bGVkIHJlcGxheV9yZWRpcmVjdC4gIFlvdSBjYW4gdXNlIHRoaXMgdG8gc3BlY2lmeSBhIGRpZmZl
-cmVudCBkZXZpY2UuICBOb3RlIHRoYXQgdGhpcyBpcyBub3QgZG9jdW1lbnRlZCBpbiBmaW8ncyBt
-YW4gcGFnZSwgYnV0IGl0IGlzIGRvY3VtZW50ZWQgaW4gdGhlIEhPV1RPIGZpbGUuICBJIGZvdW5k
-IHRoaXMgb3B0aW9uIGJ5IHNlYXJjaCBhcmNoaXZlcyBvZiB0aGlzIG1haWxpbmcgbGlzdC4KCi0t
-LQpIc2lhbyAiU2hhbyIgU3UKNjUwIDI4NyAyNTQ1IChXKQoKCi0tLS0tT3JpZ2luYWwgTWVzc2Fn
-ZS0tLS0tCkZyb206IEFsaXJlemEgSGFnaGRvb3N0IFttYWlsdG86aGFnaGRvb3N0QGdtYWlsLmNv
-bV0gClNlbnQ6IFRodXJzZGF5LCBGZWJydWFyeSAxMCwgMjAxMSA5OjI3IFBNClRvOiBIc2lhbyBT
-dQpDYzogbGludXgtYnRyYWNlQHZnZXIua2VybmVsLm9yZwpTdWJqZWN0OiBSZTogcmVwbGF5aW5n
-IGJsa3RyYWNlIHVzaW5nIGZpbyBvbiBhIGRpZmZlcmVudCBkZXZpY2UKCldoeSB5b3UgZG8gbm90
-IHVzZSBidHJlcGx5ID8gaXQgaGFzIGEgbWFwcGluZyBkZXZpY2Ugb3B0aW9uLgpXb3VsZCB5b3Ug
-cGxlYXNlIGxldCBtZSBrbm93IGhvdyB5b3UgcmVwbHkgYSB0cmFjZSB1c2luZyBmaW8gPwoKCkFs
-aXJlemEgSGFnaGRvb3N0CkdyYWR1YXRlIFN0dWRlbnQKRGVwYXJ0bWVudCBvZiBDb21wdXRlciBF
-bmdpbmVlcmluZwpTaGFyaWYgVW5pdmVyc2l0eSBvZiBUZWNobm9sb2d5Cmh0dHA6Ly9jZS5zaGFy
-aWYuZWR1L35oYWdoZG9vc3QKUGhvbmU6ICg5OCkgKDIxKSA2NjE2IDY2ODkKCgoKCgpPbiBGcmks
-IEZlYiAxMSwgMjAxMSBhdCAwMjo1NywgSHNpYW8gU3UgPEhzaWFvLlN1QG1hcmtsb2dpYy5jb20+
-IHdyb3RlOgo+Cj4gRG9lcyBhbnlvbmUga25vdyBpZiB0aGlzIGlzIHBvc3NpYmxlP8KgIEknZCBs
-aWtlIHRvIHJlY29yZCBpbyB3b3JrbG9hZCB1c2luZyBibGt0cmFjZSBmb3Igb25lIGRldmljZSwg
-YW5kIHRoZW4gdXNlIGZpbyB0byByZXBsYXkgaXQgb24gYSBkaWZmZXJlbnQgZGV2aWNlIHRoYXQn
-cyBvbiBhIGRpZmZlcmVudCBtYWNoaW5lLgo+Cj4gTXkgYnJpZWYgZXhwZXJpbWVudCBzZWVtcyB0
-byBzYXkgbm8uwqAgSWYgSSByZWNvcmQgaXQgdXNpbmcgL2Rldi9zZGEsIHRoZW4gd2hlbiByZXBs
-YXlpbmcgaXQsIC9kZXYvc2RhIG11c3QgYmUgdGhlcmUuCj4KPiBCYXNpY2FsbHksIEknbSB0cnlp
-bmcgdG8gc2VlIGhvdyB0d28gZGlmZmVyZW50IGlvIHN1YnN5c3RlbXMgbWVhc3VyZSB1cCwgdXNp
-bmcgYSByZWFsIGFwcGxpY2F0aW9uJ3Mgd29ya2xvYWQuCj4KPiAtLS0KPiBIc2lhbyAiU2hhbyIg
-U3UKPiA2NTAgMjg3IDI1NDUgKFcpCj4KPgo+IC0tCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
-IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LWJ0cmFjZSIgaW4KPiB0aGUg
-Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFq
-b3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0
-bWwKPgr/9Oi6ey5uxyuJt5+uia2GKyWKy/+x6d22F6WKd/+6ey5uxyuJt6WKe7H9u2tpx/+Ke2F5
-uh3Kh9qZ6yxqB62iZqOit2iaj++B6v+R6ud6X+iuAyit6ZqOit2iaiKd+hq2G22n//++B6v+R6ud
-6f+iuD+ZqOit2iaj+Kd+j+EK
+What king of analysis you did you mean ?
+
+Alireza Haghdoost
+
+
+
+On Fri, Feb 11, 2011 at 21:16, Hsiao Su <Hsiao.Su@marklogic.com> wrote:
+>
+> Didn't know about btreplay.  But I just read its man page.  Looks like btreplay will only replay the workload, but does not provide any analysis.  It can replay workload on a different device.
+>
+> In fio, there's a parameter called read_iolog, where you can specify blktrace's binary output files.  Fio will replay this workload and provide analysis.
+>
+> In fio v1.50, there's an additional parameter called replay_redirect.  You can use this to specify a different device.  Note that this is not documented in fio's man page, but it is documented in the HOWTO file.  I found this option by search archives of this mailing list.
+>
+> ---
+> Hsiao "Shao" Su
+> 650 287 2545 (W)
+>
+>
+> -----Original Message-----
+> From: Alireza Haghdoost [mailto:haghdoost@gmail.com]
+> Sent: Thursday, February 10, 2011 9:27 PM
+> To: Hsiao Su
+> Cc: linux-btrace@vger.kernel.org
+> Subject: Re: replaying blktrace using fio on a different device
+>
+> Why you do not use btreply ? it has a mapping device option.
+> Would you please let me know how you reply a trace using fio ?
+>
+>
+> Alireza Haghdoost
+> Graduate Student
+> Department of Computer Engineering
+> Sharif University of Technology
+> http://ce.sharif.edu/~haghdoost
+> Phone: (98) (21) 6616 6689
+>
+>
+>
+>
+>
+> On Fri, Feb 11, 2011 at 02:57, Hsiao Su <Hsiao.Su@marklogic.com> wrote:
+> >
+> > Does anyone know if this is possible?  I'd like to record io workload using blktrace for one device, and then use fio to replay it on a different device that's on a different machine.
+> >
+> > My brief experiment seems to say no.  If I record it using /dev/sda, then when replaying it, /dev/sda must be there.
+> >
+> > Basically, I'm trying to see how two different io subsystems measure up, using a real application's workload.
+> >
+> > ---
+> > Hsiao "Shao" Su
+> > 650 287 2545 (W)
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
