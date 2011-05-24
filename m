@@ -1,49 +1,70 @@
-From: Adam Crume <adamcrume@gmail.com>
-Date: Fri, 29 Apr 2011 22:44:19 +0000
-Subject: Unrealistic D2C times
-Message-Id: <BANLkTikMSmsAakkb0SKr0tf4y_Y+QnpvpQ@mail.gmail.com>
+From: Bill Broadley <bill@broadley.org>
+Date: Tue, 24 May 2011 23:38:54 +0000
+Subject: Seg fault in blkparse.
+Message-Id: <4DDC418E.4080407@broadley.org>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-I'm trying to capture IO traces and average access times (by which I
-mean time spent by the hardware and firmware).  btt seems to give me
-incorrect time for D2C, though.  As I understand it, it's saying the
-average access time is 0.3ms, while iostat says it's 8.25ms.  Am I
-misusing the tool somehow?  How can I get it to report the data I
-want?
+
+I recorded a 3 minutes of heavy IO (generated with fio) with:
+blktrace -w 240 -a read -a write -a fs -I devs -o btrfs-12-blk.log
+
+(I used 240 seconds to make sure I didn't miss any of the 180 seconds of 
+I/O).
+
+As a small aside I wasn't sure what the default filter mask was, it 
+seems more correct to use:
+blktrace -w 240 -A read -a write -a fs -I devs -o btrfs-12-blk.log
+
+So set the mask to exactly (and only) read, then add write, and fs.  But 
+that dies with:
+    Invalid set action mask read/0x0
+
+The above mentioned file "devs" contains /etc/sdc1 ... /dev/sdn1 (12 
+devices, one per line).
+
+It generated 16 log files (it's a dual socket x quad core/8 thread intel 
+CPUs).  The logs total 15M (using du --total -h *blktrace*).
+
+blkparse reliably seg faults at around 102 seconds into the log:
+   8,209  1     5749   102.246254903  4825  U   N [(null)] 2
+   8,113  4    10445   102.255427790     0  C   R 14356151 + 8 [10445]
+Segmentation fault
+
+Stderror does have some strange output:
+
+# blkparse btrfs-12-blk.log > /dev/null
+Bad magic 0
+Bad magic 0
+Bad magic 0
+Bad magic 8
+Bad magic 0
+Bad magic 0
+Bad magic 0
+Bad magic c2d3ccfa
+Segmentation fault
+
+It generated 61,758 lines of output when it dies.
+
+Additional information about this machine, it's an ubuntu 11.04 x86-64 
+machine with:
+# uname -a
+Linux fb 2.6.38-8-server #42-Ubuntu SMP Mon Apr 11 03:49:04 UTC 2011 
+x86_64 x86_64 x86_64 GNU/Linux
+# blkparse --version
+blkparse version 1.0.1
+# blktrace --version
+blktrace version 2.0.0
+
+This doesn't seem like a particularly challenging log to handle.
+
+I looked for a way to tell blkparse to use a larger buffer but I didn't 
+see a way to do that with blkparse --help or the blkparse man page.
+
+Stupid user error?  Suggestions?  I'm sending it to this list as 
+directed by the man page.
 
 
-Here's how I get my data:
-blktrace -d /dev/sdb -o $TRACE.rawtrace
-blkparse $TRACE.rawtrace -O -d $TRACE.bin
-btt -i $TRACE.bin
-
-
-This is what btt reports:
-========== All Devices ==========
-
-            ALL           MIN           AVG           MAX           N
---------------- ------------- ------------- ------------- -----------
-
-Q2Q               0.000003631   0.006093295   5.546805679       13446
-Q2G               0.000002235   0.000004725   0.000134377        6893
-G2I               0.000001676   0.000118613   0.047795413        9166
-Q2M               0.000001676   0.000002203   0.000071798        6554
-I2D               0.000008661   0.003768198   0.048250506        7158
-M2D               0.000019835   0.000142260   0.016255688        6799
-D2C               0.000136332   0.000326485   0.005760325       13447
-Q2C               0.000159799   0.002395819   0.048427905       13447
-
-
-This is what iostat reports:
-Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s
-avgrq-sz avgqu-sz   await  svctm  %util
-sdb               0.00    91.00    0.00  120.00     0.00  1476.00
-12.30     0.99    8.25   8.25  99.00
-
-
-(iostat was reporting every 2 seconds, so its totals won't match the
-btt totals, but the averages should match.)
