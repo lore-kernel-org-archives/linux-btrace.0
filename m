@@ -1,7 +1,7 @@
-From: Tao Ma <tm@tao.ma>
-Date: Wed, 25 May 2011 06:19:12 +0000
+From: Bill Broadley <bill@broadley.org>
+Date: Wed, 25 May 2011 08:48:48 +0000
 Subject: Re: Seg fault in blkparse.
-Message-Id: <4DDC9F60.9000507@tao.ma>
+Message-Id: <4DDCC270.2010804@broadley.org>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <4DDC418E.4080407@broadley.org>
 In-Reply-To: <4DDC418E.4080407@broadley.org>
@@ -10,66 +10,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 05/25/2011 07:38 AM, Bill Broadley wrote:
-> 
-> I recorded a 3 minutes of heavy IO (generated with fio) with:
-> blktrace -w 240 -a read -a write -a fs -I devs -o btrfs-12-blk.log
-> 
-> (I used 240 seconds to make sure I didn't miss any of the 180 seconds of
-> I/O).
-> 
-> As a small aside I wasn't sure what the default filter mask was, it
-> seems more correct to use:
-> blktrace -w 240 -A read -a write -a fs -I devs -o btrfs-12-blk.log
-> 
-> So set the mask to exactly (and only) read, then add write, and fs.  But
-> that dies with:
->    Invalid set action mask read/0x0
-> 
-> The above mentioned file "devs" contains /etc/sdc1 ... /dev/sdn1 (12
-> devices, one per line).
-> 
-> It generated 16 log files (it's a dual socket x quad core/8 thread intel
-> CPUs).  The logs total 15M (using du --total -h *blktrace*).
-> 
-> blkparse reliably seg faults at around 102 seconds into the log:
->   8,209  1     5749   102.246254903  4825  U   N [(null)] 2
->   8,113  4    10445   102.255427790     0  C   R 14356151 + 8 [10445]
-> Segmentation fault
-> 
-> Stderror does have some strange output:
-> 
-> # blkparse btrfs-12-blk.log > /dev/null
-> Bad magic 0
-> Bad magic 0
-> Bad magic 0
-> Bad magic 8
-> Bad magic 0
-> Bad magic 0
-> Bad magic 0
-> Bad magic c2d3ccfa
-> Segmentation fault
-> 
-> It generated 61,758 lines of output when it dies.
-> 
-> Additional information about this machine, it's an ubuntu 11.04 x86-64
-> machine with:
-> # uname -a
-> Linux fb 2.6.38-8-server #42-Ubuntu SMP Mon Apr 11 03:49:04 UTC 2011
-> x86_64 x86_64 x86_64 GNU/Linux
-> # blkparse --version
-> blkparse version 1.0.1
-> # blktrace --version
-> blktrace version 2.0.0
-> 
-> This doesn't seem like a particularly challenging log to handle.
-> 
-> I looked for a way to tell blkparse to use a larger buffer but I didn't
-> see a way to do that with blkparse --help or the blkparse man page.
-> 
-> Stupid user error?  Suggestions?  I'm sending it to this list as
-> directed by the man page.
-would you mind providing a tar.gz for the btrfs-12-blk.log?
+On 05/24/2011 11:19 PM, Tao Ma wrote:
+> would you mind providing a tar.gz for the btrfs-12-blk.log?
 
-Regards,
-Tao
+Sure.  I did have the log from the previous run, but I was careful in
+reproducing it and I get a slightly different result:
+# blkparse rand-read-btrfs-r1-blk.log | wc -l
+Bad magic 0
+Bad magic 0
+Bad magic 0
+Bad magic 0
+Out of memory, CPU info for device rand-read-btrfs-r1- (-46513984)
+
+Which brings up another question.  I setup a btrfs with 12 32GB partitions:
+# btrfs filesystem show
+failed to read /dev/sr0
+Label: none  uuid: 16c43865-52d8-42ec-a0c3-420f0184f622
+	Total devices 12 FS bytes used 96.12GB
+	devid    2 size 32.00GB used 32.00GB path /dev/sdd1
+	devid    3 size 32.00GB used 32.00GB path /dev/sde1
+	devid    5 size 32.00GB used 32.00GB path /dev/sdg1
+	devid    6 size 32.00GB used 32.00GB path /dev/sdh1
+	devid   11 size 32.00GB used 32.00GB path /dev/sdm1
+	devid    8 size 32.00GB used 32.00GB path /dev/sdj1
+	devid   10 size 32.00GB used 32.00GB path /dev/sdl1
+	devid   12 size 32.00GB used 32.00GB path /dev/sdn1
+	devid    1 size 32.00GB used 32.00GB path /dev/sdc1
+	devid    4 size 32.00GB used 32.00GB path /dev/sdf1
+	devid    9 size 32.00GB used 32.00GB path /dev/sdk1
+	devid    7 size 32.00GB used 32.00GB path /dev/sdi1
+
+But there's no specific device for it, so I can mount any of the devices
+(/dev/sd[cdefghijklmn]1) and see the entire volume:
+$ df -h /tank
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/sdc1             385G  193G  191G  51% /tank
+
+So obvious the btrfs mounted with /dev/sdc1 (385GB across 12 disks) is
+not the same as the device /dev/sdc1 (a 32GB partition on a single disk).
+
+So for proper btrfs usage I should monitor /dev/sdc1? Use 12 -d's to add
+each device?  Use -I and list the 12 devices one per line in a file?
+
+Oh, the requests logs as well as details for making the filesystem,
+running the benchmark, and recording the blktrace is a 5.1MB file at
+http://broadley.org/bill/blktrace-btrfs.tar.gz
