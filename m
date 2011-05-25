@@ -1,7 +1,7 @@
 From: Tao Ma <tm@tao.ma>
-Date: Wed, 25 May 2011 15:42:34 +0000
-Subject: [PATCH] blkparse: Avoid segfault for wrong cpu number.
-Message-Id: <1306338154-10556-1-git-send-email-tm@tao.ma>
+Date: Wed, 25 May 2011 15:43:52 +0000
+Subject: [PATCH] blktrace: Use be32_to_cpu for blk_io_trace->cpu.
+Message-Id: <1306338232-10670-1-git-send-email-tm@tao.ma>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,44 +10,27 @@ To: linux-btrace@vger.kernel.org
 
 From: taoma <taoma@taoma-laptop2.(none)>
 
-Currently we only check the magic number to see whether
-a blktrace is valid or not, but Bill Broadley did meet
-with a case that the cpu info is wrong with a number
-of 1725552676. So in resize_cpu_info, we meet with a
-overflow when calculating
-size = new_count * sizeof(struct per_cpu_info);
-And the program will be either segfault or has the error
-of out of memory. Although this is more likely a kernel
-problem, the blkparse shoudn't segfault for it.
-
-So this patch just check whether the cpu stored in the
-trace is the same as the file, if not, just warn it out
-and skip it.
+blk_io_trace->cpu is u32, so use be32_to_cpu instead.
 
 Cc: Jens Axboe <axboe@kernel.dk>
-Reported-by: Bill Broadley <bill@broadley.org>
 Signed-off-by: Tao Ma <boyu.mt@taobao.com>
 ---
- blkparse.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ blktrace.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/blkparse.c b/blkparse.c
-index 7ee9f9d..817cb31 100644
---- a/blkparse.c
-+++ b/blkparse.c
-@@ -2354,6 +2354,12 @@ static int ms_prime(struct ms_stream *msp)
- 		if (verify_trace(bit))
- 			goto err;
- 
-+		if (bit->cpu != pci->cpu) {
-+			fprintf(stderr, "cpu %d trace info has error cpu %d\n",
-+				pci->cpu, bit->cpu);
-+			continue;
-+		}
-+
- 		if (bit->action & BLK_TC_ACT(BLK_TC_NOTIFY) && bit->action != BLK_TN_MESSAGE) {
- 			handle_notify(bit);
- 			output_binary(bit, sizeof(*bit) + bit->pdu_len);
+diff --git a/blktrace.h b/blktrace.h
+index 816ce61..8b3e031 100644
+--- a/blktrace.h
++++ b/blktrace.h
+@@ -110,7 +110,7 @@ static inline void trace_to_cpu(struct blk_io_trace *t)
+ 	t->action	= be32_to_cpu(t->action);
+ 	t->pid		= be32_to_cpu(t->pid);
+ 	t->device	= be32_to_cpu(t->device);
+-	t->cpu		= be16_to_cpu(t->cpu);
++	t->cpu		= be32_to_cpu(t->cpu);
+ 	t->error	= be16_to_cpu(t->error);
+ 	t->pdu_len	= be16_to_cpu(t->pdu_len);
+ }
 -- 
 1.7.1
 
