@@ -1,36 +1,22 @@
-From: Tao Ma <tm@tao.ma>
-Date: Wed, 25 May 2011 15:48:08 +0000
-Subject: [PATCH v2] blktrace: Use be32_to_cpu for blk_io_trace->cpu.
-Message-Id: <1306338488-11426-1-git-send-email-tm@tao.ma>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Thu, 26 May 2011 19:11:23 +0000
+Subject: Re: [PATCH v2] blktrace: Use be32_to_cpu for blk_io_trace->cpu.
+Message-Id: <4DDEA5DB.9090401@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <1306338488-11426-1-git-send-email-tm@tao.ma>
+In-Reply-To: <1306338488-11426-1-git-send-email-tm@tao.ma>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-From: Tao Ma <boyu.mt@taobao.com>
+On 2011-05-25 17:48, Tao Ma wrote:
+> From: Tao Ma <boyu.mt@taobao.com>
+> 
+> blk_io_trace->cpu is u32, so use be32_to_cpu instead.
 
-blk_io_trace->cpu is u32, so use be32_to_cpu instead.
+Good catch, applied!
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Tao Ma <boyu.mt@taobao.com>
----
- blktrace.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/blktrace.h b/blktrace.h
-index 816ce61..8b3e031 100644
---- a/blktrace.h
-+++ b/blktrace.h
-@@ -110,7 +110,7 @@ static inline void trace_to_cpu(struct blk_io_trace *t)
- 	t->action	= be32_to_cpu(t->action);
- 	t->pid		= be32_to_cpu(t->pid);
- 	t->device	= be32_to_cpu(t->device);
--	t->cpu		= be16_to_cpu(t->cpu);
-+	t->cpu		= be32_to_cpu(t->cpu);
- 	t->error	= be16_to_cpu(t->error);
- 	t->pdu_len	= be16_to_cpu(t->pdu_len);
- }
 -- 
-1.7.1
+Jens Axboe
 
