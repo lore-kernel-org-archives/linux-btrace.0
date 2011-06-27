@@ -1,52 +1,60 @@
-From: Matthew Boyle <mlb@corefiling.co.uk>
-Date: Mon, 20 Jun 2011 13:12:17 +0000
-Subject: [PATCH] blktrace:  pass a valid pointer to realloc.
-Message-Id: <4DFF4731.6010001@corefiling.co.uk>
-MIME-Version: 1
-Content-Type: multipart/mixed; boundary="------------090405050901020509030201"
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Mon, 27 Jun 2011 20:11:05 +0000
+Subject: Re: [patch] blkparse: fix up incorrect pc write completion count
+Message-Id: <4E08E3D9.1090604@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090405050901020509030201
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On 5/16/11 1:23 PM, Jeff Moyer wrote:
+> Hi,
+> 
+> I noticed in some traces that I was seeing summaries like the following:
+> 
+> Total (sde):
+>  Reads Queued:          76,      304KiB  Writes Queued:      16,384,    1,048MiB
+>  Read Dispatches:       76,      304KiB  Write Dispatches:    2,210,    1,048MiB
+>  Reads Requeued:         0               Writes Requeued:         0
+>  Reads Completed:       76,      304KiB  Writes Completed:    2,210,    1,048MiB
+>  Read Merges:            0,        0KiB  Write Merges:       14,174,  907,136KiB
+>  PC Reads Queued:        0,        0KiB  PC Writes Queued:        0,        0KiB
+>  PC Read Disp.:          4,        0KiB  PC Write Disp.:          0,        0KiB
+>  PC Reads Req.:          0               PC Writes Req.:          0
+>  PC Reads Compl.:        4               PC Writes Compl.:    2,210
+>  IO unplugs:         2,124               Timer unplugs:           0
+> 
+> Note how there were no PC Writes dispatched, but there were 2210
+> completed.  It turns out to be a minor typo in the code.  The attached
+> patch fixes the reporting for me.
+> 
+> Cheers,
+> Jeff
+> 
+> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 
-When blktrace is writing to stdout, and there's sufficient disk activity
-to fill the trace buffer, tb_combine() tries to increase the buffer
-size.  But the pointer it passes to realloc isn't to the head of the
-block of memory.  glibc's realloc gets really quite upset at this, and
-aborts the process.
+Ping on this one?  I'd like to fix this in our package but would like to see it
+upstream first.  :)
 
-This just passes in the pointer handed out by malloc.
+Thanks,
+-Eric
 
-Signed-off-by: Matt Boyle <mlb@corefiling.co.uk>
----
-  blktrace.c |    2 +-
-  1 files changed, 1 insertions(+), 1 deletions(-)
+> diff --git a/blkparse.c b/blkparse.c
+> index 7ee9f9d..8d5746f 100644
+> --- a/blkparse.c
+> +++ b/blkparse.c
+> @@ -1675,7 +1675,7 @@ static void dump_io_stats(struct per_dev_info *pdi, struct io_stats *ios,
+>  		fprintf(ofp, " PC Reads Req.:   %s\t\t", size_cnv(x, ios->rrqueue_pc, 0));
+>  		fprintf(ofp, " PC Writes Req.:   %s\n", size_cnv(x, ios->wrqueue_pc, 0));
+>  		fprintf(ofp, " PC Reads Compl.: %s\t\t", size_cnv(x, ios->creads_pc, 0));
+> -		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites, 0));
+> +		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites_pc, 0));
+>  	}
+>  	fprintf(ofp, " IO unplugs:      %'8lu%8c\t", ios->io_unplugs, ' ');
+>  	fprintf(ofp, " Timer unplugs:    %'8lu\n", ios->timer_unplugs);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-
---------------090405050901020509030201
-Content-Type: text/x-patch;
- name="0001-blktrace-pass-a-valid-pointer-to-realloc.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0001-blktrace-pass-a-valid-pointer-to-realloc.patch"
-
-diff --git a/blktrace.c b/blktrace.c
-index 72866e2..d4d5111 100644
---- a/blktrace.c
-+++ b/blktrace.c
-@@ -1330,7 +1330,7 @@ static struct trace_buf *tb_combine(struct trace_buf *prev,
- 		 * the whole structures, as the other fields
- 		 * are "static".
- 		 */
--		prev = realloc(prev->buf, sizeof(*prev) + tot_len);
-+		prev = realloc(prev, sizeof(*prev) + tot_len);
- 		prev->buf = (void *)(prev + 1);
- 	}
- 
-
-
---------------090405050901020509030201--
