@@ -1,60 +1,33 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Date: Mon, 27 Jun 2011 20:11:05 +0000
-Subject: Re: [patch] blkparse: fix up incorrect pc write completion count
-Message-Id: <4E08E3D9.1090604@redhat.com>
+From: Namhyung Kim <namhyung@gmail.com>
+Date: Mon, 27 Jun 2011 17:26:14 +0000
+Subject: [PATCH] blkparse: fix wrong suffix in size_cnv()
+Message-Id: <1309195574-19981-1-git-send-email-namhyung@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 5/16/11 1:23 PM, Jeff Moyer wrote:
-> Hi,
-> 
-> I noticed in some traces that I was seeing summaries like the following:
-> 
-> Total (sde):
->  Reads Queued:          76,      304KiB  Writes Queued:      16,384,    1,048MiB
->  Read Dispatches:       76,      304KiB  Write Dispatches:    2,210,    1,048MiB
->  Reads Requeued:         0               Writes Requeued:         0
->  Reads Completed:       76,      304KiB  Writes Completed:    2,210,    1,048MiB
->  Read Merges:            0,        0KiB  Write Merges:       14,174,  907,136KiB
->  PC Reads Queued:        0,        0KiB  PC Writes Queued:        0,        0KiB
->  PC Read Disp.:          4,        0KiB  PC Write Disp.:          0,        0KiB
->  PC Reads Req.:          0               PC Writes Req.:          0
->  PC Reads Compl.:        4               PC Writes Compl.:    2,210
->  IO unplugs:         2,124               Timer unplugs:           0
-> 
-> Note how there were no PC Writes dispatched, but there were 2210
-> completed.  It turns out to be a minor typo in the code.  The attached
-> patch fixes the reporting for me.
-> 
-> Cheers,
-> Jeff
-> 
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+The next suffix to Giga(G) is Tera(T) not Peta(P).
 
-Ping on this one?  I'd like to fix this in our package but would like to see it
-upstream first.  :)
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ blkparse.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
--Eric
-
-> diff --git a/blkparse.c b/blkparse.c
-> index 7ee9f9d..8d5746f 100644
-> --- a/blkparse.c
-> +++ b/blkparse.c
-> @@ -1675,7 +1675,7 @@ static void dump_io_stats(struct per_dev_info *pdi, struct io_stats *ios,
->  		fprintf(ofp, " PC Reads Req.:   %s\t\t", size_cnv(x, ios->rrqueue_pc, 0));
->  		fprintf(ofp, " PC Writes Req.:   %s\n", size_cnv(x, ios->wrqueue_pc, 0));
->  		fprintf(ofp, " PC Reads Compl.: %s\t\t", size_cnv(x, ios->creads_pc, 0));
-> -		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites, 0));
-> +		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites_pc, 0));
->  	}
->  	fprintf(ofp, " IO unplugs:      %'8lu%8c\t", ios->io_unplugs, ' ');
->  	fprintf(ofp, " Timer unplugs:    %'8lu\n", ios->timer_unplugs);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/blkparse.c b/blkparse.c
+index 7ee9f9d..1abbd0b 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -1630,7 +1630,7 @@ static void dump_trace(struct blk_io_trace *t, struct per_cpu_info *pci,
+  */
+ static char *size_cnv(char *dst, unsigned long long num, int in_kb)
+ {
+-	char suff[] = { '\0', 'K', 'M', 'G', 'P' };
++	char suff[] = { '\0', 'K', 'M', 'G', 'T' };
+ 	unsigned int i = 0;
+ 
+ 	if (in_kb)
+-- 
+1.7.6
 
