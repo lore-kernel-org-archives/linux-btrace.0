@@ -1,77 +1,81 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Date: Fri, 22 Jul 2011 20:37:01 +0000
-Subject: Re: [patch] blkparse: fix up incorrect pc write completion count
-Message-Id: <4E29DF6D.5070005@redhat.com>
+From: Edward Shishkin <edward@redhat.com>
+Date: Mon, 04 Jul 2011 12:30:38 +0000
+Subject: [PATCH 1/1] blktrace: disable blktrace kill option carefully
+Message-Id: <1309782638.8616.24.camel@zeta.englab.brq.redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 6/27/11 3:11 PM, Eric Sandeen wrote:
-> On 5/16/11 1:23 PM, Jeff Moyer wrote:
->> Hi,
->>
->> I noticed in some traces that I was seeing summaries like the following:
->>
->> Total (sde):
->>  Reads Queued:          76,      304KiB  Writes Queued:      16,384,    1,048MiB
->>  Read Dispatches:       76,      304KiB  Write Dispatches:    2,210,    1,048MiB
->>  Reads Requeued:         0               Writes Requeued:         0
->>  Reads Completed:       76,      304KiB  Writes Completed:    2,210,    1,048MiB
->>  Read Merges:            0,        0KiB  Write Merges:       14,174,  907,136KiB
->>  PC Reads Queued:        0,        0KiB  PC Writes Queued:        0,        0KiB
->>  PC Read Disp.:          4,        0KiB  PC Write Disp.:          0,        0KiB
->>  PC Reads Req.:          0               PC Writes Req.:          0
->>  PC Reads Compl.:        4               PC Writes Compl.:    2,210
->>  IO unplugs:         2,124               Timer unplugs:           0
->>
->> Note how there were no PC Writes dispatched, but there were 2210
->> completed.  It turns out to be a minor typo in the code.  The attached
->> patch fixes the reporting for me.
->>
->> Cheers,
->> Jeff
->>
->> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> 
-> Ping on this one?  I'd like to fix this in our package but would like to see it
-> upstream first.  :)
+Disable blktrace kill option, which works incorrectly:
 
-ping^2?
+Description of problem:
+'blktrace -d <device> -k' does not kill a running trace.
+blktrace process is still running. Moreover something
+bad happens, because after executing 'blktrace -d
+<device> -k' for the second time blktrace works improperly.
 
-You can add 
+Steps to reproduce the problem (example):
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+# mount -t debugfs debugfs /sys/kernel/debug/
+# cat /proc/partitions
+major minor  #blocks  name
 
-if it helps :)
+   8     0   78150744 sda
+   8     1     104391 sda1
+   8     2   78043770 sda2
+ 253     0   76218368 dm-0
+ 253     1    1802240 dm-1
+# blktrace -d /dev/sda &
+[1] 2770
+# ps -o pid,user,args -C blktrace
+  PID USER     COMMAND
+ 2770 root     blktrace -d /dev/sda
+# blktrace -d /dev/sda -k
+# ps -o pid,user,args -C blktrace
+  PID USER     COMMAND
+ 2770 root     blktrace -d /dev/sda
+# blktrace -d /dev/sda -k
+BLKTRACETEARDOWN: Invalid argument
+# ps -o pid,user,args -C blktrace
+  PID USER     COMMAND
+ 2770 root     blktrace -d /dev/sda
 
-Thanks,
--Eric
+Signed-off-by: Edward Shishkin <edward@redhat.com>
+---
+ blktrace.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-> Thanks,
-> -Eric
-> 
->> diff --git a/blkparse.c b/blkparse.c
->> index 7ee9f9d..8d5746f 100644
->> --- a/blkparse.c
->> +++ b/blkparse.c
->> @@ -1675,7 +1675,7 @@ static void dump_io_stats(struct per_dev_info *pdi, struct io_stats *ios,
->>  		fprintf(ofp, " PC Reads Req.:   %s\t\t", size_cnv(x, ios->rrqueue_pc, 0));
->>  		fprintf(ofp, " PC Writes Req.:   %s\n", size_cnv(x, ios->wrqueue_pc, 0));
->>  		fprintf(ofp, " PC Reads Compl.: %s\t\t", size_cnv(x, ios->creads_pc, 0));
->> -		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites, 0));
->> +		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites_pc, 0));
->>  	}
->>  	fprintf(ofp, " IO unplugs:      %'8lu%8c\t", ios->io_unplugs, ' ');
->>  	fprintf(ofp, " Timer unplugs:    %'8lu\n", ios->timer_unplugs);
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-btrace" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: blktrace/blktrace.c
+=================================--- blktrace.orig/blktrace.c	2011-07-04 14:02:02.000000000 +0200
++++ blktrace/blktrace.c	2011-07-04 14:36:26.197174682 +0200
+@@ -364,12 +364,14 @@
+ 		.flag = NULL,
+ 		.val = 'o'
+ 	},
++#if 0
+ 	{
+ 		.name = "kill",
+ 		.has_arg = no_argument,
+ 		.flag = NULL,
+ 		.val = 'k'
+ 	},
++#endif
+ 	{
+ 		.name = "stopwatch",
+ 		.has_arg = required_argument,
+@@ -2089,9 +2091,11 @@
+ 		case 'o':
+ 			output_name = optarg;
+ 			break;
++#if 0
+ 		case 'k':
+ 			kill_running_trace = 1;
+ 			break;
++#endif
+ 		case 'w':
+ 			stop_watch = atoi(optarg);
+ 			if (stop_watch <= 0) {
+
 
