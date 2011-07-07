@@ -1,33 +1,28 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Date: Mon, 27 Jun 2011 17:26:14 +0000
-Subject: [PATCH] blkparse: fix wrong suffix in size_cnv()
-Message-Id: <1309195574-19981-1-git-send-email-namhyung@gmail.com>
+From: Tao Ma <tm@tao.ma>
+Date: Thu, 07 Jul 2011 09:53:05 +0000
+Subject: Re: blktrace on my block device
+Message-Id: <4E158201.3020907@tao.ma>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The next suffix to Giga(G) is Tera(T) not Peta(P).
+On 07/07/2011 05:41 PM, Gangadhar Mylapuram wrote:
+> Hi,
+> 
+> As for my understanding I no need to handle (BLKRESTART, BLKTRACESTOP,
+> BLKTRACESETUP ..) in my device ioctl handling. It is block l/O layer
+> which intercepts the
+> statistics and does the job.
+> 
+> But for my device (not sda or hda), blktrace only show the Q events.
+> It is not showing even C (completed) events. Do I need to add the
+> support in my device ioctl handling code?
+These trace pointers are only recorded if they are met.
+So I guess the reason is that your device implements your own
+make_request_fn(So you can see 'Q' event) and no other trace point is
+met at all.
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- blkparse.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/blkparse.c b/blkparse.c
-index 7ee9f9d..1abbd0b 100644
---- a/blkparse.c
-+++ b/blkparse.c
-@@ -1630,7 +1630,7 @@ static void dump_trace(struct blk_io_trace *t, struct per_cpu_info *pci,
-  */
- static char *size_cnv(char *dst, unsigned long long num, int in_kb)
- {
--	char suff[] = { '\0', 'K', 'M', 'G', 'P' };
-+	char suff[] = { '\0', 'K', 'M', 'G', 'T' };
- 	unsigned int i = 0;
- 
- 	if (in_kb)
--- 
-1.7.6
-
+Thanks,
+Tao
