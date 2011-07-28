@@ -1,37 +1,101 @@
-From: Gangadhar Mylapuram <gangadhar.m@gmail.com>
-Date: Thu, 07 Jul 2011 12:57:08 +0000
-Subject: Re: blktrace on my block device
-Message-Id: <CAKVu3CMitvaLCb21XsiJAt7zOxM7UOADFMS6L44sU1do=SBa3A@mail.gmail.com>
+From: Namhyung Kim <namhyung@gmail.com>
+Date: Thu, 28 Jul 2011 23:19:24 +0000
+Subject: Re: [PATCH] blktrace: add FLUSH/FUA support
+Message-Id: <1311895164.1913.57.camel@leonhard>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <4E158201.3020907@tao.ma>
-In-Reply-To: <4E158201.3020907@tao.ma>
+References: <x494o26ma11.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <x494o26ma11.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+To: Jeff Moyer <jmoyer@redhat.com>, Jens Axboe <jaxboe@fusionio.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-btrace@vger.kernel.org
 
-Thanks. yes, that is the reason. I just found that our block driver is
-not using request queue because our device is flash memory.
+2011-07-28 (=EB=AA=A9), 16:21 -0400, Jeff Moyer:
+> Hi,
+>=20
+> Sorry, I don't have the original posting of this message, so I've just
+> cut-n-paste from the archives on lkml.org:
+>   https://lkml.org/lkml/2011/6/1/235
+>=20
 
--Gangadhar
+Hello, Jeff.
 
-On Thu, Jul 7, 2011 at 3:23 PM, Tao Ma <tm@tao.ma> wrote:
-> On 07/07/2011 05:41 PM, Gangadhar Mylapuram wrote:
->> Hi,
->>
->> As for my understanding I no need to handle (BLKRESTART, BLKTRACESTOP,
->> BLKTRACESETUP ..) in my device ioctl handling. It is block l/O layer
->> which intercepts the
->> statistics and does the job.
->>
->> But for my device (not sda or hda), blktrace only show the Q events.
->> It is not showing even C (completed) events. Do I need to add the
->> support in my device ioctl handling code?
-> These trace pointers are only recorded if they are met.
-> So I guess the reason is that your device implements your own
-> make_request_fn(So you can see 'Q' event) and no other trace point is
-> met at all.
->
-> Thanks,
-> Tao
->
+Thanks for finding and replying to this :)
+
+
+> The proposal was this:
+>=20
+> > Add FLUSH/FUA support to blktrace. As FLUSH precedes WRITE and/or
+> > FUA follows WRITE, use the same 'F' flag for both cases and
+> > distinguish them by their (relative) position. The end results
+> > look like (other flags might be shown also):
+> >=20
+> >  - WRITE:            W
+> >  - WRITE_FLUSH:      FW
+> >  - WRITE_FUA:        WF
+> >  - WRITE_FLUSH_FUA:  FWF
+>=20
+> I'm not sure I'll ever be able to keep that straight.  How about we use
+> 'F' for FUA, since FUA is capitalized anyway, and use 'f' for flush?
+> Too subtle?
+>=20
+
+Either way is fine to me. Jens?
+
+
+> Next...
+>=20
+> > @@ -14,7 +14,7 @@
+> >  enum blktrace_cat {
+> >  	BLK_TC_READ	=3D 1 << 0,	/* reads */
+> >  	BLK_TC_WRITE	=3D 1 << 1,	/* writes */
+> > -	BLK_TC_BARRIER	=3D 1 << 2,	/* barrier */
+> > +	BLK_TC_FUA	=3D 1 << 2,	/* fua requests */
+>=20
+> I would prefer to replace BARRIER with FLUSH, as I think they are closer
+> relatives.  Doing it the way you've suggested would mean that older
+> blktrace user-space would report FUA as a Barrier.
+>=20
+
+I thought about that too. But as I said in the changelog, it led to a
+negative number at the rhs of MASC_TC_BIT calculation, so the end result
+was not good.
+
+In the meantime, I found that Matthew Wilcox posted a patch which
+relocates some REQ_ flags to appropriate positions.
+
+https://lkml.org/lkml/2011/6/2/324
+
+With the patch, it seems ok to replace BARRIER with FLUSH. However it
+looks like the patch isn't included into the tree yet.
+
+BTW, I'm thinking about user-space again. I'm not sure it's ok if older
+blktrace tool reports FLUSH/FUA as BARRIER. Actually I posted a patch
+that treats FLUSH as BARRIER [1], and Jens and others commented we
+should not do that.
+
+To end that, I could leave BLK_TC_BARRIER as is, and add
+BLK_TC_{FLUSH,FUA} at the end of blktrace_cat. But as we exhause space
+in the 16-bit act_mask, it would require a substantial change.
+
+Any thoughts?
+
+
+> Comments?  No matter what's agreed upon, we should get this in sooner
+> rather than later, as it's a big missing piece in trying to diagnose
+> performance issues!
+>=20
+> Cheers,
+> Jeff
+
+Thanks.
+
+[1] https://lkml.org/lkml/2011/5/27/206
+
+
+--=20
+Regards,
+Namhyung Kim
+
+
