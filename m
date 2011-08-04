@@ -1,47 +1,45 @@
 From: Jens Axboe <jaxboe@fusionio.com>
-Date: Wed, 03 Aug 2011 13:06:42 +0000
-Subject: Re: [patch,resend] blkparse: fix up incorrect pc write completion
-Message-Id: <4E3947E2.2040508@fusionio.com>
+Date: Thu, 04 Aug 2011 04:00:03 +0000
+Subject: Recent changes
+Message-Id: <20110804040003.C598037A30F@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <x49y5zbso36.fsf@segfault.boston.devel.redhat.com>
-In-Reply-To: <x49y5zbso36.fsf@segfault.boston.devel.redhat.com>
+References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
+In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 2011-08-02 19:46, Jeff Moyer wrote:
-> Hi,
-> 
-> I noticed in some traces that I was seeing summaries like the following:
-> 
-> Total (sde):
->  Reads Queued:          76,      304KiB  Writes Queued:      16,384,    1,048MiB
->  Read Dispatches:       76,      304KiB  Write Dispatches:    2,210,    1,048MiB
->  Reads Requeued:         0               Writes Requeued:         0
->  Reads Completed:       76,      304KiB  Writes Completed:    2,210,    1,048MiB
->  Read Merges:            0,        0KiB  Write Merges:       14,174,  907,136KiB
->  PC Reads Queued:        0,        0KiB  PC Writes Queued:        0,        0KiB
->  PC Read Disp.:          4,        0KiB  PC Write Disp.:          0,        0KiB
->  PC Reads Req.:          0               PC Writes Req.:          0
->  PC Reads Compl.:        4               PC Writes Compl.:    2,210
->  IO unplugs:         2,124               Timer unplugs:           0
-> 
-> Note how there were no PC Writes dispatched, but there were 2210
-> completed.  It turns out to be a minor typo in the code.  The attached
-> patch fixes the reporting for me.
-> 
-> Cheers,
-> Jeff
-> 
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> 
-> ---
-> 
-> Jens, any reason this hasn't been merged?
+The following changes since commit 8e8bb835e375bd8cf0f01debff61f6bf467bb1ed:
 
-Nope, thanks for the resend (and the fix) - applied!
+  blktrace: Use be32_to_cpu for blk_io_trace->cpu. (2011-05-26 21:11:09 +0200)
 
--- 
-Jens Axboe
+are available in the git repository at:
+  git://git.kernel.dk/blktrace.git master
 
+Jeff Moyer (1):
+      blkparse: fix up incorrect pc write completion count
+
+Jens Axboe (1):
+      Merge branch 'master' of ssh://router.home.kernel.dk/data/git/blktrace
+
+ blkparse.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+---
+
+Diff of recent changes:
+
+diff --git a/blkparse.c b/blkparse.c
+index 817cb31..12c7aae 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -1675,7 +1675,7 @@ static void dump_io_stats(struct per_dev_info *pdi, struct io_stats *ios,
+ 		fprintf(ofp, " PC Reads Req.:   %s\t\t", size_cnv(x, ios->rrqueue_pc, 0));
+ 		fprintf(ofp, " PC Writes Req.:   %s\n", size_cnv(x, ios->wrqueue_pc, 0));
+ 		fprintf(ofp, " PC Reads Compl.: %s\t\t", size_cnv(x, ios->creads_pc, 0));
+-		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites, 0));
++		fprintf(ofp, " PC Writes Compl.: %s\n", size_cnv(x, ios->cwrites_pc, 0));
+ 	}
+ 	fprintf(ofp, " IO unplugs:      %'8lu%8c\t", ios->io_unplugs, ' ');
+ 	fprintf(ofp, " Timer unplugs:    %'8lu\n", ios->timer_unplugs);
