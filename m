@@ -1,39 +1,32 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Date: Fri, 12 Aug 2011 04:00:04 +0000
-Subject: Recent changes
-Message-Id: <20110812040004.31B9237A30D@kernel.dk>
+From: Namhyung Kim <namhyung@gmail.com>
+Date: Thu, 11 Aug 2011 10:32:30 +0000
+Subject: [PATCH] Add FLUSH/FUA support
+Message-Id: <1313058750-1719-1-git-send-email-namhyung@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
-In-Reply-To: <46171742.iJ5w/0J1D3Q4P+M6%jens.axboe@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit bc5f9ff87cb38ffa3b64ba607e535043eef06d14:
+Add FLUSH/FUA support to blktrace. As FLUSH precedes WRITE and/or
+FUA follows WRITE, use the same 'F' flag for both cases and
+distinguish them by their (relative) position. The end results
+look like (other flags might be shown also):
 
-  Merge branch 'master' of ssh://router.home.kernel.dk/data/git/blktrace (2011-08-03 15:06:18 +0200)
+ - WRITE:            W
+ - WRITE_FLUSH:      FW
+ - WRITE_FUA:        WF
+ - WRITE_FLUSH_FUA:  FWF
 
-are available in the git repository at:
+Note that we reuse TC_BARRIER due to lack of bit space of act_mask.
 
-  git://git.kernel.dk/blktrace.git master
-
-Jens Axboe (1):
-      blktrace 1.0.3
-
-Namhyung Kim (1):
-      Add FLUSH/FUA support
-
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
  act_mask.c     |    3 ++-
- blkparse.c     |    2 +-
  blkparse_fmt.c |   17 +++++++++++------
  blkrawverify.c |    3 ++-
  blktrace_api.h |    5 +++--
- 5 files changed, 19 insertions(+), 11 deletions(-)
-
----
-
-Diff of recent changes:
+ 4 files changed, 18 insertions(+), 10 deletions(-)
 
 diff --git a/act_mask.c b/act_mask.c
 index 6d5c193..8f1b8d7 100644
@@ -56,19 +49,6 @@ index 6d5c193..8f1b8d7 100644
  };
  
  int find_mask_map(char *string)
-diff --git a/blkparse.c b/blkparse.c
-index 12c7aae..169d491 100644
---- a/blkparse.c
-+++ b/blkparse.c
-@@ -36,7 +36,7 @@
- #include "rbtree.h"
- #include "jhash.h"
- 
--static char blkparse_version[] = "1.0.2";
-+static char blkparse_version[] = "1.0.3";
- 
- struct skip_info {
- 	unsigned long start, end;
 diff --git a/blkparse_fmt.c b/blkparse_fmt.c
 index ed6cd5c..c42e6d7 100644
 --- a/blkparse_fmt.c
@@ -177,3 +157,6 @@ index ba9ee60..b222218 100644
  };
  
  #define BLK_TC_SHIFT		(16)
+-- 
+1.7.6
+
