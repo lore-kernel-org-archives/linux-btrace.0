@@ -1,30 +1,38 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Date: Wed, 20 Mar 2013 05:00:01 +0000
-Subject: Recent changes (master)
-Message-Id: <20130320050001.E340522DFC@kernel.dk>
+From: Ivan Dyukov <i.dyukov@samsung.com>
+Date: Tue, 19 Mar 2013 07:44:57 +0000
+Subject: patch  for blkparse
+Message-Id: <51481779.10404@samsung.com>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="------------090607040207050502050304"
 List-Id: <linux-btrace.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit d6918c8832793b4205ed3bfede78c2f915c23385:
+This is a multi-part message in MIME format.
+--------------090607040207050502050304
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-  blktrace 1.0.5 (2012-02-27 08:22:17 +0100)
+Hello, I have made patch for blkparse utility. I have added more 
+accurate calculation of total read/write values. in my test case, I had 
+tried to write  small chunks of data(512 bytes each), but blkparse 
+ignore such data and that data didn't appear in summary section. I have 
+made patch for this mater and attached to this email.
 
-are available in the git repository at:
-  git://git.kernel.dk/blktrace.git master
+Best regards,
+Ivan.
 
-Ivan Dyukov (1):
-      More accurate calculation of the total read/write values
+--------------090607040207050502050304
+Content-Type: text/x-patch;
+ name="read_write_bytes.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="read_write_bytes.patch"
 
- blkparse.c |   87 ++++++++++++++++++++++++++++++++++++++++++++++++++---------
- blktrace.h |    4 +++
- 2 files changed, 77 insertions(+), 14 deletions(-)
+commit 2602a606b51f9893756bd1916ec3c3911349922f
+Author: Ivan Dyukov <i.dyukov@samsung.com>
+Date:   Tue Mar 19 11:13:09 2013 +0400
 
----
-
-Diff of recent changes:
+    More accurate calculation of the total read/write values. If block device has many request with size less than 1K, blkparse ignore such requests because it treat each request in Kb.
 
 diff --git a/blkparse.c b/blkparse.c
 index a7ff0f7..a27b3ed 100644
@@ -260,3 +268,5 @@ index 5da6dbc..380aec7 100644
  	unsigned long io_unplugs, timer_unplugs;
  };
  
+
+--------------090607040207050502050304--
