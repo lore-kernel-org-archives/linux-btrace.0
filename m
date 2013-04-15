@@ -1,29 +1,33 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Tue, 19 Mar 2013 14:17:25 +0000
-Subject: Re: patch  for blkparse
-Message-Id: <20130319141725.GA2642@kernel.dk>
+From: Nathan Zimmer <nzimmer@sgi.com>
+Date: Mon, 15 Apr 2013 14:53:31 +0000
+Subject: [PATCH 0/5] Improve scaling and hotplugging tolerance in blktrace and friends
+Message-Id: <1366037616-20159-1-git-send-email-nzimmer@sgi.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <51481779.10404@samsung.com>
-In-Reply-To: <51481779.10404@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Tue, Mar 19 2013, Ivan Dyukov wrote:
-> ame="read_write_bytes.patch"
-> Content-Transfer-Encoding: 7bit
-> Content-Disposition: attachment;
->  filename="read_write_bytes.patch"
-> 
-> commit 2602a606b51f9893756bd1916ec3c3911349922f
-> Author: Ivan Dyukov <i.dyukov@samsung.com>
-> Date:   Tue Mar 19 11:13:09 2013 +0400
-> 
->     More accurate calculation of the total read/write values. If block device has many request with size less than 1K, blkparse ignore such requests because it treat each request in Kb.
+While looking for issues at 4096 cpus I noticed that blktrace was behaving 
+oddly.  Upon reviewing I discovered some parts of the code were written at at
+time when boxes were limited to 512 and holes in cpu maps were impossible.
 
-Thanks, applied.
+This patch series should correct that.
+
+
+Nathan Zimmer (5):
+  verify_blkparse: Change max_cpus to deal with systems larger the 512
+  btreplay: Machines are now large enough that holes need to be dealt
+    with
+  btreplay: use sysconf to get the number of configured cpus
+  blktrace: use number of configured cpus instead of online cpus
+  blktrace blkreplay: convert to use a dynamic cpu_set_t
+
+ blktrace.c          | 20 +++++++++++++-------
+ btreplay/btreplay.c | 51 +++++++++++++++++++++++++++++++++++----------------
+ verify_blkparse.c   | 23 +++++++++++++++++++----
+ 3 files changed, 67 insertions(+), 27 deletions(-)
 
 -- 
-Jens Axboe
+1.8.1.2
 
