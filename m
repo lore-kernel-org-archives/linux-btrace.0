@@ -1,53 +1,39 @@
 From: Nathan Zimmer <nzimmer@sgi.com>
-Date: Mon, 15 Apr 2013 14:53:33 +0000
-Subject: [PATCH 2/5] btreplay: Machines are now large enough that holes need to be dealt with
-Message-Id: <1366037616-20159-3-git-send-email-nzimmer@sgi.com>
+Date: Mon, 15 Apr 2013 14:53:35 +0000
+Subject: [PATCH 4/5] blktrace: use number of configured cpus instead of online cpus
+Message-Id: <1366037616-20159-5-git-send-email-nzimmer@sgi.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The current method fails if once we hit the first offlined cpu.  This
-will correct that case.  However this still underreports the number cpus if
-the last cpu are offlined.
+We want to run on all online processors.  However is there is a hole in the
+online cpumask this won't happen.  We need the number of configured processors
+instead of online.
 
 Cc: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Nathan Zimmer <nzimmer@sgi.com>
 ---
- btreplay/btreplay.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ blktrace.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/btreplay/btreplay.c b/btreplay/btreplay.c
-index 20494e0..6f0ba63 100644
---- a/btreplay/btreplay.c
-+++ b/btreplay/btreplay.c
-@@ -502,6 +502,7 @@ static inline void start_iter(void)
-  */
- static void get_ncpus(void)
- {
-+	long last_cpu;
- 	cpu_set_t cpus;
+diff --git a/blktrace.c b/blktrace.c
+index 89aaaac..63125ab 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -2656,9 +2656,9 @@ int main(int argc, char *argv[])
  
- 	if (sched_getaffinity(getpid(), sizeof(cpus), &cpus)) {
-@@ -509,12 +510,11 @@ static void get_ncpus(void)
- 		/*NOTREACHED*/
- 	}
- 
--	/*
--	 * XXX This assumes (perhaps wrongly) that there are no /holes/ 
--	 * XXX in the mask.
--	 */
--	for (ncpus = 0; ncpus < CPU_SETSIZE && CPU_ISSET(ncpus, &cpus); ncpus++)
--		;
-+	ncpus = -1;
-+	for (last_cpu = 0; last_cpu < CPU_SETSIZE && CPU_ISSET(last_cpu, &cpus); last_cpu++)
-+		if (CPU_ISSET( last_cpu, &cpus) ) 
-+			ncpus = last_cpu;
-+	ncpus++;
- 	if (ncpus = 0) {
- 		fatal(NULL, ERR_SYSCALL, "Insufficient number of CPUs\n");
- 		/*NOTREACHED*/
+ 	setlocale(LC_NUMERIC, "en_US");
+ 	pagesize = getpagesize();
+-	ncpus = sysconf(_SC_NPROCESSORS_ONLN);
++	ncpus = sysconf(_SC_NPROCESSORS_CONF);
+ 	if (ncpus < 0) {
+-		fprintf(stderr, "sysconf(_SC_NPROCESSORS_ONLN) failed %d/%s\n",
++		fprintf(stderr, "sysconf(_SC_NPROCESSORS_CONF) failed %d/%s\n",
+ 			errno, strerror(errno));
+ 		ret = 1;
+ 		goto out;
 -- 
 1.8.1.2
 
