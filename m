@@ -1,38 +1,49 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Wed, 04 Dec 2013 02:25:35 +0000
-Subject: Re: [PATCH] blktrace bno_plot.py: output comprehensive message when gnuplot not found
-Message-Id: <20131204022535.GH5051@kernel.dk>
+From: Jens Axboe <jaxboe@fusionio.com>
+Date: Wed, 04 Dec 2013 04:56:52 +0000
+Subject: Recent changes (master)
+Message-Id: <20131204050001.E421622D57@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <1386072299-10149-1-git-send-email-devel@etsukata.com>
-In-Reply-To: <1386072299-10149-1-git-send-email-devel@etsukata.com>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Tue, Dec 03 2013, Eiichi Tsukata wrote:
-> Currently, bno_plot.py uses os.execvp which does not show enough information
-> when executed command is not found. For example, when gnuplot is not found
-> bno_plot.py shows the following messages:
-> 
->     Traceback (most recent call last):
->       File "/usr/local/bin/bno_plot.py", line 123, in <module>
->         os.execvp(cmd[0], cmd)
->       File "/usr/lib64/python2.7/os.py", line 344, in execvp
->         _execvpe(file, args)
->       File "/usr/lib64/python2.7/os.py", line 368, in _execvpe
->         func(file, *argrest)
->     OSError: [Errno 2] No such file or directory
-> 
-> Users can't understand what happend directly from the message.
-> 
-> Instead of os.execvp, this patch uses os.system which shows the following
-> messages when gnuplot not found:
-> 
->     sh: gnuplot: command not found
+The following changes since commit 0a915aabe88ff98786a88f30d2e062ef34d0826c:
 
-Thanks, applied.
+  blktrace blkreplay: convert to use a dynamic cpu_set_t (2013-08-01 12:13:26 -0600)
 
--- 
-Jens Axboe
+are available in the git repository at:
+  git://git.kernel.dk/blktrace.git master
 
+Eiichi Tsukata (1):
+      blktrace bno_plot.py: output comprehensive message when gnuplot not found
+
+ btt/bno_plot.py |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+---
+
+Diff of recent changes:
+
+diff --git a/btt/bno_plot.py b/btt/bno_plot.py
+index 19dfdfd..aa92480 100644
+--- a/btt/bno_plot.py
++++ b/btt/bno_plot.py
+@@ -114,13 +114,12 @@ if __name__ = '__main__':
+ 
+ 	pid = os.fork()
+ 	if pid = 0:
+-		cmd = '/usr/bin/gnuplot %s/plot.cmds -' % tmpdir
++		cmd = 'gnuplot %s/plot.cmds -' % tmpdir
+ 
+ 		if verbose: print 'Executing %s' % cmd
+ 
+-		cmd = cmd.split(None)
+ 		os.chdir(tmpdir)
+-		os.execvp(cmd[0], cmd)
++		os.system(cmd)
+ 		sys.exit(1)
+ 
+ 	os.waitpid(pid, 0)
