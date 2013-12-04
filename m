@@ -1,49 +1,40 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Date: Wed, 04 Dec 2013 04:56:52 +0000
-Subject: Recent changes (master)
-Message-Id: <20131204050001.E421622D57@kernel.dk>
+From: Lakshmi <sendtold@gmail.com>
+Date: Wed, 04 Dec 2013 16:02:37 +0000
+Subject: Blktrace with read filter shows events with N for PIDs 0
+Message-Id: <CAEyTGCdPR3tBKv3R5Shrm_O=HL21VLjNGfedO5EC4OoHwcpx9Q@mail.gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20130320050001.E340522DFC@kernel.dk>
-In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 0a915aabe88ff98786a88f30d2e062ef34d0826c:
+Hi,
 
-  blktrace blkreplay: convert to use a dynamic cpu_set_t (2013-08-01 12:13:26 -0600)
+I ran a blktrace with -a read mask and when i parsed it to txt
+file,Along with Reads (R) I also see lots of Ns in the RWBS field.
+What does this mean and how do I filter only the reads or writes in
+this case?
 
-are available in the git repository at:
-  git://git.kernel.dk/blktrace.git master
+The Blktrace and Blkparse statements I used are
 
-Eiichi Tsukata (1):
-      blktrace bno_plot.py: output comprehensive message when gnuplot not found
+blktrace -w 130 -d /dev/sdb -a read -b 4096 -o 4K_RR_Trace
 
- btt/bno_plot.py |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+blkparse
+  blkparse -i ./*.blktrace.0 -d ./bp.bin -o bp.txt -w 0:130
 
----
 
-Diff of recent changes:
 
-diff --git a/btt/bno_plot.py b/btt/bno_plot.py
-index 19dfdfd..aa92480 100644
---- a/btt/bno_plot.py
-+++ b/btt/bno_plot.py
-@@ -114,13 +114,12 @@ if __name__ = '__main__':
- 
- 	pid = os.fork()
- 	if pid = 0:
--		cmd = '/usr/bin/gnuplot %s/plot.cmds -' % tmpdir
-+		cmd = 'gnuplot %s/plot.cmds -' % tmpdir
- 
- 		if verbose: print 'Executing %s' % cmd
- 
--		cmd = cmd.split(None)
- 		os.chdir(tmpdir)
--		os.execvp(cmd[0], cmd)
-+		os.system(cmd)
- 		sys.exit(1)
- 
- 	os.waitpid(pid, 0)
+  8,16  12        1     0.000000000  8632  Q   R 0 + 128 [vgdisplay]
+  8,16  12        0     0.000008612     0  m     N cfq8632S / alloced
+  8,16  12        2     0.000008807  8632  G   R 0 + 128 [vgdisplay]
+  8,16  12        3     0.000009475  8632  P   N [vgdisplay]
+  8,16  12        4     0.000009686  8632  I     R 0 + 128 [vgdisplay]
+  8,16  12        0     0.000010338     0  m     N cfq8632S / insert_request
+  8,16  12        0     0.000010901     0  m     N cfq8632S / add_to_rr
+  8,16  12        0     0.000011620     0  m      N cfq8632S / idle=0
+  8,16  12        5     0.000011907  8632  U    N [vgdisplay] 1
+  8,16  12        0     0.000012643     0  m     N cfq workload slice:30
+
+Please help.
+
+Thanks
