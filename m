@@ -1,56 +1,51 @@
-From: Akira Hayakawa <ruby.wktk@gmail.com>
-Date: Thu, 05 Dec 2013 12:12:49 +0000
-Subject: [Question] btt -B doesn't output anything with DM device
-Message-Id: <52A06DC1.4070402@gmail.com>
+From: Eiichi Tsukata <devel@etsukata.com>
+Date: Thu, 05 Dec 2013 15:00:15 +0000
+Subject: [PATCH] blktrace btt: Change bno_dump_add caller action from D-issued to C-complete
+Message-Id: <1386255615-20912-1-git-send-email-devel@etsukata.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
-Cc: dm-devel@redhat.com, devel@etsukata.com
 
-Hi, Guys,
+Currently btt -B option for bno_plot.py writes data when trace action is
+"D-issued". But device mapper blktrace data do not contain "D" events, so
+bno_plot.py can not plot block IO to dm-target.
 
-I am trying to visualize io pattern by bno_plot.
-bno_plot requires an output from btt -B but
-btt -B doesn't output anything for DM devices (e.g. /dev/mapper/mydev) while
-it does for real block devices (e.g. /dev/sdc).
+This patche changes the caller of bno_dump_add which collects data for
+bno_plot.py from handle_issue() to handle_complete(). Device mapper blktrace data
+contain "C-complete" events, we can plot block IO to dm-target.
 
+Signed-off-by: Eiichi Tsukata <devel@etsukata.com>
+---
+ btt/trace_complete.c | 1 +
+ btt/trace_issue.c    | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
-For narrowing down the problem
-I reproduced this problem with simple linear device.
+diff --git a/btt/trace_complete.c b/btt/trace_complete.c
+index 44732c5..7d7497c 100644
+--- a/btt/trace_complete.c
++++ b/btt/trace_complete.c
+@@ -57,6 +57,7 @@ static void handle_complete(struct io *c_iop)
+ 	FILE *pit_fp = c_iop->dip->pit_fp;
+ 	double cur = BIT_TIME(c_iop->t.time);
+ 
++	bno_dump_add(c_iop->dip->bno_dump_handle, c_iop);
+ 	update_blks(c_iop);
+ 	update_cregion(&all_regions, c_iop->t.time);
+ 	update_cregion(&c_iop->dip->regions, c_iop->t.time);
+diff --git a/btt/trace_issue.c b/btt/trace_issue.c
+index 976fe1c..46af64b 100644
+--- a/btt/trace_issue.c
++++ b/btt/trace_issue.c
+@@ -29,7 +29,6 @@ static void handle_issue(struct io *d_iop)
+ 		d_iop->dip->n_act_q--;
+ 
+ 	seeki_add(d_iop->dip->seek_handle, d_iop);
+-	bno_dump_add(d_iop->dip->bno_dump_handle, d_iop);
+ 	iostat_issue(d_iop);
+ 	d_iop->dip->n_ds++;
+ 	if (!remapper_dev(d_iop->t.device))
+-- 
+1.8.3.1
 
-# Setup
-root@Freedom:/home/akira# dmsetup create mydev --table "0 100000 linear /dev/sdc 0"
-root@Freedom:/home/akira# dmsetup ls
-pdc_fgaahfadb   (254:0)
-mydev   (254:1) <- this
-
-# Trace
-root@Freedom:/home/akira# cat devlist
-/dev/mapper/mydev
-/dev/sdc
-root@Freedom:/home/akira# blktrace -w 30 -I devlist -D mytrace
-== dm-1 =  CPU  0:                    0 events,        0 KiB data
-  CPU  1:                  378 events,       18 KiB data
-  Total:                   378 events (dropped 0),       18 KiB data
-== sdc =  CPU  0:                    0 events,        0 KiB data
-  CPU  1:                  781 events,       37 KiB data
-  Total:                   781 events (dropped 0),       37 KiB data
-root@Freedom:/home/akira# ls mytrace/
-dm-1.blktrace.0  dm-1.blktrace.1  sdc.blktrace.0  sdc.blktrace.1
-
-# btt
-root@Freedom:/home/akira# btt -i mytrace/sdc.blktrace.* -B sdc
-root@Freedom:/home/akira# btt -i mytrace/dm-1.blktrace.* -B dm-1  
-root@Freedom:/home/akira# ls *.dat
-sdc_008,032_c.dat  sdc_008,032_r.dat
-
-
-btt doesn't output anything with dm-1.blktrace.* .
-Is this intentionally designed or just a (known/unknown) bug?
-Or, do I forget something?
-
-
-Thanks,
-Akira
