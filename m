@@ -1,50 +1,126 @@
-From: Abhishek Dnyate <abhishek@cumulus-systems.com>
-Date: Wed, 08 Jan 2014 11:15:43 +0000
-Subject: btt support and queries
-Message-Id: <987cd96f9dd8400485449e511699dfba@CO1PR01MB110.prod.exchangelabs.com>
+From: Adam Crume <adamcrume@gmail.com>
+Date: Wed, 08 Jan 2014 17:22:10 +0000
+Subject: Re: btt support and queries
+Message-Id: <CAFu9Dv3yw8kmoiYTaGJ+xPCPJ7p-7yGyo5n8i0BFRpiS0j57ww@mail.gmail.com>
+MIME-Version: 1
+Content-Type: multipart/mixed; boundary="089e01160600ac179004ef78bb1a"
 List-Id: <linux-btrace.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+References: <987cd96f9dd8400485449e511699dfba@CO1PR01MB110.prod.exchangelabs.com>
+In-Reply-To: <987cd96f9dd8400485449e511699dfba@CO1PR01MB110.prod.exchangelabs.com>
 To: linux-btrace@vger.kernel.org
 
-DQpIaSwNCg0KQWxsb3cgbWUgdG8gaW50cm9kdWNlIG15c2VsZi0gbXkgbmFtZSBpcyBBYmhpc2hl
-ayBEbnlhdGUgYW5kIEkgd29yayBmb3IgQ3VtdWx1cyBTeXN0ZW1zLiANCkFzIGEgYmFja2dyb3Vu
-ZCB3ZSBhcmUgdXNpbmcgwqBibGt0cmFjZSB1dGlsaXR5IHRvIGFkZCBhIExpbnV4IGNvbXBvbmVu
-dCB0byBvdXIgaGlnaCBsZXZlbCBwZXJmb3JtYW5jZSBhbmFseXNpcyBhbmQgY2hhcmdlIGJhY2sg
-c3lzdGVtIGNhbGxlZCBNQVJTLiANCldoaWxlIGRldmVsb3BpbmcgdGhpcyBjb21wb25lbnQsIHdl
-IGNhbWUgYWNyb3NzIGJ0dCB1dGlsaXR5LCB3aGljaCB3b3VsZCBhbGxvdyB1cyB0byBwcm9jZXNz
-IHRoZSBkYXRhIGNvbGxlY3RlZCBieSBibGt0cmFjZSwgYW5kIHRoZSByZXBvcnRzIGdlbmVyYXRl
-ZCBieSBidHQgbG9va3MgYWxtb3N0IGV4YWN0bHkgd2hhdCB3ZSB3YW50Lg0KQnV0IHdoaWxlIHVz
-aW5nIGJ0dCwgd2UgZmFjZWQgZmV3IGdsaXRjaGVzIHdoaWNoIG1pZ2h0IGRlZmVhdCB0aGUgdmVy
-eSBwdXJwb3NlIG9mIHVzaW5nIGl0LiANCg0KKFdlIGFyZSByZWZlcnJpbmcgdG8gYSBwZGYg4oCc
-YnR0IFVzZXIgR3VpZGXigJ0gd3JpdHRlbiBieSBBbGFuIEQuIEJydW5lbGxlIChBbGFuLkJydW5l
-bGxlQGhwLmNvbSksIGRhdGVkIDEyIEZlYnJ1YXJ5IDIwMDguKQ0KDQpBbnkgaGVscCBpcyBncmVh
-dGx5IGFwcHJlY2lhdGVkLsKgDQrCoA0K4p6iwqAgRmlyc3RseSwgd2Ugd2FudCB0byBrbm93IGlz
-IGJ0dCBzdXBwb3J0ZWQgYXMgb2YgdG9kYXk/IA0KDQrinqLCoFdlIHdhbnQgYnR0IHRvIHBhcnNl
-IG9ubHkgYSBzdWJzZXQgb2YgYmxrdHJhY2UgZmlsZS4gYnR0IGhhcyDigJN0IGFuZCDigJNUIG9w
-dGlvbiB0byBzcGVjaWZ5IHRoZSBzdGFydCBhbmQgZW5kIHRpbWUsIHdoaWNoIHdvdWxkIGFsbG93
-IGl0LCBidXQgdGhlIGRvY3VtZW50IHNheXM6DQoxMS4xNyAtLXRpbWUtc3RhcnQvLXQgYW5kIC0t
-dGltZS1lbmQvVA0KVGhpcyBidHQgY2FwYWJpbGl0eSBpcyBzdGlsbCB1bmRlciBjb25zdHJ1Y3Rp
-b24sIHJlc3VsdHMgYXJlIG5vdCBhbHdheXMgY29uc2lzdGVudCBhdCB0aGlzIHBvaW50IGluIHRp
-bWUuDQpidHQgdmVyc2lvbiBzcGVjaWZpZWQgaW4gdGhlIGRvY3VtZW50IGlzIDIuMDAgYW5kIHRo
-ZSBjdXJyZW50IHZlcnNpb24gd2UgYXJlIHVzaW5nIGlzIDIuMDcuIFdlIGFyZSBub3Qgc3VyZSB0
-aGF0IHRoaXMgaXNzdWUgc3RpbGwgcGVyc2lzdHMuIEFuZCBpZiBpdCBoYXMgYmVlbiBmaXhlZCwg
-aW4gd2hpY2ggdmVyc2lvbiBvZiBidHQgaXMgaXQgZml4ZWQgPw0KwqANCuKeosKgIEFzIGZhciBh
-cyB3ZSB1bmRlcnN0YW5kLCBidHQgZG9lcyBub3QgZGlmZmVyZW50aWF0ZSBiZXR3ZWVuIHJlYWQg
-YW5kIHdyaXRlIHJlcXVlc3RzIGkuZS4gdG8gc2F5IGJ0dCBvdXRwdXQgZmlsZXMgZG9lcyBub3Qg
-c2hvdyB0aGUgdHlwZSBvZiByZXF1ZXN0LiDCoFdlIGtpbmQgb2YgbG9zZSB0aGlzIGluZm9ybWF0
-aW9uLCBjb2xsZWN0ZWQgYnkgYmxrdHJhY2UuDQrCoA0K4p6iwqAgQXMgcGVyIHRoZSBidHQgdXNl
-ciBndWlkZSAod2hpY2ggd2UgYXJlIHJlZmVycmluZyB0byksIMKgaXQgc2F5cyB0aGUgdGltZXN0
-YW1wIGR1bXBlZCBpbiBmaWxlcyBpcyBhIHJlbGF0aXZlIG9mZnNldCBzaW5jZSB0aGUgc3RhcnQg
-dGltZSBvZiB0aGUgdHJhY2UgKHJlZiBwZyBubyAyMCwgbGFzdCBwYXJhKQ0KwqDCoMKgwqDCoMKg
-wqDCoMKgDQogICAgIEJ1dCBpbiBhY3R1YWwgd2UgYXJlIGdldHRpbmcgdGltZXN0YW1wIHZhbHVl
-cyB0aGF0IGFyZSB2ZXJ5IGhpZ2ggZnJvbSB3aGF0IGlzIGV4cGVjdGVkLiANCiAgICBJcyBpdCB0
-aGUgc3lzdGVtIHVwdGltZT8NCkFzc3VtaW5nIGl0IGlzIHN5c3RlbSB1cHRpbWUsIHdlIGFsc28g
-bm90aWNlZCB0aGF0IHRoaXMgdmFsdWUgbG9va2VkIGluY29ycmVjdCBmb3IgYW4gb2xkwqBrZXJu
-ZWwgdmVyc2lvbiAoMi42LjE4KSwgYnV0IG1hdGNoZWQgZXhhY3RseSB3aXRoIHRoZSBzeXN0ZW0g
-dXB0aW1lIGZvciBhIHJlbGF0aXZlbHkgbGF0ZXIga2VybmVsIHZlcnNpb24gKDIuNi4zMikuIA0K
-SXMgdGhlcmUgYW55IHNwZWNpZmljIGtlcm5lbCB2ZXJzaW9uICwgdGhpcyB3b3VsZCByZXF1aXJl
-Pw0KQ29tbWFuZCB1c2VkIHRvIGV4ZWN1dGUgYnR0IDogYnR0IMKgLWkgc2RhLmJsa3RyYWNlLjAg
-wqAtYSDCoC1vIDxvdXRwdXRfZmlsZW5hbWU+DQoNClRoYW5rcyBpbiBhZHZhbmNlLg0KDQpSZWdh
-cmRzLA0KQWJoaXNoZWsNCg0K
+--089e01160600ac179004ef78bb1a
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+You said that btt doesn't differentiate between read and write
+requests.  If you use the -p option to see individual requests, I have
+a patch that fixes that.  I submitted it a while ago to the mailing
+list, but it was ignored.  If you're looking for aggregate statistics,
+though, you'd have to compute them yourself.
+
+The time stamps are since you started blktrace, so if there is a delay
+between starting blktrace and starting your workload, the timestamps
+will be larger.
+
+As for your other concerns, someone else will have to address them.
+I'm just another blktrace user, not a developer.
+
+On Wed, Jan 8, 2014 at 3:15 AM, Abhishek Dnyate
+<abhishek@cumulus-systems.com> wrote:
+>
+> Hi,
+>
+> Allow me to introduce myself- my name is Abhishek Dnyate and I work for C=
+umulus Systems.
+> As a background we are using  blktrace utility to add a Linux component t=
+o our high level performance analysis and charge back system called MARS.
+> While developing this component, we came across btt utility, which would =
+allow us to process the data collected by blktrace, and the reports generat=
+ed by btt looks almost exactly what we want.
+> But while using btt, we faced few glitches which might defeat the very pu=
+rpose of using it.
+>
+> (We are referring to a pdf =E2=80=9Cbtt User Guide=E2=80=9D written by Al=
+an D. Brunelle (Alan.Brunelle@hp.com), dated 12 February 2008.)
+>
+> Any help is greatly appreciated.
+>
+> =E2=9E=A2  Firstly, we want to know is btt supported as of today?
+>
+> =E2=9E=A2 We want btt to parse only a subset of blktrace file. btt has =
+=E2=80=93t and =E2=80=93T option to specify the start and end time, which w=
+ould allow it, but the document says:
+> 11.17 --time-start/-t and --time-end/T
+> This btt capability is still under construction, results are not always c=
+onsistent at this point in time.
+> btt version specified in the document is 2.00 and the current version we =
+are using is 2.07. We are not sure that this issue still persists. And if i=
+t has been fixed, in which version of btt is it fixed ?
+>
+> =E2=9E=A2  As far as we understand, btt does not differentiate between re=
+ad and write requests i.e. to say btt output files does not show the type o=
+f request.  We kind of lose this information, collected by blktrace.
+>
+> =E2=9E=A2  As per the btt user guide (which we are referring to),  it say=
+s the timestamp dumped in files is a relative offset since the start time o=
+f the trace (ref pg no 20, last para)
+>
+>      But in actual we are getting timestamp values that are very high fro=
+m what is expected.
+>     Is it the system uptime?
+> Assuming it is system uptime, we also noticed that this value looked inco=
+rrect for an old kernel version (2.6.18), but matched exactly with the syst=
+em uptime for a relatively later kernel version (2.6.32).
+> Is there any specific kernel version , this would require?
+> Command used to execute btt : btt  -i sda.blktrace.0  -a  -o <output_file=
+name>
+>
+> Thanks in advance.
+>
+> Regards,
+> Abhishek
+>
+
+--089e01160600ac179004ef78bb1a
+Content-Type: text/x-patch; charset=US-ASCII; 
+	name="0001-Adding-read-write-flag-to-per-io-output.patch"
+Content-Disposition: attachment; 
+	filename="0001-Adding-read-write-flag-to-per-io-output.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hq6utqpp0
+
+ZGlmZiAtLWdpdCBhL2J0dC90cmFjZV9jb21wbGV0ZS5jIGIvYnR0L3RyYWNlX2NvbXBsZXRlLmMK
+aW5kZXggNDQ3MzJjNS4uYWMxMDQ4MCAxMDA2NDQKLS0tIGEvYnR0L3RyYWNlX2NvbXBsZXRlLmMK
+KysrIGIvYnR0L3RyYWNlX2NvbXBsZXRlLmMKQEAgLTIxLDMxICsyMSwzMiBAQAogI2luY2x1ZGUg
+Imdsb2JhbHMuaCIKIAogc3RhdGljIGlubGluZSB2b2lkIF9fb3V0KEZJTEUgKm9mcCwgX191NjQg
+dG0sIGVudW0gaW9wX3R5cGUgdHlwZSwKLQkJCQkJX191NjQgc2VjLCBfX3UzMiBuc2VjLCBpbnQg
+aW5kZW50KQorCQkJCQlfX3U2NCBzZWMsIF9fdTMyIG5zZWMsIGludCB3cml0ZSwgaW50IGluZGVu
+dCkKIHsKIAlpZiAodG0gIT0gKF9fdTY0KS0xKSB7CiAJCWlmIChpbmRlbnQpCiAJCQlmcHJpbnRm
+KG9mcCwgIiAgICAgICAgICIpOwotCQlmcHJpbnRmKG9mcCwgIiU1ZC4lMDlsdSAlYyAlMTBsbHUr
+JS00dVxuIiwKKwkJZnByaW50ZihvZnAsICIlNWQuJTA5bHUgJWMgJTEwbGx1KyUtNHUgJWNcbiIs
+CiAJCQkoaW50KVNFQ09ORFModG0pLCAodW5zaWduZWQgbG9uZylOQU5PX1NFQ09ORFModG0pLAot
+CQkJdHlwZTJjKHR5cGUpLCAodW5zaWduZWQgbG9uZyBsb25nKXNlYywgbnNlYyk7CisJCQl0eXBl
+MmModHlwZSksICh1bnNpZ25lZCBsb25nIGxvbmcpc2VjLCBuc2VjLCB3cml0ZT8nVyc6J1InKTsK
+IAl9CiB9CiAKIHN0YXRpYyB2b2lkIGRpc3BsYXlfaW9fdHJhY2soRklMRSAqb2ZwLCBzdHJ1Y3Qg
+aW8gKmlvcCkKIHsKKwlpbnQgdyA9IChpb3AtPnQuYWN0aW9uICYgQkxLX1RDX0FDVChCTEtfVENf
+V1JJVEUpKSAhPSAwOwogCWZwcmludGYob2ZwLCAiJTNkLCUtM2Q6ICIsIE1BSk9SKGlvcC0+dC5k
+ZXZpY2UpLCBNSU5PUihpb3AtPnQuZGV2aWNlKSk7Ci0JX19vdXQob2ZwLCBpb3AtPnQudGltZSwg
+SU9QX1EsIGlvcC0+dC5zZWN0b3IsIHRfc2VjKCZpb3AtPnQpLCAwKTsKKwlfX291dChvZnAsIGlv
+cC0+dC50aW1lLCBJT1BfUSwgaW9wLT50LnNlY3RvciwgdF9zZWMoJmlvcC0+dCksIHcsIDApOwog
+CiAJaWYgKGlvcC0+Z190aW1lICE9IChfX3U2NCktMSkKLQkJX19vdXQob2ZwLCBpb3AtPmdfdGlt
+ZSwgSU9QX0csIGlvcC0+dC5zZWN0b3IsIHRfc2VjKCZpb3AtPnQpLDEpOworCQlfX291dChvZnAs
+IGlvcC0+Z190aW1lLCBJT1BfRywgaW9wLT50LnNlY3RvciwgdF9zZWMoJmlvcC0+dCksIHcsIDEp
+OwogCWlmIChpb3AtPmlfdGltZSAhPSAoX191NjQpLTEpCi0JCV9fb3V0KG9mcCwgaW9wLT5pX3Rp
+bWUsIElPUF9JLCBpb3AtPnQuc2VjdG9yLCB0X3NlYygmaW9wLT50KSwxKTsKKwkJX19vdXQob2Zw
+LCBpb3AtPmlfdGltZSwgSU9QX0ksIGlvcC0+dC5zZWN0b3IsIHRfc2VjKCZpb3AtPnQpLCB3LCAx
+KTsKIAlpZiAoaW9wLT5tX3RpbWUgIT0gKF9fdTY0KS0xKQotCQlfX291dChvZnAsIGlvcC0+bV90
+aW1lLCBJT1BfTSwgaW9wLT50LnNlY3RvciwgdF9zZWMoJmlvcC0+dCksMSk7CisJCV9fb3V0KG9m
+cCwgaW9wLT5tX3RpbWUsIElPUF9NLCBpb3AtPnQuc2VjdG9yLCB0X3NlYygmaW9wLT50KSwgdywg
+MSk7CiAKLQlfX291dChvZnAsIGlvcC0+ZF90aW1lLCBJT1BfRCwgaW9wLT5kX3NlYywgaW9wLT5k
+X25zZWMsIDEpOwotCV9fb3V0KG9mcCwgaW9wLT5jX3RpbWUsIElPUF9DLCBpb3AtPmNfc2VjLCBp
+b3AtPmNfbnNlYywgMSk7CisJX19vdXQob2ZwLCBpb3AtPmRfdGltZSwgSU9QX0QsIGlvcC0+ZF9z
+ZWMsIGlvcC0+ZF9uc2VjLCB3LCAxKTsKKwlfX291dChvZnAsIGlvcC0+Y190aW1lLCBJT1BfQywg
+aW9wLT5jX3NlYywgaW9wLT5jX25zZWMsIHcsIDEpOwogCWZwcmludGYob2ZwLCAiXG4iKTsKIH0K
+IAo=
+--089e01160600ac179004ef78bb1a--
