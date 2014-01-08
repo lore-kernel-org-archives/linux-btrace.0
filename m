@@ -1,51 +1,50 @@
-From: Eiichi Tsukata <devel@etsukata.com>
-Date: Thu, 05 Dec 2013 15:00:15 +0000
-Subject: [PATCH] blktrace btt: Change bno_dump_add caller action from D-issued to C-complete
-Message-Id: <1386255615-20912-1-git-send-email-devel@etsukata.com>
+From: Abhishek Dnyate <abhishek@cumulus-systems.com>
+Date: Wed, 08 Jan 2014 11:15:43 +0000
+Subject: btt support and queries
+Message-Id: <987cd96f9dd8400485449e511699dfba@CO1PR01MB110.prod.exchangelabs.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Currently btt -B option for bno_plot.py writes data when trace action is
-"D-issued". But device mapper blktrace data do not contain "D" events, so
-bno_plot.py can not plot block IO to dm-target.
-
-This patche changes the caller of bno_dump_add which collects data for
-bno_plot.py from handle_issue() to handle_complete(). Device mapper blktrace data
-contain "C-complete" events, we can plot block IO to dm-target.
-
-Signed-off-by: Eiichi Tsukata <devel@etsukata.com>
----
- btt/trace_complete.c | 1 +
- btt/trace_issue.c    | 1 -
- 2 files changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/btt/trace_complete.c b/btt/trace_complete.c
-index 44732c5..7d7497c 100644
---- a/btt/trace_complete.c
-+++ b/btt/trace_complete.c
-@@ -57,6 +57,7 @@ static void handle_complete(struct io *c_iop)
- 	FILE *pit_fp = c_iop->dip->pit_fp;
- 	double cur = BIT_TIME(c_iop->t.time);
- 
-+	bno_dump_add(c_iop->dip->bno_dump_handle, c_iop);
- 	update_blks(c_iop);
- 	update_cregion(&all_regions, c_iop->t.time);
- 	update_cregion(&c_iop->dip->regions, c_iop->t.time);
-diff --git a/btt/trace_issue.c b/btt/trace_issue.c
-index 976fe1c..46af64b 100644
---- a/btt/trace_issue.c
-+++ b/btt/trace_issue.c
-@@ -29,7 +29,6 @@ static void handle_issue(struct io *d_iop)
- 		d_iop->dip->n_act_q--;
- 
- 	seeki_add(d_iop->dip->seek_handle, d_iop);
--	bno_dump_add(d_iop->dip->bno_dump_handle, d_iop);
- 	iostat_issue(d_iop);
- 	d_iop->dip->n_ds++;
- 	if (!remapper_dev(d_iop->t.device))
--- 
-1.8.3.1
-
+DQpIaSwNCg0KQWxsb3cgbWUgdG8gaW50cm9kdWNlIG15c2VsZi0gbXkgbmFtZSBpcyBBYmhpc2hl
+ayBEbnlhdGUgYW5kIEkgd29yayBmb3IgQ3VtdWx1cyBTeXN0ZW1zLiANCkFzIGEgYmFja2dyb3Vu
+ZCB3ZSBhcmUgdXNpbmcgwqBibGt0cmFjZSB1dGlsaXR5IHRvIGFkZCBhIExpbnV4IGNvbXBvbmVu
+dCB0byBvdXIgaGlnaCBsZXZlbCBwZXJmb3JtYW5jZSBhbmFseXNpcyBhbmQgY2hhcmdlIGJhY2sg
+c3lzdGVtIGNhbGxlZCBNQVJTLiANCldoaWxlIGRldmVsb3BpbmcgdGhpcyBjb21wb25lbnQsIHdl
+IGNhbWUgYWNyb3NzIGJ0dCB1dGlsaXR5LCB3aGljaCB3b3VsZCBhbGxvdyB1cyB0byBwcm9jZXNz
+IHRoZSBkYXRhIGNvbGxlY3RlZCBieSBibGt0cmFjZSwgYW5kIHRoZSByZXBvcnRzIGdlbmVyYXRl
+ZCBieSBidHQgbG9va3MgYWxtb3N0IGV4YWN0bHkgd2hhdCB3ZSB3YW50Lg0KQnV0IHdoaWxlIHVz
+aW5nIGJ0dCwgd2UgZmFjZWQgZmV3IGdsaXRjaGVzIHdoaWNoIG1pZ2h0IGRlZmVhdCB0aGUgdmVy
+eSBwdXJwb3NlIG9mIHVzaW5nIGl0LiANCg0KKFdlIGFyZSByZWZlcnJpbmcgdG8gYSBwZGYg4oCc
+YnR0IFVzZXIgR3VpZGXigJ0gd3JpdHRlbiBieSBBbGFuIEQuIEJydW5lbGxlIChBbGFuLkJydW5l
+bGxlQGhwLmNvbSksIGRhdGVkIDEyIEZlYnJ1YXJ5IDIwMDguKQ0KDQpBbnkgaGVscCBpcyBncmVh
+dGx5IGFwcHJlY2lhdGVkLsKgDQrCoA0K4p6iwqAgRmlyc3RseSwgd2Ugd2FudCB0byBrbm93IGlz
+IGJ0dCBzdXBwb3J0ZWQgYXMgb2YgdG9kYXk/IA0KDQrinqLCoFdlIHdhbnQgYnR0IHRvIHBhcnNl
+IG9ubHkgYSBzdWJzZXQgb2YgYmxrdHJhY2UgZmlsZS4gYnR0IGhhcyDigJN0IGFuZCDigJNUIG9w
+dGlvbiB0byBzcGVjaWZ5IHRoZSBzdGFydCBhbmQgZW5kIHRpbWUsIHdoaWNoIHdvdWxkIGFsbG93
+IGl0LCBidXQgdGhlIGRvY3VtZW50IHNheXM6DQoxMS4xNyAtLXRpbWUtc3RhcnQvLXQgYW5kIC0t
+dGltZS1lbmQvVA0KVGhpcyBidHQgY2FwYWJpbGl0eSBpcyBzdGlsbCB1bmRlciBjb25zdHJ1Y3Rp
+b24sIHJlc3VsdHMgYXJlIG5vdCBhbHdheXMgY29uc2lzdGVudCBhdCB0aGlzIHBvaW50IGluIHRp
+bWUuDQpidHQgdmVyc2lvbiBzcGVjaWZpZWQgaW4gdGhlIGRvY3VtZW50IGlzIDIuMDAgYW5kIHRo
+ZSBjdXJyZW50IHZlcnNpb24gd2UgYXJlIHVzaW5nIGlzIDIuMDcuIFdlIGFyZSBub3Qgc3VyZSB0
+aGF0IHRoaXMgaXNzdWUgc3RpbGwgcGVyc2lzdHMuIEFuZCBpZiBpdCBoYXMgYmVlbiBmaXhlZCwg
+aW4gd2hpY2ggdmVyc2lvbiBvZiBidHQgaXMgaXQgZml4ZWQgPw0KwqANCuKeosKgIEFzIGZhciBh
+cyB3ZSB1bmRlcnN0YW5kLCBidHQgZG9lcyBub3QgZGlmZmVyZW50aWF0ZSBiZXR3ZWVuIHJlYWQg
+YW5kIHdyaXRlIHJlcXVlc3RzIGkuZS4gdG8gc2F5IGJ0dCBvdXRwdXQgZmlsZXMgZG9lcyBub3Qg
+c2hvdyB0aGUgdHlwZSBvZiByZXF1ZXN0LiDCoFdlIGtpbmQgb2YgbG9zZSB0aGlzIGluZm9ybWF0
+aW9uLCBjb2xsZWN0ZWQgYnkgYmxrdHJhY2UuDQrCoA0K4p6iwqAgQXMgcGVyIHRoZSBidHQgdXNl
+ciBndWlkZSAod2hpY2ggd2UgYXJlIHJlZmVycmluZyB0byksIMKgaXQgc2F5cyB0aGUgdGltZXN0
+YW1wIGR1bXBlZCBpbiBmaWxlcyBpcyBhIHJlbGF0aXZlIG9mZnNldCBzaW5jZSB0aGUgc3RhcnQg
+dGltZSBvZiB0aGUgdHJhY2UgKHJlZiBwZyBubyAyMCwgbGFzdCBwYXJhKQ0KwqDCoMKgwqDCoMKg
+wqDCoMKgDQogICAgIEJ1dCBpbiBhY3R1YWwgd2UgYXJlIGdldHRpbmcgdGltZXN0YW1wIHZhbHVl
+cyB0aGF0IGFyZSB2ZXJ5IGhpZ2ggZnJvbSB3aGF0IGlzIGV4cGVjdGVkLiANCiAgICBJcyBpdCB0
+aGUgc3lzdGVtIHVwdGltZT8NCkFzc3VtaW5nIGl0IGlzIHN5c3RlbSB1cHRpbWUsIHdlIGFsc28g
+bm90aWNlZCB0aGF0IHRoaXMgdmFsdWUgbG9va2VkIGluY29ycmVjdCBmb3IgYW4gb2xkwqBrZXJu
+ZWwgdmVyc2lvbiAoMi42LjE4KSwgYnV0IG1hdGNoZWQgZXhhY3RseSB3aXRoIHRoZSBzeXN0ZW0g
+dXB0aW1lIGZvciBhIHJlbGF0aXZlbHkgbGF0ZXIga2VybmVsIHZlcnNpb24gKDIuNi4zMikuIA0K
+SXMgdGhlcmUgYW55IHNwZWNpZmljIGtlcm5lbCB2ZXJzaW9uICwgdGhpcyB3b3VsZCByZXF1aXJl
+Pw0KQ29tbWFuZCB1c2VkIHRvIGV4ZWN1dGUgYnR0IDogYnR0IMKgLWkgc2RhLmJsa3RyYWNlLjAg
+wqAtYSDCoC1vIDxvdXRwdXRfZmlsZW5hbWU+DQoNClRoYW5rcyBpbiBhZHZhbmNlLg0KDQpSZWdh
+cmRzLA0KQWJoaXNoZWsNCg0K
