@@ -1,42 +1,21 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Mon, 08 Sep 2014 14:16:10 +0000
-Subject: Re: [PATCH] signal condition variable at end of stop_tracers
-Message-Id: <540DBA2A.8000007@kernel.dk>
+From: Christoph Hellwig <hch@infradead.org>
+Date: Fri, 05 Sep 2014 18:48:06 +0000
+Subject: [RFC] merge seekwatcher into the blktrace repository?
+Message-Id: <20140905184806.GA32325@infradead.org>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20140908073852.GA19062@ulegcprs1.emea.nsn-net.net>
-In-Reply-To: <20140908073852.GA19062@ulegcprs1.emea.nsn-net.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 09/08/2014 01:38 AM, Robert Schiele wrote:
-> stop_tracers modifies tp->is_done and thus must signal the condition
-> variable tracer_wait_unblock is waiting on to monitor tp->is_done.
-> Not doing so might cause the tool to deadlock if stop_tracers is
-> called while a tracer thread is in tracer_wait_unblock.
-> 
-> Signed-off-by: Robert Schiele <rschiele@gmail.com>
-> ---
->  blktrace.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/blktrace.c b/blktrace.c
-> index 7e64c94..3c8fb4c 100644
-> --- a/blktrace.c
-> +++ b/blktrace.c
-> @@ -1913,6 +1913,7 @@ static void stop_tracers(void)
->  		struct tracer *tp = list_entry(p, struct tracer, head);
->  		tp->is_done = 1;
->  	}
-> +	pthread_cond_broadcast(&mt_cond);
->  }
->  
->  static void del_tracers(void)
-> 
+Hi Chris, hi Jens,
 
-Good catch! Applied.
+I worked with a customer last week who had to manually install
+seekwatcher because their distro didn't provide it, and it turns
+out that the hg repository for it seems fairly dead, and recent fixes
+are instead carried in various distro packages.
 
--- 
-Jens Axboe
-
+Given that seekwatcher is based on blktrace, and given that other
+simple blktrace consumers are in the blktrace repository maybe it's time
+to simple add seekwatcher to the blktrace repository so that we have
+a canonical place for any sort of fixes for it?
