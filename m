@@ -1,45 +1,47 @@
 From: Jens Axboe <axboe@kernel.dk>
-Date: Wed, 24 Sep 2014 19:57:17 +0000
-Subject: Re: [GIT PULL] merge iowatcher under blktrace repo
-Message-Id: <5423221D.8090202@kernel.dk>
+Date: Tue, 09 Sep 2014 12:00:03 +0000
+Subject: Recent changes (master)
+Message-Id: <20140909120003.8FF8B40246@lyth.info>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <54231E9E.5000004@fb.com>
-In-Reply-To: <54231E9E.5000004@fb.com>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 09/24/2014 01:42 PM, Chris Mason wrote:
-> Hi everyone,
-> 
-> iowatcher is a program I use to generate graphs and animations from
-> blktrace results.  It can also generate basic bandwidth numbers from fio
-> runs.
-> 
-> You can see basic usage instructions and a few examples here:
-> 
-> http://masoncoding.com/iowatcher/
-> 
-> The general idea is that iowatcher is a lot like seekwatcher was, but
-> instead of using python and matplotlib, I generate svg files directly
-> from C.  This means it has no dependencies and is much faster.  I've
-> been maintaining it in a separate repo, but it's small enough to toss
-> into blktrace.
-> 
-> I rewrote the iowatcher repo to place it under blktrace, and it's
-> available for pulling here:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/mason/blktrace.git master
-> 
-> You can see from the stats below that I've had some help on iowatcher.
-> Many thanks to Andrew Price for working on packages, documentation, fixes
-> and usability.  Jan Kara also spent a bunch of time porting his
-> per-process IO graphing over from seekwatcher.
+The following changes since commit ce9ded7165b846598b28107ceb2864ae1ad4b652:
 
-This has now been pulled in, and I've bumped the package version from
-1.0.5 to 1.1.0 to signify that people should update their distro packages.
+  remove unused barrier.h (2014-04-11 07:45:54 -0600)
 
--- 
-Jens Axboe
+are available in the git repository at:
 
+  git://git.kernel.dk/blktrace.git master
+
+for you to fetch changes up to 838361c6cfb1319eadd59daaf9074dcdb92746e6:
+
+  signal condition variable at end of stop_tracers (2014-09-08 08:15:58 -0600)
+
+----------------------------------------------------------------
+Robert Schiele (1):
+      signal condition variable at end of stop_tracers
+
+ blktrace.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+---
+
+Diff of recent changes:
+
+diff --git a/blktrace.c b/blktrace.c
+index 7e64c94..3c8fb4c 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -1913,6 +1913,7 @@ static void stop_tracers(void)
+ 		struct tracer *tp = list_entry(p, struct tracer, head);
+ 		tp->is_done = 1;
+ 	}
++	pthread_cond_broadcast(&mt_cond);
+ }
+ 
+ static void del_tracers(void)
