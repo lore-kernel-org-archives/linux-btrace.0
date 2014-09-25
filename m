@@ -1,360 +1,126 @@
 From: Andrew Price <anprice@redhat.com>
-Date: Thu, 25 Sep 2014 21:04:14 +0000
-Subject: [PATCH 2/4] iowatcher: Move iowatcher.1 into doc directory
-Message-Id: <1411679056-32596-3-git-send-email-anprice@redhat.com>
+Date: Thu, 25 Sep 2014 21:04:15 +0000
+Subject: [PATCH 3/4] iowatcher: Remove iowatcher/README
+Message-Id: <1411679056-32596-4-git-send-email-anprice@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-iowatcher's manpage wasn't being installed with the other manpages so
-add it to the doc directory.
+This README is getting out-of-date and its contents are duplicated in
+the iowatcher manpage which is up-to-date, so remove it to reduce
+duplication of effort.
 
 Signed-off-by: Andrew Price <anprice@redhat.com>
 ---
- doc/iowatcher.1       | 162 ++++++++++++++++++++++++++++++++++++++++++++++++++
- iowatcher/iowatcher.1 | 162 --------------------------------------------------
- 2 files changed, 162 insertions(+), 162 deletions(-)
- create mode 100644 doc/iowatcher.1
- delete mode 100644 iowatcher/iowatcher.1
+ iowatcher/README | 97 --------------------------------------------------------
+ 1 file changed, 97 deletions(-)
+ delete mode 100644 iowatcher/README
 
-diff --git a/doc/iowatcher.1 b/doc/iowatcher.1
-new file mode 100644
-index 0000000..3044abf
---- /dev/null
-+++ b/doc/iowatcher.1
-@@ -0,0 +1,162 @@
-+.TH iowatcher "1" "April 2014" "iowatcher" "User Commands"
-+
-+.SH NAME
-+iowatcher - Create visualizations from blktrace results
-+
-+.SH SYNOPSIS
-+.B iowatcher
-+\fI[options]\fR [--] \fI[program arguments ...]\fR
-+
-+.SH DESCRIPTION
-+iowatcher graphs the results of a blktrace run.  It can graph the result of an existing blktrace, start a new blktrace, or start a new blktrace and a benchmark run.  It can then create an image or movie of the IO from a given trace.  iowatcher can produce either SVG files or movies in mp4 format (with ffmpeg) or ogg format (with png2theora).
-+
-+.SH OPTIONS
-+.TP
-+\fB--help\fP
-+Print a brief usage summary.
-+.TP
-+\fB-d, --device\fP \fIdevice\fP
-+Controls which device you are tracing.  You can only trace one device at a time for now.  It is sent directly to blktrace, and only needed when you are making a new trace.
-+.TP
-+\fB-D, --blktrace-destination\fP \fIdestination\fP
-+Destination for blktrace.
-+.TP
-+\fB-p, --prog\fP
-+Run a program while blktrace is run. The program and its arguments must be
-+specified after all other options.  Note that this option previously required
-+the program to be given as a single argument but it now tells \fBiowatcher\fP
-+to expect extra arguments which it should be run during the trace.
-+.TP
-+\fB--\fP
-+End option parsing. If \fB--prog\fP is specified, everything after \fB--\fP is
-+the program to be run. This can be useful if the program name could otherwise
-+be mistaken for an option.
-+.TP
-+\fB-K, --keep-movie-svgs\fP
-+Keep the SVG files generated for movie mode.
-+.TP
-+\fB-t, --trace\fP \fIpath\fP
-+Specify the name of the file or directory in which blktrace output is located.
-+\fBiowatcher\fP uses a dump from blkparse, so this option tries to guess the
-+name of the corresponding per-CPU blktrace data files if the dump file doesn't
-+already exist.  To add multiple traces to a given graph, you can specify
-+\fB--trace\fP more than once.  If \fIpath\fP is a directory, \fBiowatcher\fP
-+will use the name of the directory as the base name of the dump file and all
-+trace files found inside the directory will be processed.
-+.TP
-+\fB-l, --label\fP \fIlabel\fP
-+Sets a label in the graph for a trace file.  The labels are added in the same order as the trace files.
-+.TP
-+\fB-m, --movie\fP \fI[style]\fP
-+Create a movie.  The file format depends on the extension used in the \fB-o\fP
-+\fIfile\fP option.  If you specify an .ogv or .ogg extension, the result will
-+be Ogg Theora video, if png2theora is available.  If you use an .mp4 extension,
-+the result will be an mp4 video if ffmpeg is available.  You can use any other
-+extension, but the end result will be an mp4.  The accepted \fIstyle\fP values
-+are \fBspindle\fP for a circular disc-like effect (default) or \fBrect\fP for a
-+rectangular graph style.
-+.TP
-+\fB-T, --title\fP \fItitle\fP
-+Set a \fItitle\fP to be placed at the top of the graph.
-+.TP
-+\fB-o, --output\fP \fIfile\fP
-+Output filename for the SVG image or video. The video format used will depend
-+on the file name extension. See \fB--movie\fP for details.
-+.TP
-+\fB-r, --rolling\fP \fIseconds\fP
-+Control the duration for the rolling average.  \fBiowatcher\fP tries to smooth out bumpy graphs by averaging the current second with seconds from the past.  Larger numbers here give you flatter graphs.
-+.TP
-+\fB-h, --height\fP \fIheight\fP
-+Set the height of each graph
-+.TP
-+\fB-w, --width\fP \fIwidth\fP
-+Set the width of each graph
-+.TP
-+\fB-c, --columns\fP \fIcolumns\fP
-+Number of columns in graph output
-+.TP
-+\fB-x, --xzoom\fP \fImin:max\fP
-+Limit processed time range to \fImin:max\fP.
-+.TP
-+\fB-y, --yzoom\fP \fImin:max\fP
-+Limit processed sectors to \fImin:max\fP.
-+.TP
-+\fB-a, --io-plot-action\fP \fIaction\fP
-+Plot \fIaction\fP (one of Q, D, or C) in the IO graph.
-+.TP
-+\fB-P, --per-process-io\fP
-+Distinguish between processes in the IO graph.
-+.TP
-+\fB-O, --only-graph\fP \fIgraph\fP
-+Add a single graph to the output (see section \fBGRAPHS\fP for options).  By
-+default all graphs are included. Use \fB-O\fP to generate only the required
-+graphs.  \fB-O\fP may be used more than once.
-+.TP
-+\fB-N, --no-graph\fP \fItype\fP
-+Remove a single graph from the output (see section \fBGRAPHS\fP for options).
-+This option may be used more than once.
-+.SH GRAPHS
-+Values accepted by the \fB-O\fP and \fB-N\fP options are:
-+
-+   io, tput, latency, queue_depth, iops, cpu-sys, cpu-io, cpu-irq, cpu-user, cpu-soft
-+
-+.SH EXAMPLES
-+Generate graph from the existing trace.dump:
-+.PP
-+.RS
-+# iowatcher -t trace
-+.RE
-+.PP
-+Skip the IO graph:
-+.PP
-+.RS
-+# iowatcher -t trace.dump -o trace.svg -N io
-+.RE
-+.PP
-+Only graph tput and latency:
-+.PP
-+.RS
-+# iowatcher -t trace.dump -o trace.svg -O tput -O latency
-+.RE
-+.PP
-+Generate a graph from two runs, and label them:
-+.PP
-+.RS
-+# iowatcher -t ext4.dump -t xfs.dump -l Ext4 -l XFS -o trace.svg
-+.RE
-+.PP
-+Run a fio benchmark and store the trace in trace.dump, add a title to the top, use /dev/sda for blktrace:
-+.PP
-+.RS
-+# iowatcher -d /dev/sda -t trace.dump -T 'Fio Benchmark' -p fio some_job_file
-+.RE
-+.PP
-+Make a movie from an existing trace:
-+.PP
-+.RS
-+# iowatcher -t trace --movie -o trace.mp4
-+.RE
-+
-+.SH AUTHORS
-+iowatcher was created and is maintained by Chris Mason.
-+
-+This man page was largely written by Andrew Price based on Chris's original README.
-+
-+.SH COPYRIGHT
-+This program is free software; you can redistribute it and/or modify it under
-+the terms of the GNU General Public License v2 as published by the Free
-+Software Foundation.
-+
-+This program is distributed in the hope that it will be useful, but WITHOUT ANY
-+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-+
-+You should have received a copy of the GNU General Public License along with
-+this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
-+Street, Fifth Floor, Boston, MA 02110-1301 USA
-+
-+.SH "SEE ALSO"
-+.BR blktrace (8),
-+.BR blkparse (1),
-+.BR fio (1),
-+.BR mpstat (1)
-diff --git a/iowatcher/iowatcher.1 b/iowatcher/iowatcher.1
+diff --git a/iowatcher/README b/iowatcher/README
 deleted file mode 100644
-index 3044abf..0000000
---- a/iowatcher/iowatcher.1
+index 83db494..0000000
+--- a/iowatcher/README
 +++ /dev/null
-@@ -1,162 +0,0 @@
--.TH iowatcher "1" "April 2014" "iowatcher" "User Commands"
+@@ -1,97 +0,0 @@
+-iowatcher graphs the results of a blktrace run.  It has a few different modes:
 -
--.SH NAME
--iowatcher - Create visualizations from blktrace results
+-	* Graph the result of an existing blktrace
 -
--.SH SYNOPSIS
--.B iowatcher
--\fI[options]\fR [--] \fI[program arguments ...]\fR
+-	* Start a new blktrace
 -
--.SH DESCRIPTION
--iowatcher graphs the results of a blktrace run.  It can graph the result of an existing blktrace, start a new blktrace, or start a new blktrace and a benchmark run.  It can then create an image or movie of the IO from a given trace.  iowatcher can produce either SVG files or movies in mp4 format (with ffmpeg) or ogg format (with png2theora).
+-	* Start a new blktrace and a benchmark run
 -
--.SH OPTIONS
--.TP
--\fB--help\fP
--Print a brief usage summary.
--.TP
--\fB-d, --device\fP \fIdevice\fP
--Controls which device you are tracing.  You can only trace one device at a time for now.  It is sent directly to blktrace, and only needed when you are making a new trace.
--.TP
--\fB-D, --blktrace-destination\fP \fIdestination\fP
--Destination for blktrace.
--.TP
--\fB-p, --prog\fP
--Run a program while blktrace is run. The program and its arguments must be
--specified after all other options.  Note that this option previously required
--the program to be given as a single argument but it now tells \fBiowatcher\fP
--to expect extra arguments which it should be run during the trace.
--.TP
--\fB--\fP
--End option parsing. If \fB--prog\fP is specified, everything after \fB--\fP is
--the program to be run. This can be useful if the program name could otherwise
--be mistaken for an option.
--.TP
--\fB-K, --keep-movie-svgs\fP
--Keep the SVG files generated for movie mode.
--.TP
--\fB-t, --trace\fP \fIpath\fP
--Specify the name of the file or directory in which blktrace output is located.
--\fBiowatcher\fP uses a dump from blkparse, so this option tries to guess the
--name of the corresponding per-CPU blktrace data files if the dump file doesn't
--already exist.  To add multiple traces to a given graph, you can specify
--\fB--trace\fP more than once.  If \fIpath\fP is a directory, \fBiowatcher\fP
--will use the name of the directory as the base name of the dump file and all
--trace files found inside the directory will be processed.
--.TP
--\fB-l, --label\fP \fIlabel\fP
--Sets a label in the graph for a trace file.  The labels are added in the same order as the trace files.
--.TP
--\fB-m, --movie\fP \fI[style]\fP
--Create a movie.  The file format depends on the extension used in the \fB-o\fP
--\fIfile\fP option.  If you specify an .ogv or .ogg extension, the result will
--be Ogg Theora video, if png2theora is available.  If you use an .mp4 extension,
--the result will be an mp4 video if ffmpeg is available.  You can use any other
--extension, but the end result will be an mp4.  The accepted \fIstyle\fP values
--are \fBspindle\fP for a circular disc-like effect (default) or \fBrect\fP for a
--rectangular graph style.
--.TP
--\fB-T, --title\fP \fItitle\fP
--Set a \fItitle\fP to be placed at the top of the graph.
--.TP
--\fB-o, --output\fP \fIfile\fP
--Output filename for the SVG image or video. The video format used will depend
--on the file name extension. See \fB--movie\fP for details.
--.TP
--\fB-r, --rolling\fP \fIseconds\fP
--Control the duration for the rolling average.  \fBiowatcher\fP tries to smooth out bumpy graphs by averaging the current second with seconds from the past.  Larger numbers here give you flatter graphs.
--.TP
--\fB-h, --height\fP \fIheight\fP
--Set the height of each graph
--.TP
--\fB-w, --width\fP \fIwidth\fP
--Set the width of each graph
--.TP
--\fB-c, --columns\fP \fIcolumns\fP
--Number of columns in graph output
--.TP
--\fB-x, --xzoom\fP \fImin:max\fP
--Limit processed time range to \fImin:max\fP.
--.TP
--\fB-y, --yzoom\fP \fImin:max\fP
--Limit processed sectors to \fImin:max\fP.
--.TP
--\fB-a, --io-plot-action\fP \fIaction\fP
--Plot \fIaction\fP (one of Q, D, or C) in the IO graph.
--.TP
--\fB-P, --per-process-io\fP
--Distinguish between processes in the IO graph.
--.TP
--\fB-O, --only-graph\fP \fIgraph\fP
--Add a single graph to the output (see section \fBGRAPHS\fP for options).  By
--default all graphs are included. Use \fB-O\fP to generate only the required
--graphs.  \fB-O\fP may be used more than once.
--.TP
--\fB-N, --no-graph\fP \fItype\fP
--Remove a single graph from the output (see section \fBGRAPHS\fP for options).
--This option may be used more than once.
--.SH GRAPHS
--Values accepted by the \fB-O\fP and \fB-N\fP options are:
+-	* Make a movie of the IO from a given trace (only mp4 for now)
 -
--   io, tput, latency, queue_depth, iops, cpu-sys, cpu-io, cpu-irq, cpu-user, cpu-soft
+-Output:
 -
--.SH EXAMPLES
--Generate graph from the existing trace.dump:
--.PP
--.RS
--# iowatcher -t trace
--.RE
--.PP
--Skip the IO graph:
--.PP
--.RS
--# iowatcher -t trace.dump -o trace.svg -N io
--.RE
--.PP
--Only graph tput and latency:
--.PP
--.RS
--# iowatcher -t trace.dump -o trace.svg -O tput -O latency
--.RE
--.PP
--Generate a graph from two runs, and label them:
--.PP
--.RS
--# iowatcher -t ext4.dump -t xfs.dump -l Ext4 -l XFS -o trace.svg
--.RE
--.PP
--Run a fio benchmark and store the trace in trace.dump, add a title to the top, use /dev/sda for blktrace:
--.PP
--.RS
--# iowatcher -d /dev/sda -t trace.dump -T 'Fio Benchmark' -p fio some_job_file
--.RE
--.PP
--Make a movie from an existing trace:
--.PP
--.RS
--# iowatcher -t trace --movie -o trace.mp4
--.RE
+-	iowatcher can produce either svg files or mp4 movies.  Most browsers
+-	can view the svg files, or you can use rsvg-view-3 from librsvg.
+-	rsvg-convert can turn the svgs into many other formats.
 -
--.SH AUTHORS
--iowatcher was created and is maintained by Chris Mason.
+-Building:
 -
--This man page was largely written by Andrew Price based on Chris's original README.
+-	Type make and make install.  We need ffmpeg or png2theora, and
+-	librsvg to make movies, otherwise there are no dependencies.
 -
--.SH COPYRIGHT
--This program is free software; you can redistribute it and/or modify it under
--the terms of the GNU General Public License v2 as published by the Free
--Software Foundation.
+-The basic options:
 -
--This program is distributed in the hope that it will be useful, but WITHOUT ANY
--WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
--PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+-	-d controls which device you are tracing.  You can only trace one device
+-	   at a time for now.  It is sent directly to blktrace, and only
+-	   needed when you are making a new trace.
 -
--You should have received a copy of the GNU General Public License along with
--this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
--Street, Fifth Floor, Boston, MA 02110-1301 USA
+-	-t controls the name of the blktrace file.  iowatcher uses a dump from
+-	   blkparse, so -t tries to guess the name of the corresponding
+-	   per CPU blktrace data files if the dump file doesn't already exist.
 -
--.SH "SEE ALSO"
--.BR blktrace (8),
--.BR blkparse (1),
--.BR fio (1),
--.BR mpstat (1)
+-	   If you want more than one trace in a given graph, you can specify
+-	   -t more than once.
+-
+-	-F Add a fio bandwidth log graph.  You need to run fio --bandwidth-log
+-	   to get one of these, and then pass either the read log or the write
+-	   log into iowatcher.
+-
+-	-l Sets a label in the graph for a trace file.  The labels are added in
+-	   the same order the trace files are added.
+-
+-	-m Create a movie.  The file format depends on the extension used in the
+-	   -o filename.* option.  If you specify an .ogv or .ogg extension, the
+-	   result will be Ogg Theora video, if png2theora is available.
+-	   If you use an .mp4 extension, the result will be an mp4 video if
+-	   ffmpeg is avilable.  You can use any other extension, but the end
+-	   result will be an mp4.
+-
+-	   You can use --movie=spindle or --movie=rect, which changes the
+-	   style of the IO mapping.
+-
+-	-T Set a title for the graph.  This goes at the top of the image.
+-
+-	-o output filename.  The default is trace.svg.  iowatcher is
+-	   only able to create svg for now.
+-
+-	-r control the duration in seconds for the rolling average.
+-	   iowatcher tries to smooth out bumpy graphs by averaging the
+-	   current second with seconds from the past.  Longer numbers here
+-	   give you flatter graphs.
+-
+-	-P add per-process tags to the IO.  Each process responsible for
+-	   submitting the IO gets a different color.
+-
+-	-O add a single graph to the output.  By default all the graphs
+-	   are included, but with -O you get only the graphs you ask for.
+-	   -O may be used more than once.
+-
+-	-N remove a single graph from the output.  This may also be used more
+-	   than once.
+-
+-	Choices for -O and -N are:
+-	   io, fio, tput, latency, queue_depth, iops, cpu-sys, cpu-io,
+-	   cpu-irq, cpu-user, cpu-soft
+-
+-Examples:
+-	
+-	# generate graph from the existing trace.dump
+-	iowatcher -t trace.dump -o trace.svg
+-	
+-	# skip the IO graph
+-	iowatcher -t trace.dump -o trace.svg -N io
+-
+-	# only graph tput and latency
+-	iowatcher -t trace.dump -o trace.svg -O tput -O latency
+-
+-	# generate a graph from two runs, and label them
+-	iowatcher -t ext4.dump -t xfs.dump -l Ext4 -l XFS -o trace.svg
+-
+-	# Run a fio benchmark and store the trace in trace.dump
+-	# add a title to the top.  Use /dev/sda for blktrace
+-	iowatcher -d /dev/sda -t trace.dump -T 'Fio Benchmark' -p 'fio some_job_file'
+-
+-	# Make a movie from an existing trace
+-	iowatcher -t trace --movie -o trace.mp4
+-
+-Please email chris.mason@fusionio.com with any questions
 -- 
 1.9.3
 
