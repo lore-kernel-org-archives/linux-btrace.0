@@ -1,33 +1,29 @@
-From: Andrew Price <anprice@redhat.com>
-Date: Thu, 25 Sep 2014 21:04:16 +0000
-Subject: [PATCH 4/4] Add iowatcher requirements to README
-Message-Id: <1411679056-32596-5-git-send-email-anprice@redhat.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Date: Wed, 31 Dec 2014 01:48:02 +0000
+Subject: Events out of order
+Message-Id: <54A355D2.5060704@ubuntu.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Merge the requirements bits of iowatcher/README into README
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Signed-off-by: Andrew Price <anprice@redhat.com>
----
- README | 2 ++
- 1 file changed, 2 insertions(+)
+I captured a trace with blktrace -d /dev/sde -o - > trace, then later
+parsed it with blkparse -i - < trace, and the events are out of order.
+ It appears that they come in blocks from one cpu, then the other cpu,
+and the timestamps roll backwards when switching to the other cpu.
+Why aren't they in the proper order?
 
-diff --git a/README b/README
-index f52f48d..d7d1fbf 100644
---- a/README
-+++ b/README
-@@ -31,6 +31,8 @@ your browser to:
- 
- http://git.kernel.dk/
- 
-+A blktrace visualization tool, iowatcher, was added to blktrace in version
-+1.1.0. It requires librsvg and either png2theora or ffmpeg to generate movies.
- 
- Usage
- -----
--- 
-1.9.3
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
+iQEcBAEBCgAGBQJUo1XSAAoJENRVrw2cjl5RjS8H/2fiGBHhJ9PRwjAMEBAIqtgj
+Oaz3BDI/ilA9+feGs39/YWrKJbgPr3p+1Sat6I7rxwt6sSPm8+O/NkwEQDZQAund
+R5Urinh0Yov5I0mxUawhJs24YzrWiA8IfEdb7Nu772ihfKge6j32h734RvG9HSDh
+SaSAOFAoAdDQx2aMR/AFdq9VlO2/dwpUgW2CxyehO341lHwpE6qjAITQ6aLtOJr9
+lMAwTxifBdzsnGjafe/bawTqmwCj0ZA+SVTsDHJYFDcO1EpCo6llt3CG4bgXHXB0
+Kk6RBHS+7aXlQybCPg5J2/jvfED0ohX4CFqGxuKU5t1+ZJKcYDCDZtd2rp7C6b4=qZgI
+-----END PGP SIGNATURE-----
