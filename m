@@ -1,48 +1,33 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Fri, 21 Aug 2015 12:00:01 +0000
-Subject: Recent changes (master)
-Message-Id: <20150821120001.63B022C00B7@kernel.dk>
+From: Khem Raj <raj.khem@gmail.com>
+Date: Tue, 15 Sep 2015 00:05:21 +0000
+Subject: [PATCH] include sys/types.h for dev_t definition
+Message-Id: <1442275521-130450-1-git-send-email-raj.khem@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20130320050001.E340522DFC@kernel.dk>
-In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 88d38b4d0a5b33332fa80d7028a87c0717bb5d75:
+Avoids the build failures when sys/types.h does not get included
+indirectly through other headers.
 
-  Refer to sda instead of hda in man pages (2015-02-18 08:50:02 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.dk/blktrace.git master
-
-for you to fetch changes up to 2564a6029e55d6a0507ebb28a5a01f5dffb0bd56:
-
-  btreplay: Fix typo in scaling up the dynamic cpu set size. (2015-08-20 08:58:08 -0700)
-
-----------------------------------------------------------------
-Josef Cejka (1):
-      btreplay: Fix typo in scaling up the dynamic cpu set size.
-
- btreplay/btreplay.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
 ---
+ blktrace.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Diff of recent changes:
+diff --git a/blktrace.h b/blktrace.h
+index 380aec7..944fc08 100644
+--- a/blktrace.h
++++ b/blktrace.h
+@@ -5,6 +5,7 @@
+ #include <limits.h>
+ #include <byteswap.h>
+ #include <endian.h>
++#include <sys/types.h>
+ 
+ #include "blktrace_api.h"
+ #include "rbtree.h"
+-- 
+2.5.2
 
-diff --git a/btreplay/btreplay.c b/btreplay/btreplay.c
-index 5444010..f762279 100644
---- a/btreplay/btreplay.c
-+++ b/btreplay/btreplay.c
-@@ -516,7 +516,7 @@ realloc:
- 	if (sched_getaffinity(getpid(), size, cpus)) {
- 		if( errno = EINVAL && nrcpus < (4096<<4) ) {
- 			CPU_FREE(cpus);
--			nrcpus <= 1;
-+			nrcpus <<= 1;
- 			goto realloc;
- 		}
- 		fatal("sched_getaffinity", ERR_SYSCALL, "Can't get CPU info\n");
