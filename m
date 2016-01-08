@@ -1,31 +1,21 @@
-From: John Groves <John@groves.net>
-Date: Tue, 05 Jan 2016 00:21:46 +0000
-Subject: [PATCH] Add the "-a discard" filter option to the blktrace.8 man page
-Message-Id: <CALz7SpWogKeSYkNAmQF+pdqC5gHrT9aBf9j6VH5g5q0eB7=sCA@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Fri, 08 Jan 2016 18:46:36 +0000
+Subject: Re: [PATCH] Add the "-a discard" filter option to the blktrace.8 man page
+Message-Id: <5690040C.60303@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <CALz7SpWogKeSYkNAmQF+pdqC5gHrT9aBf9j6VH5g5q0eB7=sCA@mail.gmail.com>
+In-Reply-To: <CALz7SpWogKeSYkNAmQF+pdqC5gHrT9aBf9j6VH5g5q0eB7=sCA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Add the "-a discard" filter option to the blktrace.8 man page
+On 01/04/2016 05:21 PM, John Groves wrote:
+> Add the "-a discard" filter option to the blktrace.8 man page
 
----
- doc/blktrace.8 | 2 ++
- 1 file changed, 2 insertions(+)
+Applied, thanks.
 
-diff --git a/doc/blktrace.8 b/doc/blktrace.8
-index df464be..68f5e15 100644
---- a/doc/blktrace.8
-+++ b/doc/blktrace.8
-@@ -202,6 +202,8 @@ line options.
- .br
- \fIcomplete\fR: completed by driver
- .br
-+\fIdiscard\fR: discard / trim traces
-+.br
- \fIfs\fR: requests
- .br
- \fIissue\fR: issued to driver
+
 -- 
-2.4.0
+Jens Axboe
+
