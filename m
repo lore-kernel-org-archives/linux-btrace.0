@@ -1,57 +1,54 @@
-From: Roman Pen <r.peniaev@gmail.com>
-Date: Sat, 23 Apr 2016 11:44:09 +0000
-Subject: [PATCH 2/3] btreplay: fix sched_{set|get}affinity
-Message-Id: <1461411850-25443-2-git-send-email-r.peniaev@gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Wed, 04 May 2016 12:00:02 +0000
+Subject: Recent changes (master)
+Message-Id: <20160504120002.2E4312C00AB@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-getpid() is a pid of a process, at least tid must be provided.
-But if zero is passed, then calling thread will be used.
-That exactly what is needed.
+The following changes since commit cbd4bc0a3f6386cd000cb842b9f1f6325e301623:
 
-Signed-off-by: Roman Pen <r.peniaev@gmail.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: <linux-btrace@vger.kernel.org>
+  btreplay: remove timestamps (2016-04-25 08:54:34 -0600)
+
+are available in the git repository at:
+
+  git://git.kernel.dk/blktrace.git master
+
+for you to fetch changes up to d1422556dbff03e982aeb2faf5893b4363621bee:
+
+  btt/unplug_hist: fix bad memset (2016-05-03 08:34:50 -0600)
+
+----------------------------------------------------------------
+Jens Axboe (1):
+      btt/unplug_hist: fix bad memset
+
+ btt/unplug_hist.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
 ---
- btreplay/btreplay.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/btreplay/btreplay.c b/btreplay/btreplay.c
-index 2a1525e..5bf47ff 100644
---- a/btreplay/btreplay.c
-+++ b/btreplay/btreplay.c
-@@ -513,7 +513,7 @@ realloc:
- 	size = CPU_ALLOC_SIZE(nrcpus);
- 	CPU_ZERO_S(size, cpus);
- 
--	if (sched_getaffinity(getpid(), size, cpus)) {
-+	if (sched_getaffinity(0, size, cpus)) {
- 		if( errno = EINVAL && nrcpus < (4096<<4) ) {
- 			CPU_FREE(cpus);
- 			nrcpus <<= 1;
-@@ -552,16 +552,17 @@ static void pin_to_cpu(struct thr_info *tip)
- 
- 	CPU_ZERO_S(size, cpus);
- 	CPU_SET_S(tip->cpu, size, cpus);
--	if (sched_setaffinity(getpid(), size, cpus)) {
-+	if (sched_setaffinity(0, size, cpus)) {
- 		fatal("sched_setaffinity", ERR_SYSCALL, "Failed to pin CPU\n");
- 		/*NOTREACHED*/
- 	}
-+	assert(tip->cpu = sched_getcpu());
- 
- 	if (verbose > 1) {
- 		int i;
- 		cpu_set_t *now = CPU_ALLOC(ncpus);
- 
--		(void)sched_getaffinity(getpid(), size, now);
-+		(void)sched_getaffinity(0, size, now);
- 		fprintf(tip->vfp, "Pinned to CPU %02d ", tip->cpu);
- 		for (i = 0; i < ncpus; i++)
- 			fprintf(tip->vfp, "%1d", CPU_ISSET_S(i, size, now));
--- 
-2.7.4
+Diff of recent changes:
 
+diff --git a/btt/unplug_hist.c b/btt/unplug_hist.c
+index 89995de..be16b69 100644
+--- a/btt/unplug_hist.c
++++ b/btt/unplug_hist.c
+@@ -34,11 +34,11 @@ void *unplug_hist_alloc(struct d_info *dip)
+ {
+ 	struct hist_bkt *hbp;
+ 
+-	if (unplug_hist_name = NULL) return NULL;
++	if (unplug_hist_name = NULL)
++		return NULL;
+ 
+-	hbp = malloc(sizeof(*hbp));
++	hbp = calloc(1, sizeof(*hbp));
+ 	hbp->dip = dip;
+-	memset(hbp->hist, 0, NBKTS * sizeof(int));
+ 
+ 	return hbp;
+ }
