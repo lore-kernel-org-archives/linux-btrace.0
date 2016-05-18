@@ -1,37 +1,25 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Fri, 20 May 2016 12:00:02 +0000
-Subject: Recent changes (master)
-Message-Id: <20160520120002.305E72C00DF@kernel.dk>
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Wed, 18 May 2016 16:15:07 +0000
+Subject: [PATCH] blktrace: remove -k from manpage synopsis
+Message-Id: <49be338d-da1d-eac9-e6db-357032f3a0d4@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20130320050001.E340522DFC@kernel.dk>
-In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 7644909627859a9d9d837df8b2ecf21a169f0ff0:
+An earlier commit:
 
-  Fixup graph name in help text (2016-05-05 09:20:18 -0600)
+  fb7f8667 blktrace: disable kill option - take 2
 
-are available in the git repository at:
+removed the "-k" option documentation, but left
+it in the synopsis.
 
-  git://git.kernel.dk/blktrace.git master
+This is a bit unusual and unhelpful and probably
+unintended; remove it from the synopsis as well.
 
-for you to fetch changes up to 86596c7579c6e374e6e24c2b14398b0808a93f18:
-
-  blktrace: remove -k from manpage synopsis (2016-05-19 15:57:22 -0600)
-
-----------------------------------------------------------------
-Eric Sandeen (1):
-      blktrace: remove -k from manpage synopsis
-
- doc/blktrace.8 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
-
-Diff of recent changes:
 
 diff --git a/doc/blktrace.8 b/doc/blktrace.8
 index 68f5e15..820b03a 100644
@@ -46,3 +34,4 @@ index 68f5e15..820b03a 100644
  .br
  
  
+
