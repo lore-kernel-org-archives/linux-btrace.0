@@ -1,68 +1,82 @@
-From: Jun He <jhe@cs.wisc.edu>
-Date: Sat, 25 Jun 2016 19:36:43 +0000
-Subject: Re: Any way to output semantics of block
-Message-Id: <CABW1wHRHHF1Z-fVMRkJiF2ox4VjFdjUQ4nAFMb74LVx8R=qscg@mail.gmail.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Wed, 29 Jun 2016 17:02:20 +0000
+Subject: [PATCH] blktrace: handle failed BLKTRACESETUP gracefully
+Message-Id: <98700be9-4c65-7ee7-65b1-673b8629218e@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20160625170402.GA21168@wifi-514.cs.wisc.edu>
-In-Reply-To: <20160625170402.GA21168@wifi-514.cs.wisc.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Thanks for the reply.
+Today if BLKTRACESETUP fails, we carry on and try to tear
+down things at the end of the run, leading to lots of
+error spew.
 
-Jun
+This can be seen, for example, with:
 
-On Sat, Jun 25, 2016 at 2:34 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 06/25/2016 11:04 AM, Jun He wrote:
->>
->> Hi all,
->>
->> I use the output of blktrace as the input of my block device simulator.
->> Now I
->> want to add semantics of data stored in each block to the output, so
->> my simulator can use them.  For example, I would like to know if the block
->> is
->> storing file data or file system metadata. If it is metadata, I'd like to
->> know
->> what kind of metadata it is. For example, ext4's superblock, inode table,
->> blockbitmap, or extent tree block ... If it is file data, I'd like to know
->> its filename.
->>
->> Output of blkparse may look like:
->>
->> op block#  semantics
->> w  43      inode-table
->> w  88      directory-entries
->> r  48      file-data(/home/user1/data)
->> w  77      extent-tree-block
->> w  777     journal
->>
->> Statically, I can get the semantics of, for example, ext4 by debugfs and
->> dumpe2fs. And this is fine for most of the cases since the format of ext4
->> is
->> mostly fixed (blocks that store inode table will always store inode
->> table). But
->> the data semantics in a block does change over time in some case. For
->> example, a
->> block can store file data at a time and extent tree block at another time.
->> So I
->> cannot use the statically collected semantics to feed my simulator.
->>
->> Is outputting semantics already supported by blktrace?
->>
->> If not, any suggestions for implementing it?
->
->
-> The kernel marks certain IO as being meta data, and blktrace/blkparse
-> understands this and carries this information to user space. What you are
-> looking for is a further split of meta data into categories. This would need
-> to be annotated on the kernel front, and the blktrace format extended to
-> understand that we have multiple kinds of meta data. Currently we don't have
-> that.
->
->
-> --
-> Jens Axboe
->
+# blktrace -d /dev/sda -w 10 &
+# kill -9 %1
+# blktrace -d /dev/sda -w 10
+
+(In this case, debugfs files remain, so the 2nd blktrace setup
+fails in a rather cryptic way, stating "No such file or directory"
+when in fact the problem is more like EEXIST, but that's another
+long sad story about debugfs).
+
+If BLKTRACESETUP fails, we can remove that devpath from the
+list so no further actions are taken on it.  If no devpaths
+remain, just exit.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+Please do give this a proper review, as I may well have missed
+something :)
+
+I think one side effect of this is that now, nothing will try
+to clean up the debugfs paths, so the leftover state from
+a killed/crashed prior run can only be removed with the
+undocumented "-k" option ...
+
+diff --git a/blktrace.c b/blktrace.c
+index b445524..a1d29ef 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -1059,9 +1059,9 @@ static void close_client_connections(void)
+ 
+ static void setup_buts(void)
+ {
+-	struct list_head *p;
++	struct list_head *p, *q;
+ 
+-	__list_for_each(p, &devpaths) {
++	list_for_each_safe(p, q, &devpaths) {
+ 		struct blk_user_trace_setup buts;
+ 		struct devpath *dpp = list_entry(p, struct devpath, head);
+ 
+@@ -1077,9 +1077,13 @@ static void setup_buts(void)
+ 				free(dpp->stats);
+ 			dpp->stats = calloc(dpp->ncpus, sizeof(*dpp->stats));
+ 			memset(dpp->stats, 0, dpp->ncpus * sizeof(*dpp->stats));
+-		} else
++		} else {
+ 			fprintf(stderr, "BLKTRACESETUP(2) %s failed: %d/%s\n",
+ 				dpp->path, errno, strerror(errno));
++			list_del(&dpp->head);
++			dpp_free(dpp);
++			ndevs--;
++		}
+ 	}
+ }
+ 
+@@ -2626,6 +2630,9 @@ static int run_tracers(void)
+ 
+ 	setup_buts();
+ 
++	if (list_empty(&devpaths))
++		return 1;
++
+ 	if (use_tracer_devpaths()) {
+ 		if (setup_tracer_devpaths())
+ 			return 1;
+
