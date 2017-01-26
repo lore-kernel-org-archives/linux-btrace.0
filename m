@@ -1,76 +1,117 @@
 From: Jan Kara <jack@suse.cz>
-Date: Thu, 26 Jan 2017 10:23:55 +0000
-Subject: [PATCH 3/3] blktrace: Create empty output files for non-existent cpus
-Message-Id: <20170126102355.19802-3-jack@suse.cz>
+Date: Thu, 26 Jan 2017 10:23:54 +0000
+Subject: [PATCH 2/3] blktrace: Reorganize creation of output file name
+Message-Id: <20170126102355.19802-2-jack@suse.cz>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-When CPU number space is sparse, we don't start threads for non-existent
-CPUs. As a result, there are no output files created for these CPUs
-which confuses tools like blkparse which expect that CPU numbers are
-contiguous. Create fake empty files for non-existent CPUs so that other
-tools don't have to bother.
-
-Note that in network mode, the server will create all files in the range
-0..max_cpus automatically.
+We would like to generate output file name without having corresponding
+iop structure. Reorganize the function to allow that. Also fix couple of
+overflows possible when generating the file name when we are modifying
+the code anyway.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- blktrace.c | 30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
+ blktrace.c | 48 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 19 deletions(-)
 
 diff --git a/blktrace.c b/blktrace.c
-index 3a25338cc9ad..e8f2f8773522 100644
+index f7d35dd1a62e..3a25338cc9ad 100644
 --- a/blktrace.c
 +++ b/blktrace.c
-@@ -1893,6 +1893,26 @@ static int start_tracer(int cpu)
- 	return 0;
+@@ -1502,30 +1502,25 @@ static inline int net_sendfile_data(struct tracer *tp, struct io_info *iop)
+ 	return net_sendfile(iop);
  }
  
-+static int create_output_files(int cpu)
-+{
-+	char fname[MAXPATHLEN + 64];
-+	struct list_head *p;
-+	FILE *f;
-+
-+	__list_for_each(p, &devpaths) {
-+		struct devpath *dpp = list_entry(p, struct devpath, head);
-+
-+		if (fill_ofname(fname, sizeof(fname), NULL, dpp->buts_name,
-+				cpu))
-+			return 1;
-+		f = my_fopen(fname, "w+");
-+		if (!f)
-+			return 1;
-+		fclose(f);
-+	}
-+	return 0;
-+}
-+
- static void start_tracers(void)
+-static int fill_ofname(struct io_info *iop, int cpu)
++static int fill_ofname(char *dst, int dstlen, char *subdir, char *buts_name,
++		       int cpu)
  {
- 	int cpu, started = 0;
-@@ -1900,8 +1920,16 @@ static void start_tracers(void)
- 	size_t alloc_size = CPU_ALLOC_SIZE(max_cpus);
+ 	int len;
+ 	struct stat sb;
+-	char *dst = iop->ofn;
  
- 	for (cpu = 0; cpu < max_cpus; cpu++) {
--		if (!CPU_ISSET_S(cpu, alloc_size, online_cpus))
-+		if (!CPU_ISSET_S(cpu, alloc_size, online_cpus)) {
-+			/*
-+			 * Create fake empty output files so that other tools
-+			 * like blkparse don't have to bother with sparse CPU
-+			 * number space.
-+			 */
-+			if (create_output_files(cpu))
-+				break;
- 			continue;
-+		}
- 		if (start_tracer(cpu))
- 			break;
- 		started++;
+ 	if (output_dir)
+-		len = snprintf(iop->ofn, sizeof(iop->ofn), "%s/", output_dir);
++		len = snprintf(dst, dstlen, "%s/", output_dir);
+ 	else
+-		len = snprintf(iop->ofn, sizeof(iop->ofn), "./");
++		len = snprintf(dst, dstlen, "./");
+ 
+-	if (net_mode = Net_server) {
+-		struct cl_conn *nc = iop->nc;
+-
+-		len += sprintf(dst + len, "%s-", nc->ch->hostname);
+-		len += strftime(dst + len, 64, "%F-%T/",
+-				gmtime(&iop->dpp->cl_connect_time));
+-	}
++	if (subdir)
++		len += snprintf(dst + len, dstlen - len, "%s", subdir);
+ 
+-	if (stat(iop->ofn, &sb) < 0) {
++	if (stat(dst, &sb) < 0) {
+ 		if (errno != ENOENT) {
+ 			fprintf(stderr,
+ 				"Destination dir %s stat failed: %d/%s\n",
+-				iop->ofn, errno, strerror(errno));
++				dst, errno, strerror(errno));
+ 			return 1;
+ 		}
+ 		/*
+@@ -1533,20 +1528,20 @@ static int fill_ofname(struct io_info *iop, int cpu)
+ 		 * trying to create the directory at once.  It's harmless
+ 		 * to let them try, so just detect the problem and move on.
+ 		 */
+-		if (mkdir(iop->ofn, 0755) < 0 && errno != EEXIST) {
++		if (mkdir(dst, 0755) < 0 && errno != EEXIST) {
+ 			fprintf(stderr,
+ 				"Destination dir %s can't be made: %d/%s\n",
+-				iop->ofn, errno, strerror(errno));
++				dst, errno, strerror(errno));
+ 			return 1;
+ 		}
+ 	}
+ 
+ 	if (output_name)
+-		snprintf(iop->ofn + len, sizeof(iop->ofn), "%s.blktrace.%d",
++		snprintf(dst + len, dstlen - len, "%s.blktrace.%d",
+ 			 output_name, cpu);
+ 	else
+-		snprintf(iop->ofn + len, sizeof(iop->ofn), "%s.blktrace.%d",
+-			 iop->dpp->buts_name, cpu);
++		snprintf(dst + len, dstlen - len, "%s.blktrace.%d",
++			 buts_name, cpu);
+ 
+ 	return 0;
+ }
+@@ -1567,8 +1562,23 @@ static int set_vbuf(struct io_info *iop, int mode, size_t size)
+ 
+ static int iop_open(struct io_info *iop, int cpu)
+ {
++	char hostdir[MAXPATHLEN + 64];
++
+ 	iop->ofd = -1;
+-	if (fill_ofname(iop, cpu))
++	if (net_mode = Net_server) {
++		struct cl_conn *nc = iop->nc;
++		int len;
++
++		len = snprintf(hostdir, sizeof(hostdir), "%s-",
++			       nc->ch->hostname);
++		len += strftime(hostdir + len, sizeof(hostdir) - len, "%F-%T/",
++				gmtime(&iop->dpp->cl_connect_time));
++	} else {
++		hostdir[0] = 0;
++	}
++
++	if (fill_ofname(iop->ofn, sizeof(iop->ofn), hostdir,
++			iop->dpp->buts_name, cpu))
+ 		return 1;
+ 
+ 	iop->ofp = my_fopen(iop->ofn, "w+");
 -- 
 2.10.2
 
