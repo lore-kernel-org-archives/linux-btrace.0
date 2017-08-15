@@ -1,38 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Date: Tue, 09 May 2017 19:08:02 +0000
-Subject: Re: What does FWFSM as an RBWS mean?
-Message-Id: <20170509190802.GA10037@infradead.org>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Date: Tue, 15 Aug 2017 21:17:52 +0000
+Subject: [PATCH] blkparse: man - Elaborate definitions of RWBS fields.
+Message-Id: <20170815211752.9643-1-rgoldwyn@suse.de>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <CANWz5fjBj_zNfCGGX4LMi2yghP1N80SNQZ__FgAOd=8n=mC01A@mail.gmail.com>
-In-Reply-To: <CANWz5fjBj_zNfCGGX4LMi2yghP1N80SNQZ__FgAOd=8n=mC01A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Tue, May 09, 2017 at 07:03:06AM -1000, Chris Worley wrote:
-> So one is pre-flush and the second is FUA?  How do you tell which F
-> you're looking at if just one?  I'm seeing lots of both FWS and FWFSM.
+The RWBS fields can output more fields, which need detailed description.
+This information is extracted from fill_rwbs() function. If there is more
+to it, I'd be happy to include it.
 
-A Pre-flush is before the 'W', a FUA is after the 'W'.
+I did not see Barrier Operations in the fill_rwbs() function. Also,
+Flush and FUA have the same code, F. Besides, I am not sure if the N
+field's description is correct.
 
-> So, really no effect, just informational (this is an XFS fs doing the I/O).
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Yes.
-
-> 
-> Any hints on when sync, flushes, or FUAs force flash to write to
-> media?  We're using NVMe drives.  All these operations should be
-> power-cut safe... I'm not sure if any force the driver/controller to
-> commit to NAND when buffering (in power-cut safe memory) would be
-> better for performance/lifespan.  I'm guessing this isn't an easy
-> question... any idea how to find out?
-
-The answer is it depends.  For enterprice drivers writes are usually
-buffered on SRAM before going to the media, but those usually don't
-even claim to have a volatile write cache (e.g. do not set the
-Volatile Write Cache (VWC) bit in Identify Controller in nvme, you
-can check that using 'nvme id-ctrl -H /dev/nvme0').
-
-For consumer drivers chances are every flush or fua will go out
-to the media, or the device is not actually power fail safe.
+diff --git a/doc/blkparse.1 b/doc/blkparse.1
+index be9b34b..fb70318 100644
+--- a/doc/blkparse.1
++++ b/doc/blkparse.1
+@@ -413,10 +413,32 @@ Split
+ 
+ .SH "RWBS DESCRIPTION"
+ 
+-This is a small string containing at least one character ('R' for read, 'W'
+-for write, or 'D' for block discard operation), and optionally either
+-a 'B' (for barrier operations) or 'S' (for synchronous operations).
++This is a small string containing at least one character for the operation(s)
++performed. It is described by the following table:
+ 
++.IP R
++Read
++
++.IP W
++Write
++
++.IP D
++Discard Block
++
++.IP S
++Synchronous
++
++.IP N
++Nil or Nothing, a place holder.
++
++.IP F
++Flush or Force Unit Access (FUA)
++
++.IP A
++Read-Ahead
++
++.IP M
++Metadata
+ 
+ .SH "DEFAULT OUTPUT"
+ 
