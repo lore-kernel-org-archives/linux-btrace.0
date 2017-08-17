@@ -1,70 +1,72 @@
 From: Gwendal Grignou <gwendal@chromium.org>
-Date: Fri, 18 Aug 2017 22:00:22 +0000
-Subject: [PATCH] btt: Fix overlapping IO stats.
-Message-Id: <20170818220022.26471-1-gwendal@chromium.org>
+Date: Thu, 17 Aug 2017 03:42:46 +0000
+Subject: Erroneous Q2G when 2 identical IOs are present in a trace.
+Message-Id: <CAMHSBOWOsT_CPrNMNTXSs-Y4YFnDSuyQn5r43LubLTrcnhJ9tQ@mail.gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Keep scanning the tree for overlapping IO otherwise Q2G and process
-traces will be incorrect.
+Taking a long trace (NOVA), I noticed max and average Q2G were not
+correct in btt:
 
-Let assume we have 2 IOs:
+blkparse -i NOVA -d NOVA.bin -o NOVA.txt
+btt -Ai NOVA.bin -e sdcard -t 0 -T 400 | less
 
-A                                      A+a
-|---------------------------------------|
-       B                B+b
-       |-----------------|
+...
 
-In the red/black tree we have:
+            Q2G           MIN           AVG           MAX           N
+--------------- ------------- ------------- ------------- -----------
+sdcard            0.000000306  59.073180248 334.885369822        1532
+....
 
-                    o -> [A,A+a]
-                   / \
-                left right
-                 /    \
-           [...]o      o -> [B, B+b]
+Q2G is 334s, which is not viable.
 
-In the current code, if we would not be able to find [B+b] in the tree:
-B is greater than A, so we won't go left
-B+b is smaller than A+a, so we are not going right either.
+Looking in more detail,
 
-When we have a [X, X+x] IO to look for:
-We need to check for right when either:
- X+x >= A+a (for merged IO)
+btt -i NOVA.bin -e sdcard -t 0 -T 400 -p sdcard_NOVA.io.txt
 and
- X > A (for overlapping IO)
+grep -e 'Q' -e 'G' sdcard_NOVA.io.txt | cut -c 10-40 | sed 's/ \+/ /g' | awk \
+'BEGIN { FS=" "; Q=0 ; D=0 }
+{
+  if ($2 = "G") { G=$1; if ((G - Q) > D) { D = G - Q; M=$0 }}
+  if ($2 = "Q") { Q=$1 }
+}
+END { print D," - ",M }'
 
-TEST=Check with a trace with overlapping IO: Q2C and Q2G are expected.
+One offending IO is at:
+331.494  -   355.349404410 G 38345728+10 :
 
-Signed-off-by: Gwendal Grignou <gwendal@chromium.org>
----
- btt/dip_rb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+in sdcard_NOVA.io.txt, indded, we have this IO with unexpected timing:
+259,0  :    23.855603264 Q   38345728+1024
+           355.349404410 G   38345728+1024
+           355.350027569 D   38345728+1024
+           355.350381786 C   38345728+1024
 
-diff --git a/btt/dip_rb.c b/btt/dip_rb.c
-index 2aa7ffc..6efef6c 100644
---- a/btt/dip_rb.c
-+++ b/btt/dip_rb.c
-@@ -57,7 +57,7 @@ struct io *rb_find_sec(struct rb_root *root, __u64 sec)
- 		__iop = rb_entry(n, struct io, rb_node);
- 		if (sec < BIT_START(__iop))
- 			n = n->rb_left;
--		else if (sec >= BIT_END(__iop))
-+		else if (sec > BIT_START(__iop))
- 			n = n->rb_right;
- 		else
- 			return __iop;
-@@ -82,7 +82,7 @@ void rb_foreach(struct rb_node *n, struct io *iop,
- 		}
- 		if (iop_s < this_s)
- 			rb_foreach(n->rb_left, iop, fnc, head);
--		if (this_e < iop_e)
-+		if ((this_e < iop_e) || (this_s < iop_s))
- 			rb_foreach(n->rb_right, iop, fnc, head);
- 	}
- }
--- 
-2.14.1.480.gb18f417b89-goog
 
+Looking in the block trace (NOVA.txt), we have 2 IO with the same LBA:
+
+259,0    0     1722    23.855603264 15391  Q  WS 38345728 + 1024 [dex2oat]
+...
+259,0    0     1725    23.855608359 15391  G  WS 38345728 + 1024 [dex2oat]
+...
+259,0    0     1733    23.856222064 15391  D  WS 38345728 + 1024 [dex2oat]
+...
+259,0    0     1736    23.856567516 15391  C  WS 38345728 + 1024 [0]
+
+and much later:
+
+259,0    0    55740   355.349397967 22400  Q  WS 38345728 + 1024 [dex2oat]
+...
+259,0    0    55743   355.349404410 22400  G  WS 38345728 + 1024 [dex2oat]
+....
+259,0    0    55751   355.350027569 22400  D  WS 38345728 + 1024 [dex2oat]
+....
+259,0    0    55754   355.350381786 22400  C  WS 38345728 + 1024 [0]
+
+It looks like btt skipped the G/D/C of the first IO and jump to the second one.
+
+Looking into the btt code for an explanation.
+
+Gwendal.
