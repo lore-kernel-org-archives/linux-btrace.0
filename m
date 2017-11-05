@@ -1,72 +1,92 @@
-From: Gwendal Grignou <gwendal@chromium.org>
-Date: Thu, 17 Aug 2017 03:42:46 +0000
-Subject: Erroneous Q2G when 2 identical IOs are present in a trace.
-Message-Id: <CAMHSBOWOsT_CPrNMNTXSs-Y4YFnDSuyQn5r43LubLTrcnhJ9tQ@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Sun, 05 Nov 2017 13:00:01 +0000
+Subject: Recent changes (master)
+Message-Id: <20171105130001.6F6C22C02AF@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Taking a long trace (NOVA), I noticed max and average Q2G were not
-correct in btt:
+The following changes since commit 8772bc4fb049bdd879de5952d6f291a34112fae0:
 
-blkparse -i NOVA -d NOVA.bin -o NOVA.txt
-btt -Ai NOVA.bin -e sdcard -t 0 -T 400 | less
+  blktrace: Create empty output files for non-existent cpus (2017-01-26 10:06:05 -0700)
 
-...
+are available in the git repository at:
 
-            Q2G           MIN           AVG           MAX           N
---------------- ------------- ------------- ------------- -----------
-sdcard            0.000000306  59.073180248 334.885369822        1532
-....
+  git://git.kernel.dk/blktrace.git master
 
-Q2G is 334s, which is not viable.
+for you to fetch changes up to cca113f2fe0759b91fd6a0e10fdcda2c28f18a7e:
 
-Looking in more detail,
+  Blktrace 1.2.0 (2017-11-04 22:13:06 -0600)
 
-btt -i NOVA.bin -e sdcard -t 0 -T 400 -p sdcard_NOVA.io.txt
-and
-grep -e 'Q' -e 'G' sdcard_NOVA.io.txt | cut -c 10-40 | sed 's/ \+/ /g' | awk \
-'BEGIN { FS=" "; Q=0 ; D=0 }
-{
-  if ($2 = "G") { G=$1; if ((G - Q) > D) { D = G - Q; M=$0 }}
-  if ($2 = "Q") { Q=$1 }
-}
-END { print D," - ",M }'
+----------------------------------------------------------------
+Jens Axboe (2):
+      blktrace: abort if device ioctl setup fails
+      Blktrace 1.2.0
 
-One offending IO is at:
-331.494  -   355.349404410 G 38345728+10 :
+ blkparse.c |  2 +-
+ blktrace.c | 12 +++++++++---
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
-in sdcard_NOVA.io.txt, indded, we have this IO with unexpected timing:
-259,0  :    23.855603264 Q   38345728+1024
-           355.349404410 G   38345728+1024
-           355.350027569 D   38345728+1024
-           355.350381786 C   38345728+1024
+---
 
+Diff of recent changes:
 
-Looking in the block trace (NOVA.txt), we have 2 IO with the same LBA:
-
-259,0    0     1722    23.855603264 15391  Q  WS 38345728 + 1024 [dex2oat]
-...
-259,0    0     1725    23.855608359 15391  G  WS 38345728 + 1024 [dex2oat]
-...
-259,0    0     1733    23.856222064 15391  D  WS 38345728 + 1024 [dex2oat]
-...
-259,0    0     1736    23.856567516 15391  C  WS 38345728 + 1024 [0]
-
-and much later:
-
-259,0    0    55740   355.349397967 22400  Q  WS 38345728 + 1024 [dex2oat]
-...
-259,0    0    55743   355.349404410 22400  G  WS 38345728 + 1024 [dex2oat]
-....
-259,0    0    55751   355.350027569 22400  D  WS 38345728 + 1024 [dex2oat]
-....
-259,0    0    55754   355.350381786 22400  C  WS 38345728 + 1024 [0]
-
-It looks like btt skipped the G/D/C of the first IO and jump to the second one.
-
-Looking into the btt code for an explanation.
-
-Gwendal.
+diff --git a/blkparse.c b/blkparse.c
+index ab5edc2..227cc44 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -36,7 +36,7 @@
+ #include "rbtree.h"
+ #include "jhash.h"
+ 
+-static char blkparse_version[] = "1.1.0";
++static char blkparse_version[] = "1.2.0";
+ 
+ struct skip_info {
+ 	unsigned long start, end;
+diff --git a/blktrace.c b/blktrace.c
+index e8f2f87..e048f68 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -1066,9 +1066,10 @@ static void close_client_connections(void)
+ 	}
+ }
+ 
+-static void setup_buts(void)
++static int setup_buts(void)
+ {
+ 	struct list_head *p;
++	int ret = 0;
+ 
+ 	__list_for_each(p, &devpaths) {
+ 		struct blk_user_trace_setup buts;
+@@ -1086,10 +1087,14 @@ static void setup_buts(void)
+ 				free(dpp->stats);
+ 			dpp->stats = calloc(dpp->ncpus, sizeof(*dpp->stats));
+ 			memset(dpp->stats, 0, dpp->ncpus * sizeof(*dpp->stats));
+-		} else
++		} else {
+ 			fprintf(stderr, "BLKTRACESETUP(2) %s failed: %d/%s\n",
+ 				dpp->path, errno, strerror(errno));
++			ret++;
++		}
+ 	}
++
++	return ret;
+ }
+ 
+ static void start_buts(void)
+@@ -2676,7 +2681,8 @@ static int run_tracers(void)
+ 	if (net_mode = Net_client)
+ 		printf("blktrace: connecting to %s\n", hostname);
+ 
+-	setup_buts();
++	if (setup_buts())
++		return 1;
+ 
+ 	if (use_tracer_devpaths()) {
+ 		if (setup_tracer_devpaths())
