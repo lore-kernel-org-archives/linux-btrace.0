@@ -1,21 +1,40 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Tue, 07 Nov 2017 18:26:24 +0000
-Subject: Re: [PATCH] btt: Fix overlapping IO stats.
-Message-Id: <0e66316c-7f11-0d41-5c2e-064d4aaafe49@kernel.dk>
+From: weiping zhang <zhangweiping@didichuxing.com>
+Date: Thu, 07 Dec 2017 16:23:10 +0000
+Subject: [PATCH] doc: trace action M only for back merge
+Message-Id: <20171207162306.GA25143@localhost.didichuxing.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20170818220022.26471-1-gwendal@chromium.org>
-In-Reply-To: <20170818220022.26471-1-gwendal@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 11/06/2017 03:08 PM, Gwendal Grignou wrote:
-> Any chance this patch can be included in the next release?
+F -- front merge
+M -- back merge, exclude front merge
 
-Sorry for the delay on this one, missed it. Looks good to me, I've
-added it to the repo. Thanks!
+Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
+---
+ doc/blkparse.1 | 8 --------
+ 1 file changed, 8 deletions(-)
 
+diff --git a/doc/blkparse.1 b/doc/blkparse.1
+index be9b34b..70c85cf 100644
+--- a/doc/blkparse.1
++++ b/doc/blkparse.1
+@@ -243,14 +243,6 @@ Same as the back merge, except this i/o ends where a previously inserted
+ requests starts.
+ 
+ .HP 4
+-\fBM --front or back merge\fR
+-One of the above
+-
+-.HP 4
+-\fBM -- front or back merge\fR
+-One of the above.
+-
+-.HP 4
+ \fBG -- get request\fR
+ To send any type of request to a block device, a \fIstruct request\fR
+ container must be allocated first.
 -- 
-Jens Axboe
+2.9.4
 
