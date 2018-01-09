@@ -1,49 +1,51 @@
 From: Hou Tao <houtao1@huawei.com>
-Date: Tue, 09 Jan 2018 06:56:25 +0000
-Subject: [PATCH 2/3] blkparse: add option g/group to output cgroup info
-Message-Id: <20180109065626.5459-3-houtao1@huawei.com>
+Date: Tue, 09 Jan 2018 06:56:26 +0000
+Subject: [PATCH 3/3] blktrace: add option g/group to save cgroup info
+Message-Id: <20180109065626.5459-4-houtao1@huawei.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-When blk_cgroup option is enabled in trace_options file, the trace
-got by blktrace will include the io cgroup info for trace action or
-trace message. The io cgroup info is a file handle exported by kernfs
-(union kernfs_node_id), so we use open_by_handle_at() and procfs to
-get the path of the corresponding io cgroup and output the cgroup path
-before the pid. Maybe we also need to add a cache for the translation
-from kernfs (ino, gen) tuple to cgroup path.
+Now blk tracer could output cgroup info for trace actions and
+trace messages, but there is no per-device API for it and it
+can only be turned on globally by writing trace_options file
+under /sys/kernel/debug/tracing.
 
-The following lines are snippet from output with cgroup info:
-253,0    3      664     0.528123310 /t1    0  C   R 790832 + 8 [0]
-253,0    3      665     0.528208698  1521  A   R 452720 + 8 <- (253,1) 450672
-253,0    3      666     0.528211593 /t1 1521  Q   R 452720 + 8 [fio]
-253,0    3      667     0.528215253 /t1 1521  G   R 452720 + 8 [fio]
-253,0    3      668     0.528219125  1521  P   N [fio]
-253,0    3      669     0.528221590  1521 UT   N [fio] 1
-253,0    3      670     0.528223067 /t1 1521  I   R 452720 + 8 [fio]
-253,0    3      671     0.528226553 /t1 1521  D   R 452720 + 8 [fio]
-253,0    5      608     0.533095375 /    0  C   R 3868224 + 8 [0]
-253,0    5      609     0.533164175  1523  A   R 4641296 + 8 <- (253,1) 4639248
-253,0    5      610     0.533166445 / 1523  Q   R 4641296 + 8 [fio]
-253,0    5      611     0.533169825 / 1523  G   R 4641296 + 8 [fio]
+Add option g/group to save cgroup info in trace file. Implement it
+by writing "blk_cgroup" to trace_options file before tracing starts,
+and writing "noblk_cgroup" to trace_options file after tracing stops.
 
 Signed-off-by: Hou Tao <houtao1@huawei.com>
 ---
- blkparse.c     | 103 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- blkparse_fmt.c |  10 ++++--
- blktrace.h     |   2 ++
- doc/blkparse.1 |   9 ++++-
- 4 files changed, 118 insertions(+), 6 deletions(-)
+ blktrace.c     | 144 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ doc/blktrace.8 |   9 +++-
+ 2 files changed, 151 insertions(+), 2 deletions(-)
 
-diff --git a/blkparse.c b/blkparse.c
-index fa2f520..35958d2 100644
---- a/blkparse.c
-+++ b/blkparse.c
-@@ -148,6 +148,12 @@ static struct option l_opts[] = {
- 		.val = 'F'
+diff --git a/blktrace.c b/blktrace.c
+index e048f68..56aa9c9 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -282,6 +282,7 @@ static int act_mask = ~0U;
+ static int kill_running_trace;
+ static int stop_watch;
+ static int piped_output;
++static int save_cgroup_info;
+ 
+ static char *debugfs_path = "/sys/kernel/debug";
+ static char *output_name;
+@@ -328,7 +329,7 @@ static int *cl_fds;
+ static int (*handle_pfds)(struct tracer *, int, int);
+ static int (*handle_list)(struct tracer_devpath_head *, struct list_head *);
+ 
+-#define S_OPTS	"d:a:A:r:o:kw:vVb:n:D:lh:p:sI:"
++#define S_OPTS	"d:a:A:r:o:kw:vVb:n:D:lh:p:sI:g"
+ static struct option l_opts[] = {
+ 	{
+ 		.name = "dev",
+@@ -433,6 +434,12 @@ static struct option l_opts[] = {
+ 		.val = 's'
  	},
  	{
 +		.name = "cgroup",
@@ -52,246 +54,213 @@ index fa2f520..35958d2 100644
 +		.val = 'g',
 +	},
 +	{
- 		.name = "hash-by-name",
- 		.has_arg = no_argument,
- 		.flag = NULL,
-@@ -292,6 +298,15 @@ static char *pipename;
- 
- static int text_output = 1;
- 
-+int show_cgroup = 0;
-+static const char *unknown_cg = "<...>";
-+static const char *root_cg = "/";
-+static int cg_mount_fd;
-+static struct file_handle *cg_handle;
-+static int cg_path_skip;
-+static char cg_path[NAME_MAX + 1];
-+
-+
- #define is_done()	(*(volatile int *)(&done))
- static volatile int done;
- 
-@@ -572,6 +587,45 @@ static struct process_pid_map *add_ppm_hash(pid_t pid, const char *name)
- 	return ppm;
+ 		.name = NULL,
+ 	}
+ };
+@@ -446,6 +453,7 @@ static char usage_str[] = "\n\n" \
+         "[ -a <action field>  | --act-mask=<action field>]\n" \
+         "[ -A <action mask>   | --set-mask=<action mask>]\n" \
+         "[ -b <size>          | --buffer-size]\n" \
++        "[ -g                 | --cgroup]\n" \
+         "[ -n <number>        | --num-sub-buffers=<number>]\n" \
+         "[ -l                 | --listen]\n" \
+         "[ -h <hostname>      | --host=<hostname>]\n" \
+@@ -463,6 +471,7 @@ static char usage_str[] = "\n\n" \
+ 	"\t-a Only trace specified actions. See documentation\n" \
+ 	"\t-A Give trace mask as a single value. See documentation\n" \
+ 	"\t-b Sub buffer size in KiB (default 512)\n" \
++	"\t-g Save io cgroup info in trace\n" \
+ 	"\t-n Number of sub buffers (default 4)\n" \
+ 	"\t-l Run in network listen mode (blktrace server)\n" \
+ 	"\t-h Run in network client mode, connecting to the given host\n" \
+@@ -2010,6 +2019,125 @@ static void wait_tracers(void)
+ 	get_all_drops();
  }
  
-+void get_cg_path(struct blk_io_trace *bit, const char **path)
++static int read_oneline_tfile(const char *name, char *buf, size_t len)
 +{
-+#define FILEID_INO32_GEN 1
-+	int fd = -1;
-+	union kernfs_node_id *id;
-+	char fd_path[NAME_MAX + 1];
-+	ssize_t cnt;
++	char fn[MAXPATHLEN];
++	int fd;
++	ssize_t rcnt;
 +
-+	cg_handle->handle_bytes = sizeof(*id);
-+	cg_handle->handle_type = FILEID_INO32_GEN;
-+	id = (void *)&cg_handle[1];
-+
-+	memcpy(id, (void *)&bit[1], sizeof(*id));
-+
-+	fd = open_by_handle_at(cg_mount_fd, cg_handle, 0);
-+	if (fd < 0)
-+		goto err_out;
-+
-+	snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd/%d", getpid(), fd);
-+	cnt = readlink(fd_path, cg_path, sizeof(cg_path) - 1);
-+	if (cnt < 0)
-+		goto err_out;
-+
-+	close(fd);
-+
-+	cg_path[cnt] = '\0';
-+	if (cg_path_skip < cnt)
-+		*path = cg_path + cg_path_skip;
-+	else
-+		*path = root_cg;
-+
-+	return;
-+
-+err_out:
-+	if (fd >= 0)
-+		close(fd);
-+	*path = unknown_cg;
-+}
-+
- static void handle_notify(struct blk_io_trace *bit)
- {
- 	void	*payload;
-@@ -607,16 +661,22 @@ static void handle_notify(struct blk_io_trace *bit)
- 	case BLK_TN_MESSAGE:
- 		if (pdu_len > 0) {
- 			char msg[pdu_len+1];
-+			const char *cg_path;
- 
- 			memcpy(msg, (char *)payload, pdu_len);
- 			msg[pdu_len] = '\0';
- 
-+			if (show_cgroup && (bit->action & __BLK_TA_CGROUP))
-+				get_cg_path(bit, &cg_path);
-+			else
-+				cg_path = "";
-+
- 			fprintf(ofp,
--				"%3d,%-3d %2d %8s %5d.%09lu %5u %2s %3s %s\n",
-+				"%3d,%-3d %2d %8s %5d.%09lu %s%5u %2s %3s %s\n",
- 				MAJOR(bit->device), MINOR(bit->device),
- 				bit->cpu, "0", (int) SECONDS(bit->time),
- 				(unsigned long) NANO_SECONDS(bit->time),
--				0, "m", "N", msg);
-+				cg_path, 0, "m", "N", msg);
- 		}
- 		break;
- 
-@@ -2743,7 +2803,36 @@ static int is_pipe(const char *str)
- 	return 0;
- }
- 
--#define S_OPTS  "a:A:b:D:d:f:F:hi:o:Oqstw:vVM"
-+static int init_cg_res(void)
-+{
-+	const char *path;
-+
-+	cg_handle = malloc(sizeof(*cg_handle) + sizeof(union kernfs_node_id));
-+	if (!cg_handle) {
-+		perror("malloc");
++	snprintf(fn, sizeof(fn), "%s/tracing/%s", debugfs_path, name);
++	fd = my_open(fn, O_RDONLY);
++	if (fd < 0) {
++		fprintf(stderr, "Could not open %s: %d/%s\n",
++				fn, errno, strerror(errno));
 +		return -1;
 +	}
 +
-+	path = "/sys/fs/cgroup/blkio";
-+	cg_mount_fd = open(path, O_RDONLY);
-+	if (cg_mount_fd < 0) {
-+		if (errno = ENOENT) {
-+			path = "/sys/fs/cgroup/unified";
-+			cg_mount_fd = open(path, O_RDONLY);
-+		}
-+
-+		if (cg_mount_fd < 0) {
-+			perror("open io cgroup");
-+			return -1;
-+		}
++	/* -1 for the trailing \0 */
++	rcnt = read(fd, buf, len - 1);
++	if (rcnt >= 0) {
++		if (rcnt > 0 && buf[rcnt - 1] = '\n')
++			rcnt--;
++		buf[rcnt] = '\0';
++	} else {
++		fprintf(stderr, "Could not read %s: %d/%s\n",
++				fn, errno, strerror(errno));
 +	}
 +
-+	cg_path_skip = strlen(path);
++	close(fd);
 +
-+	return 0;
++	return rcnt >= 0 ? 0 : -1;
 +}
 +
-+#define S_OPTS  "a:A:b:D:d:f:F:ghi:o:Oqstw:vVM"
- static char usage_str[] =    "\n\n" \
- 	"-i <file>           | --input=<file>\n" \
- 	"[ -a <action field> | --act-mask=<action field> ]\n" \
-@@ -2753,6 +2842,7 @@ static char usage_str[] =    "\n\n" \
- 	"[ -D <dir>          | --input-directory=<dir> ]\n" \
- 	"[ -f <format>       | --format=<format> ]\n" \
- 	"[ -F <spec>         | --format-spec=<spec> ]\n" \
-+	"[ -g                | --cgroup\n" \
- 	"[ -h                | --hash-by-name ]\n" \
- 	"[ -o <file>         | --output=<file> ]\n" \
- 	"[ -O                | --no-text-output ]\n" \
-@@ -2771,6 +2861,7 @@ static char usage_str[] =    "\n\n" \
- 	"\t-f Output format. Customize the output format. The format field\n" \
- 	"\t   identifies can be found in the documentation\n" \
- 	"\t-F Format specification. Can be found in the documentation\n" \
-+	"\t-g Show the io cgroup of trace action or trace message\n" \
- 	"\t-h Hash processes by name, not pid\n" \
- 	"\t-i Input file containing trace data, or '-' for stdin\n" \
- 	"\t-o Output file. If not given, output is stdout\n" \
-@@ -2840,6 +2931,9 @@ int main(int argc, char *argv[])
- 			if (rb_batch <= 0)
- 				rb_batch = RB_BATCH_DEFAULT;
++static int write_tfile(const char *name, const char *str)
++{
++	char fn[MAXPATHLEN];
++	int fd;
++	size_t len;
++	ssize_t wcnt;
++
++	snprintf(fn, sizeof(fn), "%s/tracing/%s", debugfs_path, name);
++	fd = my_open(fn, O_WRONLY);
++	if (fd < 0) {
++		fprintf(stderr, "Could not open %s for write: %d/%s\n",
++				fn, errno, strerror(errno));
++		return -1;
++	}
++
++	len = strlen(str);
++	wcnt = write(fd, str, len);
++	if (wcnt < 0)
++		fprintf(stderr, "Could not write %s to %s: %d/%s\n",
++				str, fn, errno, strerror(errno));
++	else if ((size_t)wcnt != len)
++		fprintf(stderr, "Incomplete write (%zu/%zu) to %s: %d/%s\n",
++				(size_t)wcnt, len, fn, errno, strerror(errno));
++
++	close(fd);
++
++	return ((size_t)wcnt = len) ? 0 : -1;
++}
++
++static void restore_tracer(const char *tracer, int tracing_on)
++{
++	write_tfile("current_tracer", tracer);
++	if (tracing_on)
++		write_tfile("tracing_on", "1");
++}
++
++static int switch_tracer(const char *tracer, int *old_tracing_on)
++{
++	int err;
++	char buf[4];
++	int tracing_on;
++
++	err = read_oneline_tfile("tracing_on", buf, sizeof(buf));
++	if (err)
++		goto out;
++
++	tracing_on = atoi(buf);
++	if (tracing_on) {
++		err = write_tfile("tracing_on", "0");
++		if (err)
++			goto out;
++	}
++
++	err = write_tfile("current_tracer", tracer);
++	if (err)
++		goto restore_out;
++
++	*old_tracing_on = tracing_on;
++
++	return 0;
++
++restore_out:
++	if (tracing_on)
++		write_tfile("tracing_on", "1");
++out:
++	return -1;
++}
++
++static int set_blk_tracer_opt(const char *opt)
++{
++	int err;
++	char tracer[32];
++	int tracing_on = 0;
++
++	err = read_oneline_tfile("current_tracer", tracer, sizeof(tracer));
++	if (err)
++		return -1;
++
++	if (strcmp(tracer, "blk") && switch_tracer("blk", &tracing_on))
++		return -1;
++
++	err = write_tfile("trace_options", opt);
++
++	if (strcmp(tracer, "blk"))
++		restore_tracer(tracer, tracing_on);
++
++	return !err ? 0 : -1;
++}
++
+ static void exit_tracing(void)
+ {
+ 	signal(SIGINT, SIG_IGN);
+@@ -2021,6 +2149,10 @@ static void exit_tracing(void)
+ 	wait_tracers();
+ 	del_tracers();
+ 	rel_devpaths();
++
++	if (save_cgroup_info) {
++		set_blk_tracer_opt("noblk_cgroup");
++	}
+ }
+ 
+ static void handle_sigint(__attribute__((__unused__)) int sig)
+@@ -2131,6 +2263,10 @@ static int handle_args(int argc, char *argv[])
+ 				return 1;
  			break;
+ 
 +		case 'g':
-+			show_cgroup = 1;
++			save_cgroup_info = 1;
 +			break;
- 		case 's':
- 			per_process_stats = 1;
- 			break;
-@@ -2898,6 +2992,9 @@ int main(int argc, char *argv[])
- 	if (act_mask_tmp != 0)
- 		act_mask = act_mask_tmp;
++
+ 		case 'I': {
+ 			char dev_line[256];
+ 			FILE *ifp = my_fopen(optarg, "r");
+@@ -2681,6 +2817,12 @@ static int run_tracers(void)
+ 	if (net_mode = Net_client)
+ 		printf("blktrace: connecting to %s\n", hostname);
  
-+	if (show_cgroup && init_cg_res())
++	if (save_cgroup_info && set_blk_tracer_opt("blk_cgroup")) {
++		/* No need to disable opt "blk_cgroup" */
++		save_cgroup_info = 0;
 +		return 1;
++	}
 +
- 	memset(&rb_sort_root, 0, sizeof(rb_sort_root));
+ 	if (setup_buts())
+ 		return 1;
  
- 	signal(SIGINT, handle_sigint);
-diff --git a/blkparse_fmt.c b/blkparse_fmt.c
-index 8dc20ca..58c2721 100644
---- a/blkparse_fmt.c
-+++ b/blkparse_fmt.c
-@@ -312,6 +312,7 @@ static void process_default(char *act, struct per_cpu_info *pci,
- 	struct blk_io_trace_remap r = { .device_from = 0, };
- 	char rwbs[8];
- 	char *name;
-+	const char *cg_path;
+diff --git a/doc/blktrace.8 b/doc/blktrace.8
+index 820b03a..861c54a 100644
+--- a/doc/blktrace.8
++++ b/doc/blktrace.8
+@@ -6,7 +6,7 @@ blktrace \- generate traces of the i/o traffic on block devices
  
- 	fill_rwbs(rwbs, t);
  
-@@ -324,13 +325,18 @@ static void process_default(char *act, struct per_cpu_info *pci,
- 		 t->device = r.device_to;
- 	 }
+ .SH SYNOPSIS
+-.B blktrace \-d \fIdev\fR [ \-r \fIdebugfs_path\fR ] [ \-o \fIoutput\fR ] [ \-w \fItime\fR ] [ \-a \fIaction\fR ] [ \-A \fIaction_mask\fR ] [ \-v ]
++.B blktrace \-d \fIdev\fR [ \-r \fIdebugfs_path\fR ] [ \-o \fIoutput\fR ] [ \-w \fItime\fR ] [ \-a \fIaction\fR ] [ \-A \fIaction_mask\fR ] [ \-g ] [ \-v ]
+ .br
  
-+	if (show_cgroup && (t->action & __BLK_TA_CGROUP))
-+		get_cg_path(t, &cg_path);
-+	else
-+		cg_path = "";
-+
- 	/*
- 	 * The header is always the same
- 	 */
--	fprintf(ofp, "%3d,%-3d %2d %8d %5d.%09lu %5u %2s %3s ",
-+	fprintf(ofp, "%3d,%-3d %2d %8d %5d.%09lu %s%5u %2s %3s ",
- 		MAJOR(t->device), MINOR(t->device), pci->cpu, t->sequence,
- 		(int) SECONDS(t->time), (unsigned long) NANO_SECONDS(t->time),
--		t->pid, act, rwbs);
-+		cg_path, t->pid, act, rwbs);
  
- 	name = find_process_name(t->pid);
- 
-diff --git a/blktrace.h b/blktrace.h
-index c5ed618..6874edb 100644
---- a/blktrace.h
-+++ b/blktrace.h
-@@ -68,6 +68,7 @@ struct per_cpu_info {
- extern FILE *ofp;
- extern int data_is_native;
- extern struct timespec abs_start_time;
-+extern int show_cgroup;
- 
- #define CHECK_MAGIC(t)		(((t)->magic & 0xffffff00) = BLK_IO_TRACE_MAGIC)
- #define SUPPORTED_VERSION	(0x07)
-@@ -152,5 +153,6 @@ extern char *find_process_name(pid_t);
- 
- extern void pdu_start_len(struct blk_io_trace *bit,
- 			void **pdu, __u16 *pdu_len);
-+extern void get_cg_path(struct blk_io_trace *bit, const char **path);
- 
- #endif
-diff --git a/doc/blkparse.1 b/doc/blkparse.1
-index be9b34b..de2f9cd 100644
---- a/doc/blkparse.1
-+++ b/doc/blkparse.1
-@@ -114,11 +114,18 @@ event type. The single\-character \fItyp\fR field is one of the
- action specifiers described in ACTION IDENTIFIERS.
+@@ -103,6 +103,13 @@ buffer size is 512KiB.
+ Adds \fIdev\fR as a device to trace  
  .RE
  
 +\-g
 +.br
 +\-\-cgroup
 +.RS
-+Show the io cgroup of trace action or trace message
++Save io cgroup info in trace
 +.RE
 +
- \-M
+ \-I \fIfile\fR
  .br
- \-\-no-msgs
- .RS
--When \-d is specified, this will stop messages from being output to the
-+When \-M is specified, this will stop messages from being output to the
- file. (Can seriously reduce the size of the resultant file when using
- the CFQ I/O scheduler.)
- .RE
+ \-\-input\-devs=\fIfile\fR
 -- 
 2.9.5
 
