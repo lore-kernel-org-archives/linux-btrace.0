@@ -1,40 +1,53 @@
 From: weiping zhang <zhangweiping@didichuxing.com>
-Date: Thu, 07 Dec 2017 16:23:10 +0000
-Subject: [PATCH] doc: trace action M only for back merge
-Message-Id: <20171207162306.GA25143@localhost.didichuxing.com>
+Date: Mon, 15 Jan 2018 15:53:42 +0000
+Subject: [PATCH] blktrace: don't stop tracer if not setup trace successfully
+Message-Id: <20180115155338.GA15313@bogon.didichuxing.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-F -- front merge
-M -- back merge, exclude front merge
+if we run blktrace on same device twice, the second time will failed
+to ioctl(BLKTRACESETUP), then it will call __stop_tracer, which lead
+the first blktrace failed to access debugfs entries. So this patch add
+a check to handle this case, to avoid stop tracer uncondionally.
 
 Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
 ---
- doc/blkparse.1 | 8 --------
- 1 file changed, 8 deletions(-)
+ blktrace.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/doc/blkparse.1 b/doc/blkparse.1
-index be9b34b..70c85cf 100644
---- a/doc/blkparse.1
-+++ b/doc/blkparse.1
-@@ -243,14 +243,6 @@ Same as the back merge, except this i/o ends where a previously inserted
- requests starts.
+diff --git a/blktrace.c b/blktrace.c
+index e048f68..d0d271f 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -112,6 +112,7 @@ struct devpath {
+ 	struct cl_host *ch;
+ 	u32 cl_id;
+ 	time_t cl_connect_time;
++	int setup_done;	/* ioctl BLKTRACESETUP done */
+ 	struct io_info *ios;
+ };
  
- .HP 4
--\fBM --front or back merge\fR
--One of the above
--
--.HP 4
--\fBM -- front or back merge\fR
--One of the above.
--
--.HP 4
- \fBG -- get request\fR
- To send any type of request to a block device, a \fIstruct request\fR
- container must be allocated first.
+@@ -1083,6 +1084,7 @@ static int setup_buts(void)
+ 		if (ioctl(dpp->fd, BLKTRACESETUP, &buts) >= 0) {
+ 			dpp->ncpus = max_cpus;
+ 			dpp->buts_name = strdup(buts.name);
++			dpp->setup_done = 1;
+ 			if (dpp->stats)
+ 				free(dpp->stats);
+ 			dpp->stats = calloc(dpp->ncpus, sizeof(*dpp->stats));
+@@ -1285,7 +1287,8 @@ static void rel_devpaths(void)
+ 		struct devpath *dpp = list_entry(p, struct devpath, head);
+ 
+ 		list_del(&dpp->head);
+-		__stop_trace(dpp->fd);
++		if (dpp->setup_done)
++			__stop_trace(dpp->fd);
+ 		close(dpp->fd);
+ 
+ 		if (dpp->heads)
 -- 
-2.9.4
+1.8.3.1
 
