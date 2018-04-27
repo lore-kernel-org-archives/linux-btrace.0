@@ -1,130 +1,58 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Date: Fri, 27 Apr 2018 13:07:22 +0000
-Subject: [PATCH 15/31] blktrace: doc: update RWBS including flush, FUA replacing barrier
-Message-Id: <20180427130738.102806-16-maier@linux.ibm.com>
+Date: Fri, 27 Apr 2018 13:07:10 +0000
+Subject: [PATCH 03/31] btrace: fix usage by adding -h (blkparse --hash-by-name)
+Message-Id: <20180427130738.102806-4-maier@linux.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+Fixes: d915dee697e3 ("[PATCH] Switch hash option -h, update btrace for all new options")
+Fixes: bc93336f08a3 ("fix up btrace options & manpage")
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Cc: Namhyung Kim <namhyung@gmail.com>
 ---
- doc/blkparse.1   | 19 +++++++++++++++++--
- doc/blktrace.8   | 11 +++++++++++
- doc/blktrace.tex | 28 +++++++++++++++++++++++++++-
- 3 files changed, 55 insertions(+), 3 deletions(-)
+ btrace       | 2 +-
+ doc/btrace.8 | 6 +++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/doc/blkparse.1 b/doc/blkparse.1
-index d334d25dac15..69d05cabe333 100644
---- a/doc/blkparse.1
-+++ b/doc/blkparse.1
-@@ -427,9 +427,24 @@ Thus, to specify the command in a 12-character field that is left aligned:
- .SH "RWBS DESCRIPTION"
+diff --git a/btrace b/btrace
+index 45c10cffdd4d..f1f731b2a18f 100644
+--- a/btrace
++++ b/btrace
+@@ -8,7 +8,7 @@
  
- This is a small string containing at least one character ('R' for read, 'W'
--for write, or 'D' for block discard operation), and optionally either
-+for write, 'D' for block discard operation,
-+or 'N' for empty requests otherwise),
-+and optionally either
- a 'B' (for barrier operations) or 'S' (for synchronous operations).
--
-+Additionally, the string can contain
-+\&'A' for readahead, or
-+\&'M' for metadata.
-+Since blktrace-1.0.3 /
-+.\" blktrace commit 344320932064 ("Add FLUSH/FUA support")
-+Linux kernel v3.1,
-+.\" kernel commit c09c47caedc9 ("blktrace: add FLUSH/FUA support")
-+\&'B' (for barrier operations) no longer exists, but
-+\&'F' before a write for flush or
-+\&'F' after a write for FUA (force unit access).
-+As regular expression, the RWBS string has the following format,
-+although not necessarily all combinations appear in the Linux block layer:
-+
-+    F?[RWDN]F?A?B?S?M?
+ TRACEOPTS=""
+ PARSEOPTS="-b100000"
+-USAGE="Usage: btrace [-s] [-t] [-w N] [-n N] [-b N] [-a <trace>...] [-r <dbg mnt>] <dev>..."
++USAGE="Usage: btrace [-s] [-t] [-h] [-w N] [-n N] [-b N] [-a <trace>...] [-r <dbg mnt>] <dev>..."
+ DIRNAME=`dirname $0`
+ 
+ while getopts "a:w:n:b:r:sthv" c
+diff --git a/doc/btrace.8 b/doc/btrace.8
+index a1f34c2cfbe1..60462140ccc6 100644
+--- a/doc/btrace.8
++++ b/doc/btrace.8
+@@ -6,7 +6,7 @@ btrace \- perform live tracing for block devices
  
  
- .SH "DEFAULT OUTPUT HEADER"
-diff --git a/doc/blktrace.8 b/doc/blktrace.8
-index 67ea3ddfaedf..708758a9e253 100644
---- a/doc/blktrace.8
-+++ b/doc/blktrace.8
-@@ -241,11 +241,22 @@ line options.
+ .SH SYNOPSIS
+-.B btrace [\-s] [\-t] [\-w \fIN\fN] [\-n \fIN\fR] [\-b \fIN\fR] [\-r \fI<dbg mnt>\fR] [\-a <\fItrace\fR>...] <\fIdev\fR>...
++.B btrace [\-s] [\-t] [\-h] [\-w \fIN\fN] [\-n \fIN\fR] [\-b \fIN\fR] [\-r \fI<dbg mnt>\fR] [\-a <\fItrace\fR>...] <\fIdev\fR>...
  .br
- \fImeta\fR: metadata
- .br
-+\fIflush\fR: flush the volatile write cache
-+.br
-+\fIfua\fR: Force Unit Access requests
-+.br
- \fInotify\fR: trace messages
- .br
- \fIdrv_data\fR: additional driver specific trace
- .RE
  
-+\fIbarrier\fR does not exist anymore since blktrace-1.0.3 /
-+.\" blktrace commit 344320932064 ("Add FLUSH/FUA support")
-+Linux kernel v3.1,
-+.\" kernel commit c09c47caedc9 ("blktrace: add FLUSH/FUA support")
-+but \fIflush\fR and \fIfua\fR were introduced;
-+see also Linux kernel source Documentation/block/writeback_cache_control.txt.
+ 
+@@ -27,6 +27,10 @@ Displays data sorted by program (see \fIblkparse\fR (1)).
+ .B \-t 
+ Displays time deltas per IO (see \fIblkparse\fR (1)).
+ 
++.HP 4
++.B \-h
++Hash processes by name, not PID (see \fIblkparse\fR (1)).
 +
- 
- .SH REQUEST TYPES
- blktrace distinguishes between two types of block layer requests, file system
-diff --git a/doc/blktrace.tex b/doc/blktrace.tex
-index 539362f657d4..4fb9aae16245 100644
---- a/doc/blktrace.tex
-+++ b/doc/blktrace.tex
-@@ -437,10 +437,19 @@ sync & \emph{synchronous} attribute \\ \hline
- write & \emph{write} requests \\ \hline
- ahead & readahead \\ \hline
- meta & metadata \\ \hline
-+flush & flush the volatile write cache \\ \hline
-+fua & Force Unit Access requests \\ \hline
- notify & \emph{notify} trace messages \\ \hline
- drv\_data & additional driver specific trace \\ \hline
- \end{tabular}
- 
-+Barrier does not exist anymore since blktrace-1.0.3\footnote{
-+v1.0.3 blktrace commit 344320932064 (``Add FLUSH/FUA support'')}
-+/ Linux kernel v3.1\footnote{
-+v3.1 kernel commit c09c47caedc9 (``blktrace: add FLUSH/FUA support'')},
-+but flush and fua were introduced; see also Linux kernel source
-+Documentation/\linebreak[0]block/\linebreak[0]writeback\_cache\_control.txt.
-+
- \subsubsection{Request types}
- \label{sec:request-types}
- blktrace disguingishes between two types of block layer requests,
-@@ -714,8 +723,25 @@ X & Split \\ \hline
- \subsubsection{RWBS Description}
- \label{sec:rwbs}
- This is a small string containing at least one character ('R' for read,
--'W' for write, or 'D' for block discard operation), and optionally either
-+'W' for write, or 'D' for block discard operation,
-+or 'N' for empty requests otherwise), and optionally either
- a 'B' (for barrier operations) or 'S' (for synchronous operations).
-+Additionally, the string can contain
-+'A' for readahead, or
-+'M' for metadata.
-+Since blktrace-1.0.3\footnote{
-+blktrace commit 344320932064 (``Add FLUSH/FUA support'')}
-+/ Linux kernel v3.1\footnote{
-+kernel commit c09c47caedc9 (``blktrace: add FLUSH/FUA support'')},
-+'B' (for barrier operations) no longer exists, but
-+'F' before a write for flush or
-+'F' after a write for FUA (force unit access).
-+As regular expression, the RWBS string has the following format,
-+although not necessarily all combinations appear in the Linux block layer:
-+
-+\begin{verbatim}
-+    F?[RWDN]F?A?B?S?M?
-+\end{verbatim}
- 
- \subsubsection{Default output header}
- \label{sec:default-output-header}
+ .HP 4
+ .B \-w \fIN\fR
+ Sets run time to the number of seconds specified (see \fIblktrace\fR (8)).
 -- 
 2.14.2
 
