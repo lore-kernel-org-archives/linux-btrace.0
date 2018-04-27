@@ -1,218 +1,248 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Date: Fri, 27 Apr 2018 13:07:09 +0000
-Subject: [PATCH 02/31] btt: doc: small fixes
-Message-Id: <20180427130738.102806-3-maier@linux.ibm.com>
+Date: Fri, 27 Apr 2018 13:07:17 +0000
+Subject: [PATCH 10/31] blktrace: doc: PDF output with bookmark structure and clickable cross references
+Message-Id: <20180427130738.102806-11-maier@linux.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-device list argument to -D|--devices separated by semicolon not colon
-Fixes: 512566d40074 ("BTT: Added user guide")
+Need to extract labels from section titles as hyperref does not like this.
 
-incoming requests either go through Q2G+G2I or Q2M,
-rather than                         Q2G+Q2I or Q2M,
-otherwise Q2G would be counted twice for the sum of Q2G+Q2I=Q2G+(Q2G+G2I)
-
-typo: ov => of
-typo: Aerage => Average
-
-file_mbps_fp.dat provides data for mebibytes not millibits per second
-
-consistent upper case usage for Q2d, D2c
-
---iostat|-I producing results "from" iostat sounded as if we would really
-run the iostat tool in parallel, but we only emulate the same output from
-just our own blktrace data "as if" we would have been running iostat in
-parallel
-
---per-io-dump|-p records are separated by blank lines, not blank spaces
-
-describe freq argument to --periodic-latencies|-L as in man page
-
---dev-maps|-M seems no longer under construction so describe what the code
-supports since commit 63eba14776db ("[PATCH] Add Alan's btt tool")
-
-typographical double quotes in regular text (as opposed to verbatim)
-
-typo: performend => performed
-
---time-start/-t and --time-end/T: for easier readability use same
-consistent phrasing with the case of unspecified option in parentheses
-
-typo: exentsion => extension
-
-copy&paste: short option -Z is long option -do-active, not --q2d-latencies
-Fixes: 2e37a10ee8b4 ("btt: Added in I/O activity per device and system-wide")
-
-man page: --per-io-dump|-p seems to also show get request traces ('G')
-according to code and corresponding example in btt.tex
+$ sed 's/{\(\\label{[^}]*}\)\([^}]*}\)/{\2\n\1/' -i blktrace.tex
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
 ---
- btt/doc/btt.tex | 43 ++++++++++++++++++++++++++++---------------
- doc/btt.1       |  2 +-
- 2 files changed, 29 insertions(+), 16 deletions(-)
+ doc/Makefile     |  2 +-
+ doc/blktrace.tex | 64 +++++++++++++++++++++++++++++++++++++-------------------
+ 2 files changed, 44 insertions(+), 22 deletions(-)
 
-diff --git a/btt/doc/btt.tex b/btt/doc/btt.tex
-index dbd1fde612d4..92507f3071ac 100644
---- a/btt/doc/btt.tex
-+++ b/btt/doc/btt.tex
-@@ -196,7 +196,7 @@ Q2C    0.000207665   0.125405263   1.830917198     2262311
- IO\footnote{It should be noted that incoming requests either go through:
+diff --git a/doc/Makefile b/doc/Makefile
+index 0be44256e9e9..11ad4107ed46 100644
+--- a/doc/Makefile
++++ b/doc/Makefile
+@@ -1,4 +1,4 @@
+-DOCTMP	= blktrace.log blktrace.aux blktrace.dvi
++DOCTMP	= blktrace.log blktrace.aux blktrace.dvi blktrace.out
  
- \begin{enumerate}
--  \item Q2G + Q2I
-+  \item Q2G + G2I
+ all: blktrace.pdf
  
-   or
+diff --git a/doc/blktrace.tex b/doc/blktrace.tex
+index 4d8278e8eec4..c46e3e072be6 100644
+--- a/doc/blktrace.tex
++++ b/doc/blktrace.tex
+@@ -1,4 +1,5 @@
+ \documentclass{article}
++\usepackage[dvipdfm,pdfborderstyle={/S/U/W 1}]{hyperref}
  
-@@ -354,8 +354,8 @@ IO\footnote{It should be noted that incoming requests either go through:
+ %
+ % Copyright (C) 2005, 2006 Alan D. Brunelle <Alan.Brunelle@hp.com>
+@@ -26,7 +27,8 @@
+ \begin{document}
+ \maketitle
+ %---------------------
+-\section{\label{sec:intro}Introduction}
++\section{Introduction}
++\label{sec:intro}
  
-   \begin{description}
-     \item[\# Live] Number of periods of ``liveness.''
--    \item[Avg. Act] Average length of each period ov ``liveness.''
--    \item[Avg. !Act] Aerage length of each non-active period.
-+    \item[Avg. Act] Average length of each period of ``liveness.''
-+    \item[Avg. !Act] Average length of each non-active period.
-     \item[\% Live] Percent of total time spent with the driver/device active.
-   \end{description}
+ blktrace is a block layer IO tracing mechanism which provides detailed
+ information about request queue operations up to user space. There are
+@@ -54,13 +56,15 @@ as part of the following git repository:
+ git://git.kernel.org/pub/scm/linux/kernel/git/axboe/blktrace.git bt
  
-@@ -475,7 +475,7 @@ pdflush       0.000000790 0.000006752 0.247231307  179791
-   see section~\ref{sec:dhist}.
+ %--------------------------
+-\newpage\section{\label{sec:quick-start}Quick Start Guide}
++\newpage\section{Quick Start Guide}
++\label{sec:quick-start}
  
-   \item[\emph{file}\_mbps\_fp.dat] Provides a set of data for
--  mb-per-second values each second
-+  MiB-per-second values each second
-   - for more information see section~\ref{sec:rstat}.
+ The following sections outline some quick steps towards utilizing
+ blktrace. Some of the specific instructions below may need to be tailored
+ to your environment.
  
-   \item[\emph{file}\_iops\_fp.dat] Provides a set of data for
-@@ -502,7 +502,7 @@ pdflush       0.000000790 0.000006752 0.247231307  179791
-     than grepping through a blkparse output file for example). The
-     details on this file is included in section~\ref{sec:per-io}.
+-\subsection{\label{sec:get-blktrace}Retrieving blktrace}
++\subsection{Retrieving blktrace}
++\label{sec:get-blktrace}
  
--    \item[iostat] Latency information -- both Q2d, D2c and Q2C --
-+    \item[iostat] Latency information -- both Q2D, D2C and Q2C --
-     on a per-IO basis can be generated. These are described in
-     section~\ref{sec:lat}.
+ As noted above, the kernel patch along with the blktrace and blkparse utilities are stored in a git repository. One simple way to get going would be:
  
-@@ -681,7 +681,7 @@ figure~\ref{fig:rstats}).
+@@ -70,7 +74,8 @@ As noted above, the kernel patch along with the blktrace and blkparse utilities
+ % git checkout
+ \end{verbatim}
  
- \newpage\section{iostat Data File}
- \label{sec:iostat}
--  \texttt{btt} attempts to produce the results from running an
-+  \texttt{btt} attempts to produce the results as if running an
-   \texttt{iostat -x} command in parallel with the system as it is being
-   traced. The fields (columns) generated by the \texttt{--iostat} or
-   \texttt{-I} option can be seen from the following output snippet --
-@@ -720,7 +720,7 @@ Device:       rrqm/s   wrqm/s     r/s     w/s    rsec/s    wsec/s
+-\subsection{\label{sec:patching}Patching and configuring the Linux kernel}
++\subsection{Patching and configuring the Linux kernel}
++\label{sec:patching}
  
-   The \emph{--per-io-dump} or \emph{-p} option triggers this behavior,
-   and will produce a file containing streams of IOs (separated by blank
--  spaces). As an example, here is a snippet of 4 IOs that were merged
-+  lines). As an example, here is a snippet of 4 IOs that were merged
-   together, you will note there are 3 merged IOs, and 1 inserted in the
-   stream. The issue and completion traces are replicated per IO.
+ A patch for a \emph{specific Linux kernel} is provided in bt/kernel (where
+ \emph{bt} is the name of the directory from the above git sequence). The
+@@ -104,7 +109,8 @@ and then down to \emph{Support for tracing block io actions} and hit Y.
  
-@@ -975,8 +975,8 @@ Usage: btt 2.09
-   the traces parsed. With this option, one can reduce the analysis to
-   one or more devices provided in the string passed to this option. The
-   device identifiers are the major and minor number of each device, and
--  each device identifier is separated by a colon (:). A valid specifier
--  for devices 8,0 and 8,8 would then be: \texttt{"8,0:8,8"}.
-+  each device identifier is separated by a semicolon (;). A valid specifier
-+  for devices 8,0 and 8,8 would then be: \texttt{"8,0;8,8"}.
+ Install the new kernel (and modules\ldots) and reboot. 
  
- \subsection{\texttt{--exes}/\texttt{-e}}
- \label{sec:o-e}
-@@ -1019,6 +1019,8 @@ Usage: btt 2.09
-   When given a value greater than 0, this option will create two data
-   files (q2c \& d2c) per device containing a periodic timestamp \&
-   average latency over that period.
-+  The frequency argument value is a floating point value expressing seconds
-+  for the period length.
+-\subsection{\label{sec:mount}Mounting the debugfs file system}
++\subsection{Mounting the debugfs file system}
++\label{sec:mount}
  
- \subsection{\texttt{--seeks-per-second}\texttt{-m}}
- \label{sec:o-m}
-@@ -1036,7 +1038,18 @@ Usage: btt 2.09
- \subsection{\texttt{--dev-maps}/\texttt{-M}}
- \label{sec:o-M}
+ blktrace utilizes files under the debug file system, and thus must have
+ the mount point set up -- mounted on the directory /sys/kernel/debug.
+@@ -124,7 +130,8 @@ debug /sys/kernel/debug debugfs default 0 0
+ \end{verbatim}
+ \end{enumerate}
  
--  Internal option, still under construction.
-+  Takes a previously created text file with one device mapping per line.
-+  Each line contains a word string representing the device name,
-+  a space character as field separator, and in the second field the major and
-+  minor device number in comma separated format.
-+  Lines which contain the substring ``Device'' are ignored.
-+  E.g.\
-+\begin{verbatim}
-+Devices mapping names from major,minor device IDs
-+/dev/sda 8,0
-+/dev/sdb 8,16
-+\end{verbatim}
-+  This allows for better output of device names.
+-\subsection{\label{sec:build}Build the tools}
++\subsection{Build the tools}
++\label{sec:build}
  
- \subsection{\texttt{--output-file}/\texttt{-o}}
- \label{sec:o-o}
-@@ -1055,7 +1068,7 @@ Usage: btt 2.09
- \label{sec:o-P}
+ To build and install the tools, execute the following sequence (as root):
  
- The \texttt{-P} option will generate a file that contains a list of all IO
--"sequences" - showing only the Q, D \& C operation times. The D \& C
-+``sequences'' - showing only the Q, D \& C operation times. The D \& C
- time values are separated from the Q time values with a vertical bar.
+@@ -133,7 +140,8 @@ To build and install the tools, execute the following sequence (as root):
+ % make && make install
+ \end{verbatim}
  
- \subsection{\texttt{--q2c-latencies}/\texttt{-q}}
-@@ -1070,7 +1083,7 @@ time values are separated from the Q time values with a vertical bar.
-   This option tells \texttt{btt} to generate a data file (using the given
-   name as a base) which contains: A time stamp in the first column,
-   and then the number of \emph{active} requests issued to the device
--  driver. (The value is incremented when an \emph{issue} is performend,
-+  driver. (The value is incremented when an \emph{issue} is performed,
-   and decremented when a \emph{complete} is performed.
+-\subsection{\label{sec:live-blktrace}blktrace -- live}
++\subsection{blktrace -- live}
++\label{sec:live-blktrace}
  
- \subsection{\texttt{--no-remaps}/\texttt{-r}}
-@@ -1105,7 +1118,7 @@ time values are separated from the Q time values with a vertical bar.
-   These options allow one to dictate to \texttt{btt} when to start and stop
-   parsing of trace data in terms of seconds since the start of the run. The
-   trace chosen will be between the start time (or 0.0 if not
--  specified) and end time (or the end of the run) specified.
-+  specified) and end time (or the end of the run if not specified).
+ Now to simply watch what is going on for a specific disk (to stop the
+ trace, hit control-C):
+@@ -194,7 +202,8 @@ By default, \emph{btrace} runs the trace in quiet mode so it will not
+ include statistics when you break the run. Add the \emph{-S} option to
+ get that dumped as well.
  
- \subsection{\texttt{--unplug-hist}/\texttt{-u}}
- \label{sec:o-u}
-@@ -1168,7 +1181,7 @@ Sending stats data to bttX.avg
-   \emph{Some} of the data produced by default can also be shipped
-   simultaneously to another file in an easy to parse form. When
-   the \texttt{-o} option is selected (thus producing a file with a
--  \texttt{.avg} exentsion), \emph{and} the \texttt{-X} flag is present,
-+  \texttt{.avg} extension), \emph{and} the \texttt{-X} flag is present,
-   then \texttt{btt} will generate this file.
+-\subsection{\label{sec:pc-blktrace}blktrace -- SCSI commands}
++\subsection{blktrace -- SCSI commands}
++\label{sec:pc-blktrace}
  
-   The format is space-delimited values starting with a 3-character
-@@ -1231,7 +1244,7 @@ ARQ 8,16 12.938165321
-   This option instructs \texttt{btt} to generate the Q2D latency file
-   discussed in section~\ref{sec:lat-q2d}.
+ The previous section showed typical file system io actions, but blktrace
+ can also show SCSI commands going in and out of the queue as submitted
+@@ -217,7 +226,8 @@ that the command completed successfully. Tracing SCSI commands can be
+ very useful for debugging problems with programs talking directly to the
+ device. An example of that would be \emph{cdrecord} burning.
  
--\subsection{\texttt{--q2d-latencies}/\texttt{-Z}}
-+\subsection{\texttt{--do-active}/\texttt{-Z}}
- \label{sec:o-Z}
+-\subsection{\label{sec:blktrace-post}blktrace -- post-processing}
++\subsection{blktrace -- post-processing}
++\label{sec:blktrace-post}
  
-   This option generates per-device (and total system) data files. Each
-diff --git a/doc/btt.1 b/doc/btt.1
-index 28cf912d2ebb..97296b95c73b 100644
---- a/doc/btt.1
-+++ b/doc/btt.1
-@@ -234,7 +234,7 @@ Specifies the output file name.
- .B \-\-per\-io\-dump=<\fIoutput name\fR>
- .RS 4
- The \-p option will generate a file that contains a list of all IO
--"sequences" \- showing the parts of each IO (Q, A, I/M, D, & C).
-+"sequences" \- showing the parts of each IO (Q, A, G, I/M, D, & C).
- .RE
+ Another way to run blktrace is to have blktrace save data away for later
+ formatting by blkparse. This would be useful if you want to get 
+@@ -330,7 +340,8 @@ Total (65,160):
+ \end{verbatim}
  
- .B \-P <\fIoutput name\fR>
+ %----------------------------
+-\newpage\section{\label{sec:blktrace-ug}blktrace User Guide}
++\newpage\section{blktrace User Guide}
++\label{sec:blktrace-ug}
+ 
+ The \emph{blktrace} utility extracts event traces from the kernel (via
+ the relaying through the debug file system). Some background details
+@@ -380,7 +391,8 @@ of the more arcane command line options:
+   \end{enumerate}
+ \end{itemize}
+ 
+-\subsection{\label{sec:blktrace-args}Command line arguments}
++\subsection{Command line arguments}
++\label{sec:blktrace-args}
+ \begin{tabular}{|l|l|l|}\hline
+ Short              & Long                       & Description \\ \hline\hline
+ -A \emph{hex-mask} & --set-mask=\emph{hex-mask} & Set filter mask to \emph{hex-mask} \\ \hline
+@@ -400,7 +412,8 @@ Short              & Long                       & Description \\ \hline\hline
+                    &                              & (One device per line.) \\ \hline
+ \end{tabular}
+ 
+-\subsubsection{\label{sec:filter-mask}Filter Masks}
++\subsubsection{Filter Masks}
++\label{sec:filter-mask}
+ The following masks may be passed with the \emph{-a} command line
+ option, multiple filters may be combined via multiple \emph{-a} command
+ line options.\smallskip
+@@ -419,7 +432,8 @@ write & \emph{write} traces \\ \hline
+ notify & \emph{notify} trace messages \\ \hline
+ \end{tabular}
+ 
+-\subsubsection{\label{sec:request-types}Request types}
++\subsubsection{Request types}
++\label{sec:request-types}
+ blktrace disguingishes between two types of block layer requests,
+ file system and scsi commands. The former are dubbed \emph{fs}
+ requests, the latter \emph{pc} requests. File system requests are
+@@ -432,7 +446,8 @@ commands. blktrace sends the command data block as a payload
+ so that blkparse can decode it.
+ 
+ %----------------------------
+-\newpage\section{\label{sec:blkparse-ug}blkparse User Guide}
++\newpage\section{blkparse User Guide}
++\label{sec:blkparse-ug}
+ 
+ The \emph{blkparse} utility will attempt to combine streams of events
+ for various devices on various CPUs, and produce a formatted output of
+@@ -470,7 +485,8 @@ will help in understanding the command line options presented below.
+ 
+ \end{itemize}
+ 
+-\newpage\subsection{\label{sec:blkparse-args}Command line arguments}
++\newpage\subsection{Command line arguments}
++\label{sec:blkparse-args}
+ \begin{tabular}{|l|l|l|}\hline
+ Short              & Long                       & Description \\ \hline\hline
+ -b \emph{batch}    & --batch={batch}            & Standard input read batching \\ \hline
+@@ -517,7 +533,8 @@ Short              & Long                       & Description \\ \hline\hline
+ \end{tabular}
+ 
+ \newpage
+-\subsection{\label{sec:blkparse-actions}Trace actions}
++\subsection{Trace actions}
++\label{sec:blkparse-actions}
+ 
+ \begin{description}
+   \item[C -- complete] A previously issued request has been completed.
+@@ -583,7 +600,8 @@ Short              & Long                       & Description \\ \hline\hline
+ 
+ \end{description}
+ 
+-\subsection{\label{sec:blkparse-format}Output Description and Formatting}
++\subsection{Output Description and Formatting}
++\label{sec:blkparse-format}
+ 
+ The output from blkparse can be tailored for specific use - in particular,
+ to ease parsing of output, and/or limit output fields to those the user
+@@ -627,7 +645,8 @@ Thus, to specify the command in a 12-character field that is left aligned:
+ \end{verbatim}
+ 
+ \newpage
+-\subsubsection{\label{sec:act-table}Action Table}
++\subsubsection{Action Table}
++\label{sec:act-table}
+ The following table shows the various actions which may be output.
+ 
+ \begin{tabular}{|l|l|}\hline
+@@ -648,12 +667,14 @@ U & Unplug request \\ \hline
+ X & Split \\ \hline
+ \end{tabular}
+ 
+-\subsubsection{\label{sec:act-table}RWBS Description}
++\subsubsection{RWBS Description}
++\label{sec:act-table}
+ This is a small string containing at least one character ('R' for read,
+ 'W' for write, or 'D' for block discard operation), and optionally either
+ a 'B' (for barrier operations) or 'S' (for synchronous operations).
+ 
+-\subsubsection{\label{sec:default-output}Default output}
++\subsubsection{Default output}
++\label{sec:default-output}
+ 
+ The standard \emph{header} (or initial fields displayed) include:
+ 
+@@ -736,7 +757,8 @@ The default output for all event types includes this header.
+ 
+ %------------------------------
+ \newpage
+-\newpage\section*{\label{sec:blktrace-kg}Appendix: blktrace Kernel Guide}
++\newpage\section*{Appendix: blktrace Kernel Guide}
++\label{sec:blktrace-kg}
+ 
+ The blktrace facility provides an efficient event transfer mechanism which
+ supplies block IO layer state transition data via the relay
 -- 
 2.14.2
 
