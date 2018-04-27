@@ -1,94 +1,90 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Date: Fri, 27 Apr 2018 13:07:34 +0000
-Subject: [PATCH 27/31] blkparse: elapsed time: change unit of custom format, no exit on none
-Message-Id: <20180427130738.102806-28-maier@linux.ibm.com>
+Date: Fri, 27 Apr 2018 13:07:32 +0000
+Subject: [PATCH 25/31] btrace: bring back possibility to toggle statistics at end of trace
+Message-Id: <20180427130738.102806-26-maier@linux.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This brings the unit in line with the default output format,
-so it becomes possible to imitate the default with custom output format.
-
-Since only particular trace subtypes provide elapsed time,
-remove the early exit if no elapsed time is available.
-Otherwise the custom format field %u is hardly usable.
-
-$ blkparse -t sdw1
- 65,97   3        4    13.942706121 75872  I   R 2048 + 1 (    5985) [dd]
- 65,97   3        5    13.942709906 75872  D   R 2048 + 1 (    3785) [dd]
- 65,97   2        2    13.943098186     0  C   R 2048 + 1 (  388280) [0]
-
-$ blkparse -t sdw1 \
-  -F C,"%D %2c %8s %5T.%9t %5p %2a %3d %S + %n (%8u) (%P) [%e]\n" \
-  -F D,"%D %2c %8s %5T.%9t %5p %2a %3d %S + %n (%8u) %N (%P) [%C]\n" \
-  -F I,"%D %2c %8s %5T.%9t %5p %2a %3d %S + %n (%8u) %N (%P) [%C]\n"
- 65,97   3        4    13.942706121 75872  I   R 2048 + 1 (    5985) 512 () [dd]
- 65,97   3        5    13.942709906 75872  D   R 2048 + 1 (    3785) 512 () [dd]
- 65,97   2        2    13.943098186     0  C   R 2048 + 1 (  388280) () [0]
-
-But without the elapsed time unit change, the latter would be:
-
- 65,97   3        4    13.942706121 75872  I   R 2048 + 1 (       5) 512 () [dd]
- 65,97   3        5    13.942709906 75872  D   R 2048 + 1 (       3) 512 () [dd]
- 65,97   2        2    13.943098186     0  C   R 2048 + 1 (     388) () [0]
+First, blkparse was internally called in quiet mode by default.
+v0.99.1 commit eea01dfc2e0e ("[PATCH] btrace: don't be quiet by default,
+and fix -h parameter") changed the default.
+v1.0.1 commit bc93336f08a3 ("fix up btrace options & manpage")
+removed the no longer functional -S option.
+Simply surface -q option of blkparse for use in btrace to suppress stats.
+Otherwise it keeps printing stats by default.
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
 ---
- blkparse_fmt.c   | 5 ++---
- doc/blkparse.1   | 3 +--
- doc/blktrace.tex | 2 +-
- 3 files changed, 4 insertions(+), 6 deletions(-)
+ btrace           | 5 +++--
+ doc/blktrace.tex | 2 ++
+ doc/btrace.8     | 6 +++++-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/blkparse_fmt.c b/blkparse_fmt.c
-index 818208808198..1bcd028918b5 100644
---- a/blkparse_fmt.c
-+++ b/blkparse_fmt.c
-@@ -242,10 +242,9 @@ static void print_field(char *act, struct per_cpu_info *pci,
- 		break;
- 	case 'u':
- 		if (elapsed = -1ULL) {
--			fprintf(stderr, "Expecting elapsed value\n");
--			exit(1);
-+			break;
- 		}
--		fprintf(ofp, strcat(format, "llu"), elapsed / 1000);
-+		fprintf(ofp, strcat(format, "llu"), elapsed);
- 		break;
- 	case 'U':
- 		fprintf(ofp, strcat(format, "u"), get_pdu_int(t));
-diff --git a/doc/blkparse.1 b/doc/blkparse.1
-index 69d05cabe333..4ec9c098a49f 100644
---- a/doc/blkparse.1
-+++ b/doc/blkparse.1
-@@ -386,12 +386,11 @@ default width 9 if no width specified
- Time stamp (seconds), decimal integer
+diff --git a/btrace b/btrace
+index 44401823aa61..e260b91ff081 100644
+--- a/btrace
++++ b/btrace
+@@ -8,10 +8,10 @@
  
- .IP \fBu\fR 4
--Elapsed value in microseconds (\fB\-t\fR command line option),
-+Elapsed value in nanoseconds (\fB\-t\fR command line option),
- unsigned long long decimal integer. You can use this with \fB-F,--format\fR
- option and event types I, D, C (for insert, issue, complete) to provide
- intervals Q2I, I2D, D2C respectively [see also btt (1)]. Elapsed values are
- only provided for file system requests (fs) [see REQUEST TYPES in blktrace (8)].
--Otherwise blkparse exits with error once any other event type appears on the input.
+ TRACEOPTS=""
+ PARSEOPTS="-b100000"
+-USAGE="Usage: btrace [-s] [-t] [-h] [-v] [-w N] [-n N] [-b N] [-a <trace>...] [-r <dbg mnt>] <dev>..."
++USAGE="Usage: btrace [-s] [-t] [-h] [-v] [-q] [-w N] [-n N] [-b N] [-a <trace>...] [-r <dbg mnt>] <dev>..."
+ DIRNAME=`dirname $0`
  
- .IP \fBU\fR 4
- Payload, unsigned integer
+-while getopts "a:w:n:b:r:sthv" c
++while getopts "a:w:n:b:r:sthvq" c
+ do
+ 	case $c in
+ 	a)	TRACEOPTS=$TRACEOPTS" -a "$OPTARG" ";;
+@@ -23,6 +23,7 @@ do
+ 	t)	PARSEOPTS=$PARSEOPTS" -t";;
+ 	h)	PARSEOPTS=$PARSEOPTS" -h";;
+ 	v)	PARSEOPTS=$PARSEOPTS" -v";;
++	q)	PARSEOPTS=$PARSEOPTS" -q";;
+ 	\?)	echo $USAGE 1>&2
+ 		exit 2
+ 		;;
 diff --git a/doc/blktrace.tex b/doc/blktrace.tex
-index aad19e2ff38d..408b3dcb6298 100644
+index b5fc769ab891..aad19e2ff38d 100644
 --- a/doc/blktrace.tex
 +++ b/doc/blktrace.tex
-@@ -1100,7 +1100,7 @@ the \\
- \emph{t} & Time stamp (nanoseconds), long unsigned decimal integer, \\
-          & default width 9 if no width specified \\ \hline
- \emph{T} & Time stamp (seconds), decimal integer \\ \hline
--\emph{u} & Elapsed value in microseconds (\emph{-t} command line option), \\
-+\emph{u} & Elapsed value in nanoseconds (\emph{-t} command line option), \\
-          & unsigned long long decimal integer \\ \hline
- \emph{U} & Payload, unsigned integer \\ \hline
- \emph{z} & Calendar time of time stamp, string with format hh:mm:ss.uuuuuu \\
+@@ -222,6 +222,8 @@ default\footnote{blktrace v0.99.1 eea01dfc2e0e (``[PATCH] btrace:
+   don't be quiet by default, and fix -h parameter'')} and the
+ \emph{-S} option does not exist any more\footnote{blktrace v1.0.1
+   bc93336f08a3 (``fix up btrace options \& manpage'')}.
++An inverse quiet option \emph{-q} allows to toggle off statistics\footnote{
++  blktrace newer than 1.2.0}.
+ 
+ \subsection{blktrace -- SCSI commands}
+ \label{sec:pc-blktrace}
+diff --git a/doc/btrace.8 b/doc/btrace.8
+index dc08e3608f1d..833cf9bf3596 100644
+--- a/doc/btrace.8
++++ b/doc/btrace.8
+@@ -6,7 +6,7 @@ btrace \- perform live tracing for block devices
+ 
+ 
+ .SH SYNOPSIS
+-.B btrace [\-s] [\-t] [\-h] [\-v] [\-w \fIN\fN] [\-n \fIN\fR] [\-b \fIN\fR] [\-r \fI<dbg mnt>\fR] [\-a <\fItrace\fR>...] <\fIdev\fR>...
++.B btrace [\-s] [\-t] [\-h] [\-v] [\-q] [\-w \fIN\fN] [\-n \fIN\fR] [\-b \fIN\fR] [\-r \fI<dbg mnt>\fR] [\-a <\fItrace\fR>...] <\fIdev\fR>...
+ .br
+ 
+ 
+@@ -35,6 +35,10 @@ Hash processes by name, not PID (see \fIblkparse\fR (1)).
+ .B \-v
+ Be more verbose for marginal errors (see \fIblkparse\fR (1)).
+ 
++.HP 4
++.B \-q
++Do not print any statistics at end of trace (see \fIblkparse\fR (1)).
++
+ .HP 4
+ .B \-w \fIN\fR
+ Sets run time to the number of seconds specified (see \fIblktrace\fR (8)).
 -- 
 2.14.2
 
