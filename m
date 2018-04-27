@@ -1,38 +1,34 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Date: Fri, 27 Apr 2018 13:07:28 +0000
-Subject: [PATCH 21/31] btt: fix --do-active to not perform --q2d-latencies|-z
-Message-Id: <20180427130738.102806-22-maier@linux.ibm.com>
+Date: Fri, 27 Apr 2018 13:07:33 +0000
+Subject: [PATCH 26/31] blkparse: treat sector as %llu for custom format like elsewhere in code
+Message-Id: <20180427130738.102806-27-maier@linux.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-With flag NULL, val is returned from getopt_long().
-Since long option --do-active is short option -Z, val should be capital 'Z'
-so the switch construct matches case 'Z' as for the short option.
-Otherwise --do-active would end up the same as -z which is --q2d-latencies.
-Fixes btt v2.09 in blktrace v1.0.2.
+blk_io_trace.sector is __u64.
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 2e37a10ee8b4 ("btt: Added in I/O activity per device and system-wide")
 ---
- btt/args.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ blkparse_fmt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/btt/args.c b/btt/args.c
-index 5c5078ab2c81..4a3ab6fe1044 100644
---- a/btt/args.c
-+++ b/btt/args.c
-@@ -191,7 +191,7 @@ static struct option l_opts[] = {
- 		.name = "do-active",
- 		.has_arg = no_argument,
- 		.flag = NULL,
--		.val = 'z'
-+		.val = 'Z'
- 	},
- 	{
- 		.name = "easy-parse-avgs",
+diff --git a/blkparse_fmt.c b/blkparse_fmt.c
+index c110dad10b0b..818208808198 100644
+--- a/blkparse_fmt.c
++++ b/blkparse_fmt.c
+@@ -230,7 +230,8 @@ static void print_field(char *act, struct per_cpu_info *pci,
+ 		fprintf(ofp, strcat(format, "ld"), t->sequence);
+ 		break;
+ 	case 'S':
+-		fprintf(ofp, strcat(format, "lu"), t->sector);
++		fprintf(ofp, strcat(format, "llu"),
++			(unsigned long long)t->sector);
+ 		break;
+ 	case 't':
+ 		sprintf(format, "%%0%dlu", has_w ? width : 9);
 -- 
 2.14.2
 
