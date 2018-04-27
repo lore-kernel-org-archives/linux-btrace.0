@@ -1,149 +1,218 @@
-From: Arnaldo Carvalho de Melo <acme@kernel.org>
-Date: Fri, 27 Apr 2018 19:40:53 +0000
-Subject: Re: [PATCH 18/31] blktrace: doc: alternatives to blktrace traditional tooling
-Message-Id: <20180427194053.GA17295@kernel.org>
+From: Steffen Maier <maier@linux.ibm.com>
+Date: Fri, 27 Apr 2018 13:07:09 +0000
+Subject: [PATCH 02/31] btt: doc: small fixes
+Message-Id: <20180427130738.102806-3-maier@linux.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20180427130738.102806-19-maier@linux.ibm.com>
-In-Reply-To: <20180427130738.102806-19-maier@linux.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Em Fri, Apr 27, 2018 at 03:07:25PM +0200, Steffen Maier escreveu:
-> Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-> Cc: Arnaldo Carvalho de Melo <acme@kernel.org>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: Steven Rostedt <rostedt@goodmis.org>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: Peter Zijlstra <peterz@infradead.org>
-> Cc: Christoph Hellwig <hch@lst.de>
+device list argument to -D|--devices separated by semicolon not colon
+Fixes: 512566d40074 ("BTT: Added user guide")
 
-Interesting, I'd suggest adding 'perf trace' to that mix, that is a strace like
-perf tool that can mix and match syscalls formatted strace-like + other events,
-such as tracepoints, with the record perf.data, process it later, or do it
-live, like strace, but with a vastly lower overhead and not just for a workload
-started from it or a pid, but supporting the other targets perf supports:
-system wide, CPU wide, cgroups, etc.
+incoming requests either go through Q2G+G2I or Q2M,
+rather than                         Q2G+Q2I or Q2M,
+otherwise Q2G would be counted twice for the sum of Q2G+Q2I=Q2G+(Q2G+G2I)
 
-For instance, to see the block lifetime of a workload that
-calls fsync, intermixed to the strace like output of the 'read' and 'write'
-syscalls:
+typo: ov => of
+typo: Aerage => Average
 
-[root@jouet bpf]# perf trace -e read,write,block:* dd if=/etc/passwd of=bla conv=fsync
-     0.054 ( 0.004 ms): dd/24556 read(fd: 3, buf: 0x7fff83d09318, count: 832                           ) = 832
-     0.521 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.524 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.528 (         ): block:block_touch_buffer:253,2 sector92603 size@96
-     0.534 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.550 ( 0.007 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 512
-     0.559 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 512      ) ...
-     0.562 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.574 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.578 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.559 ( 0.023 ms): dd/24556  ... [continued]: write()) = 512
-     0.584 ( 0.003 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 512
-     0.589 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 512      ) ...
-     0.592 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.594 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.589 ( 0.007 ms): dd/24556  ... [continued]: write()) = 512
-     0.598 ( 0.002 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 512
-     0.603 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 512      ) ...
-     0.606 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.608 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.603 ( 0.008 ms): dd/24556  ... [continued]: write()) = 512
-     0.613 ( 0.002 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 512
-     0.617 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 512      ) ...
-     0.621 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.623 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.617 ( 0.009 ms): dd/24556  ... [continued]: write()) = 512
-     0.629 ( 0.003 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 512
-     0.634 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 512      ) ...
-     0.637 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.639 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.634 ( 0.008 ms): dd/24556  ... [continued]: write()) = 512
-     0.644 ( 0.002 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 512
-     0.649 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 512      ) ...
-     0.652 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.654 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.649 ( 0.008 ms): dd/24556  ... [continued]: write()) = 512
-     0.659 ( 0.003 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 512
-     0.664 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 512      ) ...
-     0.667 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.669 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.664 ( 0.007 ms): dd/24556  ... [continued]: write()) = 512
-     0.674 ( 0.002 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 298
-     0.679 ( 0.005 ms): dd/24556 read(buf: 0x55c3ca055000, count: 512                                  ) = 0
-     0.686 (         ): dd/24556 write(fd: 1</home/acme/bpf/bla>, buf: 0x55c3ca057000, count: 298      ) ...
-     0.689 (         ): block:block_dirty_buffer:253,2 sector446744073709486080 size@96
-     0.691 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.686 ( 0.008 ms): dd/24556  ... [continued]: write()) = 298
-     0.716 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.719 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.729 (         ): block:block_touch_buffer:253,2 sector84 size@96
-     0.735 (         ): block:block_bio_queue:253,2 WS 63627608 + 8 [dd]
-     0.740 (         ): block:block_bio_remap:8,0 WS 79620440 + 8 <- (253,2) 63627608
-     0.743 (         ): block:block_bio_remap:8,0 WS 196985176 + 8 <- (8,6) 79620440
-     0.746 (         ): block:block_bio_queue:8,0 WS 196985176 + 8 [dd]
-     0.756 (         ): block:block_getrq:8,0 WS 196985176 + 8 [dd]
-     0.759 (         ): block:block_plug:[dd]
-     0.764 (         ): block:block_rq_insert:8,0 WS 4096 () 196985176 + 8 [dd]
-     0.768 (         ): block:block_unplug:[dd] 1
-     0.771 (         ): block:block_rq_issue:8,0 WS 4096 () 196985176 + 8 [dd]
-     8.864 ( 0.006 ms): dd/24556 read(buf: 0x55c3ca057910, count: 4096                                 ) = 2997
-     8.891 ( 0.003 ms): dd/24556 read(buf: 0x55c3ca057910, count: 4096                                 ) = 0
-7+1 records in
-7+1 records out
-3882 bytes (3.9 kB, 3.8 KiB) copied, 0.00845109 s, 459 kB/s
-     8.985 ( 0.008 ms): dd/24556 write(fd: 2</dev/pts/10>, buf: 0x7fff83d07760, count: 31              ) = 31
-     9.013 ( 0.005 ms): dd/24556 write(fd: 2</dev/pts/10>, buf: 0x7fff83d06f90, count: 59              ) = 59
-     9.021 ( 0.004 ms): dd/24556 write(fd: 2</dev/pts/10>, buf: 0x7f032f1946e3, count: 1               ) = 1
-[root@jouet bpf]#
+file_mbps_fp.dat provides data for mebibytes not millibits per second
 
-If one wants instead to concentrate on the callchains leading to the block_rq_issue:
+consistent upper case usage for Q2d, D2c
 
-[root@jouet bpf]# perf trace --no-syscalls -e block:*rq_issue/call-graph=dwarf,max-stack/ dd if=/etc/passwd of=bla conv=fsync
-7+1 records in
-7+1 records out
-3882 bytes (3.9 kB, 3.8 KiB) copied, 0.010108 s, 384 kB/s
-no symbols found in /usr/bin/dd, maybe install a debug package?
-     0.000 block:block_rq_issue:8,0 WS 4096 () 197218728 + 8 [dd]
-                                       blk_peek_request ([kernel.kallsyms])
-                                       fsync (/usr/lib64/libc-2.26.so)
-                                       [0xffffaa100818045d] (/usr/bin/dd)
-                                       __libc_start_main (/usr/lib64/libc-2.26.so)
-                                       [0xffffaa1008180d99] (/usr/bin/dd)
-[root@jouet bpf]# 
+--iostat|-I producing results "from" iostat sounded as if we would really
+run the iostat tool in parallel, but we only emulate the same output from
+just our own blktrace data "as if" we would have been running iostat in
+parallel
 
-installing the debuginfo for the coreutils package, where dd lives, would give more info, etc.
+--per-io-dump|-p records are separated by blank lines, not blank spaces
 
-Since this is an ext4 filesystem, lets add its *write* routines to the mix:
+describe freq argument to --periodic-latencies|-L as in man page
 
-[root@jouet bpf]# perf trace --no-syscalls -e ext4:*write*/call-graph=dwarf/,block:*rq_issue/call-graph=dwarf/ dd if=/etc/passwd of=bla conv=fsync |& tail -18
-     0.215 ext4:ext4_da_write_pages:dev 253,2 ino 8437 first_page 1 nr_to_write 9223372036854775806 sync_mode 1
-                                       ext4_writepages ([kernel.kallsyms])
-                                       fsync (/usr/lib64/libc-2.26.so)
-                                       [0xffffa9f16310445d] (/usr/bin/dd)
-                                       __libc_start_main (/usr/lib64/libc-2.26.so)
-                                       [0xffffa9f163104d99] (/usr/bin/dd)
-     0.231 block:block_rq_issue:8,0 WS 4096 () 197703696 + 8 [dd]
-                                       blk_peek_request ([kernel.kallsyms])
-                                       fsync (/usr/lib64/libc-2.26.so)
-                                       [0xffffa9f16310445d] (/usr/bin/dd)
-                                       __libc_start_main (/usr/lib64/libc-2.26.so)
-                                       [0xffffa9f163104d99] (/usr/bin/dd)
-     0.249 ext4:ext4_writepages_result:dev 253,2 ino 8437 ret 0 pages_written 1 pages_skipped 0 sync_mode 1 writeback_index 1
-                                       ext4_writepages ([kernel.kallsyms])
-                                       fsync (/usr/lib64/libc-2.26.so)
-                                       [0xffffa9f16310445d] (/usr/bin/dd)
-                                       __libc_start_main (/usr/lib64/libc-2.26.so)
-                                       [0xffffa9f163104d99] (/usr/bin/dd)
-[root@jouet bpf]#
+--dev-maps|-M seems no longer under construction so describe what the code
+supports since commit 63eba14776db ("[PATCH] Add Alan's btt tool")
 
-And if we replace that --no-syscalls with *sync, we'd get as the last line this:
+typographical double quotes in regular text (as opposed to verbatim)
 
-     0.752 ( 7.651 ms): dd/24974  ... [continued]: fsync()) = 0
+typo: performend => performed
 
-:-)
+--time-start/-t and --time-end/T: for easier readability use same
+consistent phrasing with the case of unspecified option in parentheses
 
-- Arnaldo
+typo: exentsion => extension
+
+copy&paste: short option -Z is long option -do-active, not --q2d-latencies
+Fixes: 2e37a10ee8b4 ("btt: Added in I/O activity per device and system-wide")
+
+man page: --per-io-dump|-p seems to also show get request traces ('G')
+according to code and corresponding example in btt.tex
+
+Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+---
+ btt/doc/btt.tex | 43 ++++++++++++++++++++++++++++---------------
+ doc/btt.1       |  2 +-
+ 2 files changed, 29 insertions(+), 16 deletions(-)
+
+diff --git a/btt/doc/btt.tex b/btt/doc/btt.tex
+index dbd1fde612d4..92507f3071ac 100644
+--- a/btt/doc/btt.tex
++++ b/btt/doc/btt.tex
+@@ -196,7 +196,7 @@ Q2C    0.000207665   0.125405263   1.830917198     2262311
+ IO\footnote{It should be noted that incoming requests either go through:
+ 
+ \begin{enumerate}
+-  \item Q2G + Q2I
++  \item Q2G + G2I
+ 
+   or
+ 
+@@ -354,8 +354,8 @@ IO\footnote{It should be noted that incoming requests either go through:
+ 
+   \begin{description}
+     \item[\# Live] Number of periods of ``liveness.''
+-    \item[Avg. Act] Average length of each period ov ``liveness.''
+-    \item[Avg. !Act] Aerage length of each non-active period.
++    \item[Avg. Act] Average length of each period of ``liveness.''
++    \item[Avg. !Act] Average length of each non-active period.
+     \item[\% Live] Percent of total time spent with the driver/device active.
+   \end{description}
+ 
+@@ -475,7 +475,7 @@ pdflush       0.000000790 0.000006752 0.247231307  179791
+   see section~\ref{sec:dhist}.
+ 
+   \item[\emph{file}\_mbps\_fp.dat] Provides a set of data for
+-  mb-per-second values each second
++  MiB-per-second values each second
+   - for more information see section~\ref{sec:rstat}.
+ 
+   \item[\emph{file}\_iops\_fp.dat] Provides a set of data for
+@@ -502,7 +502,7 @@ pdflush       0.000000790 0.000006752 0.247231307  179791
+     than grepping through a blkparse output file for example). The
+     details on this file is included in section~\ref{sec:per-io}.
+ 
+-    \item[iostat] Latency information -- both Q2d, D2c and Q2C --
++    \item[iostat] Latency information -- both Q2D, D2C and Q2C --
+     on a per-IO basis can be generated. These are described in
+     section~\ref{sec:lat}.
+ 
+@@ -681,7 +681,7 @@ figure~\ref{fig:rstats}).
+ 
+ \newpage\section{iostat Data File}
+ \label{sec:iostat}
+-  \texttt{btt} attempts to produce the results from running an
++  \texttt{btt} attempts to produce the results as if running an
+   \texttt{iostat -x} command in parallel with the system as it is being
+   traced. The fields (columns) generated by the \texttt{--iostat} or
+   \texttt{-I} option can be seen from the following output snippet --
+@@ -720,7 +720,7 @@ Device:       rrqm/s   wrqm/s     r/s     w/s    rsec/s    wsec/s
+ 
+   The \emph{--per-io-dump} or \emph{-p} option triggers this behavior,
+   and will produce a file containing streams of IOs (separated by blank
+-  spaces). As an example, here is a snippet of 4 IOs that were merged
++  lines). As an example, here is a snippet of 4 IOs that were merged
+   together, you will note there are 3 merged IOs, and 1 inserted in the
+   stream. The issue and completion traces are replicated per IO.
+ 
+@@ -975,8 +975,8 @@ Usage: btt 2.09
+   the traces parsed. With this option, one can reduce the analysis to
+   one or more devices provided in the string passed to this option. The
+   device identifiers are the major and minor number of each device, and
+-  each device identifier is separated by a colon (:). A valid specifier
+-  for devices 8,0 and 8,8 would then be: \texttt{"8,0:8,8"}.
++  each device identifier is separated by a semicolon (;). A valid specifier
++  for devices 8,0 and 8,8 would then be: \texttt{"8,0;8,8"}.
+ 
+ \subsection{\texttt{--exes}/\texttt{-e}}
+ \label{sec:o-e}
+@@ -1019,6 +1019,8 @@ Usage: btt 2.09
+   When given a value greater than 0, this option will create two data
+   files (q2c \& d2c) per device containing a periodic timestamp \&
+   average latency over that period.
++  The frequency argument value is a floating point value expressing seconds
++  for the period length.
+ 
+ \subsection{\texttt{--seeks-per-second}\texttt{-m}}
+ \label{sec:o-m}
+@@ -1036,7 +1038,18 @@ Usage: btt 2.09
+ \subsection{\texttt{--dev-maps}/\texttt{-M}}
+ \label{sec:o-M}
+ 
+-  Internal option, still under construction.
++  Takes a previously created text file with one device mapping per line.
++  Each line contains a word string representing the device name,
++  a space character as field separator, and in the second field the major and
++  minor device number in comma separated format.
++  Lines which contain the substring ``Device'' are ignored.
++  E.g.\
++\begin{verbatim}
++Devices mapping names from major,minor device IDs
++/dev/sda 8,0
++/dev/sdb 8,16
++\end{verbatim}
++  This allows for better output of device names.
+ 
+ \subsection{\texttt{--output-file}/\texttt{-o}}
+ \label{sec:o-o}
+@@ -1055,7 +1068,7 @@ Usage: btt 2.09
+ \label{sec:o-P}
+ 
+ The \texttt{-P} option will generate a file that contains a list of all IO
+-"sequences" - showing only the Q, D \& C operation times. The D \& C
++``sequences'' - showing only the Q, D \& C operation times. The D \& C
+ time values are separated from the Q time values with a vertical bar.
+ 
+ \subsection{\texttt{--q2c-latencies}/\texttt{-q}}
+@@ -1070,7 +1083,7 @@ time values are separated from the Q time values with a vertical bar.
+   This option tells \texttt{btt} to generate a data file (using the given
+   name as a base) which contains: A time stamp in the first column,
+   and then the number of \emph{active} requests issued to the device
+-  driver. (The value is incremented when an \emph{issue} is performend,
++  driver. (The value is incremented when an \emph{issue} is performed,
+   and decremented when a \emph{complete} is performed.
+ 
+ \subsection{\texttt{--no-remaps}/\texttt{-r}}
+@@ -1105,7 +1118,7 @@ time values are separated from the Q time values with a vertical bar.
+   These options allow one to dictate to \texttt{btt} when to start and stop
+   parsing of trace data in terms of seconds since the start of the run. The
+   trace chosen will be between the start time (or 0.0 if not
+-  specified) and end time (or the end of the run) specified.
++  specified) and end time (or the end of the run if not specified).
+ 
+ \subsection{\texttt{--unplug-hist}/\texttt{-u}}
+ \label{sec:o-u}
+@@ -1168,7 +1181,7 @@ Sending stats data to bttX.avg
+   \emph{Some} of the data produced by default can also be shipped
+   simultaneously to another file in an easy to parse form. When
+   the \texttt{-o} option is selected (thus producing a file with a
+-  \texttt{.avg} exentsion), \emph{and} the \texttt{-X} flag is present,
++  \texttt{.avg} extension), \emph{and} the \texttt{-X} flag is present,
+   then \texttt{btt} will generate this file.
+ 
+   The format is space-delimited values starting with a 3-character
+@@ -1231,7 +1244,7 @@ ARQ 8,16 12.938165321
+   This option instructs \texttt{btt} to generate the Q2D latency file
+   discussed in section~\ref{sec:lat-q2d}.
+ 
+-\subsection{\texttt{--q2d-latencies}/\texttt{-Z}}
++\subsection{\texttt{--do-active}/\texttt{-Z}}
+ \label{sec:o-Z}
+ 
+   This option generates per-device (and total system) data files. Each
+diff --git a/doc/btt.1 b/doc/btt.1
+index 28cf912d2ebb..97296b95c73b 100644
+--- a/doc/btt.1
++++ b/doc/btt.1
+@@ -234,7 +234,7 @@ Specifies the output file name.
+ .B \-\-per\-io\-dump=<\fIoutput name\fR>
+ .RS 4
+ The \-p option will generate a file that contains a list of all IO
+-"sequences" \- showing the parts of each IO (Q, A, I/M, D, & C).
++"sequences" \- showing the parts of each IO (Q, A, G, I/M, D, & C).
+ .RE
+ 
+ .B \-P <\fIoutput name\fR>
+-- 
+2.14.2
+
