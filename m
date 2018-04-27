@@ -1,303 +1,255 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Date: Fri, 27 Apr 2018 13:07:24 +0000
-Subject: [PATCH 17/31] blktrace: doc: assorted fixes and updates
-Message-Id: <20180427130738.102806-18-maier@linux.ibm.com>
+Date: Fri, 27 Apr 2018 13:07:38 +0000
+Subject: [PATCH 31/31] blkparse: new option to customize format of default output header only
+Message-Id: <20180427130738.102806-32-maier@linux.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-blktrace.git history regarding removed kernel patches
+Allows the user to only modify the default output header without the
+need to specify one individual custom format (-F) for each action.
+One common custom format (-f) is hardly an option either because
+it would not have suitable action-specific output per event type.
 
-typo: you kernel => your kernel
+Actually use the previously unused already existing define for the
+default header format string as default. Optionally replace it if
+the user specifies new option with argument format string.
 
-linux.git history regarding kernel config for blktrace
+Factor out the actual processing of custom format strings using a
+function argument for the latter.
 
-add debugfs mount alternative: systemd automatism
+It's either default processing or custom processing.
 
-blktrace.git history regarding statistics option of btrace
+Default processing now supports the option of replacing the default
+header. The code path simply re-uses custom processing for the header
+in either case.
 
-typo: parentheses plural
-
-typo: you test cases => your test cases
-typo: disguingishes => distinguishes
-
-API:
-* header file name changes
-* fix duplicate request_queue argument
-* BLK_TA_QUEUE only for bio; add BLK_TA_INSERT for rq function
-* add BLK_TA_BOUNCE and BLK_TA_COMPLETE to bio function
-* message size changes
-
-Roughly explain the internal trace record format and variants
-to help the reader understand what functionality can be expected
-such as wall clock calendar timestamps.
+Custom processing (-F, -f) does not change and ignores the new option.
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
 ---
- doc/blktrace.tex | 169 ++++++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 150 insertions(+), 19 deletions(-)
+ blkparse.c            | 13 ++++++++++++-
+ blkparse_fmt.c        | 27 ++++++++++++++++++++++-----
+ blktrace.h            |  1 +
+ doc/blkparse.1        | 18 ++++++++++++++++++
+ doc/blktrace.tex      |  1 +
+ doc/verify_blkparse.1 |  2 +-
+ 6 files changed, 55 insertions(+), 7 deletions(-)
 
+diff --git a/blkparse.c b/blkparse.c
+index 8049bb55bb0e..b24a9f946e9e 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -147,6 +147,12 @@ static struct option l_opts[] = {
+ 		.flag = NULL,
+ 		.val = 'F'
+ 	},
++	{
++		.name = "header",
++		.has_arg = required_argument,
++		.flag = NULL,
++		.val = 'H'
++	},
+ 	{
+ 		.name = "hash-by-name",
+ 		.has_arg = no_argument,
+@@ -2727,7 +2733,7 @@ static int is_pipe(const char *str)
+ 	return 0;
+ }
+ 
+-#define S_OPTS  "a:A:b:D:d:f:F:hi:o:Oqstw:vVM"
++#define S_OPTS  "a:A:b:D:d:f:F:H:hi:o:Oqstw:vVM"
+ static char usage_str[] =    "\n\n" \
+ 	"-i <file>           | --input=<file>\n" \
+ 	"[ -a <action field> | --act-mask=<action field> ]\n" \
+@@ -2737,6 +2743,7 @@ static char usage_str[] =    "\n\n" \
+ 	"[ -D <dir>          | --input-directory=<dir> ]\n" \
+ 	"[ -f <format>       | --format=<format> ]\n" \
+ 	"[ -F <spec>         | --format-spec=<spec> ]\n" \
++	"[ -H <format>       | --header=<format> ]\n" \
+ 	"[ -h                | --hash-by-name ]\n" \
+ 	"[ -o <file>         | --output=<file> ]\n" \
+ 	"[ -O                | --no-text-output ]\n" \
+@@ -2755,6 +2762,7 @@ static char usage_str[] =    "\n\n" \
+ 	"\t-f Output format. Customize the output format. The format field\n" \
+ 	"\t   identifies can be found in the documentation\n" \
+ 	"\t-F Format specification. Can be found in the documentation\n" \
++	"\t-H Output header format. Customize the output header format.\n" \
+ 	"\t-h Hash processes by name, not pid\n" \
+ 	"\t-i Input file containing trace data, or '-' for stdin\n" \
+ 	"\t-o Output file. If not given, output is stdout\n" \
+@@ -2844,6 +2852,9 @@ int main(int argc, char *argv[])
+ 			if (add_format_spec(optarg) != 0)
+ 				return 1;
+ 			break;
++		case 'H':
++			set_default_header_format(optarg);
++			break;
+ 		case 'h':
+ 			ppi_hash_by_pid = 0;
+ 			break;
+diff --git a/blkparse_fmt.c b/blkparse_fmt.c
+index 45ffe04d71c1..5ddc621e2938 100644
+--- a/blkparse_fmt.c
++++ b/blkparse_fmt.c
+@@ -15,6 +15,8 @@
+ 
+ #define HEADER		"%D %2c %8s %5T.%9t %5p %2a %3d "
+ 
++static char *override_header = HEADER;
++
+ static char *override_format[256];
+ 
+ static inline int valid_spec(int spec)
+@@ -22,6 +24,11 @@ static inline int valid_spec(int spec)
+ 	return strchr(VALID_SPECS, spec) != NULL;
+ }
+ 
++void set_default_header_format(char *option)
++{
++	override_header = option;
++}
++
+ void set_all_format_specs(char *option)
+ {
+ 	char *p;
+@@ -310,6 +317,10 @@ static char *parse_field(char *act, struct per_cpu_info *pci,
+ 	return p;
+ }
+ 
++static void process_custom(char *act, struct per_cpu_info *pci,
++			   struct blk_io_trace *t, unsigned long long elapsed,
++			   int pdu_len, unsigned char *pdu_buf, char *p);
++
+ static void process_default(char *act, struct per_cpu_info *pci,
+ 			    struct blk_io_trace *t, unsigned long long elapsed,
+ 			    int pdu_len, unsigned char *pdu_buf)
+@@ -332,10 +343,7 @@ static void process_default(char *act, struct per_cpu_info *pci,
+ 	/*
+ 	 * The header is always the same
+ 	 */
+-	fprintf(ofp, "%3d,%-3d %2d %8d %5d.%09lu %5u %2s %3s ",
+-		MAJOR(t->device), MINOR(t->device), pci->cpu, t->sequence,
+-		(int) SECONDS(t->time), (unsigned long) NANO_SECONDS(t->time),
+-		t->pid, act, rwbs);
++	process_custom(act, pci, t, elapsed, pdu_len, pdu_buf, override_header);
+ 
+ 	name = find_process_name(t->pid);
+ 
+@@ -449,7 +457,6 @@ void process_fmt(char *act, struct per_cpu_info *pci, struct blk_io_trace *t,
+ 		 unsigned long long elapsed, int pdu_len,
+ 		 unsigned char *pdu_buf)
+ {
+-	struct blk_io_trace_remap r = { .device_from = 0, };
+ 	char *p = override_format[(int) *act];
+ 
+ 	if (!p) {
+@@ -457,6 +464,16 @@ void process_fmt(char *act, struct per_cpu_info *pci, struct blk_io_trace *t,
+ 		return;
+ 	}
+ 
++	/* full custom event: header and action-specific */
++	process_custom(act, pci, t, elapsed, pdu_len, pdu_buf, p);
++}
++
++static void process_custom(char *act, struct per_cpu_info *pci,
++			   struct blk_io_trace *t, unsigned long long elapsed,
++			   int pdu_len, unsigned char *pdu_buf, char *p)
++{
++	struct blk_io_trace_remap r = { .device_from = 0, };
++
+ 	/*
+ 	 * For remaps we have to modify the device using the remap structure
+ 	 * passed up.
+diff --git a/blktrace.h b/blktrace.h
+index 944fc084cc09..7af9ba79e5f8 100644
+--- a/blktrace.h
++++ b/blktrace.h
+@@ -140,6 +140,7 @@ static inline int check_data_endianness(u32 magic)
+ 	return 1;
+ }
+ 
++extern void set_default_header_format(char *);
+ extern void set_all_format_specs(char *);
+ extern int add_format_spec(char *);
+ extern void process_fmt(char *, struct per_cpu_info *, struct blk_io_trace *,
+diff --git a/doc/blkparse.1 b/doc/blkparse.1
+index dc1d0b393714..4a392434498d 100644
+--- a/doc/blkparse.1
++++ b/doc/blkparse.1
+@@ -21,6 +21,8 @@ blkparse \- produce formatted output of event streams of block devices
+ .IR typ , fmt ]
+ .RB [ \-f
+ .IR fmt ]
++.RB [ \-H
++.IR fmt ]
+ .RB [ \-o
+ .IR file ]
+ .RB [ \-d
+@@ -72,6 +74,7 @@ the \fB\-o\fR option to blktrace), you must specify the same input name via the
+ .TP
+ \-
+ The format of the output data can be controlled via the \fB\-f\fR or \fB\-F\fR
++or \fB\-H\fR
+ options \-\- see OUTPUT DESCRIPTION AND FORMATTING for details.
+ 
+ .PP
+@@ -143,6 +146,17 @@ action specifiers described in TRACE ACTIONS.
+ The \-f form specifies a common format for all event types.
+ .RE
+ 
++\-H \fIfmt\fR
++.br
++\-\-header=\fIfmt\fR
++.RS
++While \fB-F\fR or \fB-f\fR set the full output with header and
++action-specific part, this option here replaces only the DEFAULT
++OUTPUT HEADER format but you still get the DEFAULT OUTPUT PER ACTION
++appended. Only applies if neither \fB-F\fR nor \fB-f\fR is used.
++(See OUTPUT DESCRIPTION AND FORMATTING for details.)
++.RE
++
+ \-M
+ .br
+ \-\-no-msgs
+@@ -660,6 +674,10 @@ The custom format syntax from section OUTPUT DESCRIPTION AND FORMATTING
+ does not support conditional output. Thus, the example output differs
+ by printing all information instead of skipping some based on conditions.
+ 
++To just replace the default output header with e.g. leading calendar time:
++
++    % blkparse sda sdb -H "%z %D %2c %8s %5p %2a %3d "
++
+ 
+ .SH AUTHORS
+ \fIblkparse\fR was written by Jens Axboe, Alan D. Brunelle and Nathan Scott.  This
 diff --git a/doc/blktrace.tex b/doc/blktrace.tex
-index 7acf082346d3..6307b9343c44 100644
+index 008767e2010b..685353715417 100644
 --- a/doc/blktrace.tex
 +++ b/doc/blktrace.tex
-@@ -79,11 +79,14 @@ As noted above, the kernel patch along with the blktrace and blkparse utilities
- \subsection{Patching and configuring the Linux kernel}
- \label{sec:patching}
+@@ -966,6 +966,7 @@ Short              & Long                       & Description \\ \hline\hline
+ 		   &                            & action specifiers in section~\ref{sec:act-table} \\
+                    &                            & \\
+ 		   &                            & The -f form specifies a common format for all events \\ \hline
++-H \emph{fmt}      & -{}-header=\emph{fmt}      & Without -F and -f, replaces default output header (sec~\ref{sec:default-output-header}) \\ \hline
  
--A patch for a \emph{specific Linux kernel} is provided in bt/kernel (where
-+A patch for a \emph{specific Linux kernel} used to be\footnote{until
-+  blktrace v0.99.2 commit e33da1d51a82 (``[PATCH] Fixup relayfs
-+  references and kill kernel patch'')}
-+provided in bt/kernel (where
- \emph{bt} is the name of the directory from the above git sequence). The
- detailed actual patching instructions for a Linux kernel is outside the
- scope of this document, but the following may be used as a sample template.
--Note that you may skip this step, if you kernel is at least 2.6.17-rc1.
-+Note that you may skip this step, if your kernel is at least 2.6.17-rc1.
+ -h                 & -{}-hash-by-name             & Hash processes by name, not by PID\\ \hline
  
- As an example, bt/kernel contains blk-trace-2.6.14-rc1-git-G2, download
- linux-2.6.13.tar.bz2 and patch-2.6.14-rc1.bz2
-@@ -109,6 +112,15 @@ system -- again, outside the scope of this document -- and then enable
- and navigate through \emph{Device Drivers} and \emph{Block devices}
- and then down to \emph{Support for tracing block io actions} and hit Y.
+diff --git a/doc/verify_blkparse.1 b/doc/verify_blkparse.1
+index 8ea886ef83a3..d54ffb739588 100644
+--- a/doc/verify_blkparse.1
++++ b/doc/verify_blkparse.1
+@@ -21,7 +21,7 @@ including timestamp. The sscanf format string for parsing input lines
+ is "%3d,%3d %5d %8d %lf". This corresponds to blkparse's default
+ output header prefix "%D %2c %8s %5T.%9t", see section DEFAULT OUTPUT
+ HEADER in blkparse(1). Take care when using custom output format with
+-blkparse options \fB-F\fR or \fB-f\fR.
++blkparse options \fB-F\fR or \fB-f\fR or \fB-H\fR.
  
-+In more recent kernels\footnote{Linux v2.6.30 2db270a80b8f
-+  (``tracing/blktrace: move the tracing file to kernel/trace'')},
-+navigate through \emph{Kernel hacking}, hit Y for \emph{Tracers} and
-+then enter its submenu, then navigate down to \emph{Support for
-+  tracing block IO actions} and hit Y. To be selectable, the following
-+dependencies need to be met: \emph{Enable the block layer} as well as
-+\emph{File systems}, \emph{Pseudo filesystems}, \emph{sysfs file
-+  system support}.
-+
- Install the new kernel (and modules\ldots) and reboot. 
+ On reading an unrecognized input line, the tool exits early.
  
- \subsection{Mounting the debugfs file system}
-@@ -130,6 +142,8 @@ To do this one may do either of the following:
- \begin{verbatim}
- debug /sys/kernel/debug debugfs default 0 0
- \end{verbatim}
-+
-+\item Have systemd automatically mount debugfs by default.
- \end{enumerate}
- 
- \subsection{Build the tools}
-@@ -200,9 +214,14 @@ tracing of devices. The above could also be accomplished by issuing:
- % btrace /dev/sda
- \end{verbatim}
- 
--By default, \emph{btrace} runs the trace in quiet mode so it will not
--include statistics when you break the run. Add the \emph{-S} option to
-+By default, \emph{btrace} did run blkparse in quiet mode so it did not
-+include statistics when you break the run. You could add the \emph{-S} option to
- get that dumped as well.
-+Meanwhile, \emph{btrace} includes the statistics by
-+default\footnote{blktrace v0.99.1 eea01dfc2e0e (``[PATCH] btrace:
-+  don't be quiet by default, and fix -h parameter'')} and the
-+\emph{-S} option does not exist any more\footnote{blktrace v1.0.1
-+  bc93336f08a3 (``fix up btrace options \& manpage'')}.
- 
- \subsection{blktrace -- SCSI commands}
- \label{sec:pc-blktrace}
-@@ -223,7 +242,7 @@ by applications using the SCSI Generic (\emph{sg}) interface.
- 
- Here we see a program issuing an INQUIRY command to the CDROM device.
- The program requested a read of 56 bytes of data, the CDB is included
--in parenthesis after the data length. The completion event shows shows
-+in parentheses after the data length. The completion event shows shows
- that the command completed successfully. Tracing SCSI commands can be
- very useful for debugging problems with programs talking directly to the
- device. An example of that would be \emph{cdrecord} burning.
-@@ -246,7 +265,7 @@ formatting by blkparse. This would be useful if you want to get
- measurements while running specific loads.
- 
- To do this, one would specify the device (or devices) to be watched. Then 
--go run you test cases. Stop the trace, and at your leisure utilize
-+go run your test cases. Stop the trace, and at your leisure utilize
- blkparse to see the results.
- 
- In this example, devices /dev/sdaa, /dev/sdc and /dev/sdo are used in an 
-@@ -462,7 +481,7 @@ Documentation/\linebreak[0]block/\linebreak[0]writeback\_cache\_control.txt.
- 
- \subsubsection{Request types}
- \label{sec:request-types}
--blktrace disguingishes between two types of block layer requests,
-+blktrace distinguishes between two types of block layer requests,
- file system and scsi commands. The former are dubbed \emph{fs}
- requests, the latter \emph{pc} requests. File system requests are
- normal read/write operations, ie any type of read or write from a
-@@ -874,9 +893,9 @@ filesystem. This section provides some details as to the interfaces
- blktrace utilizes in the kernel to effect this. It is good background data
- to help understand some of the outputs and command-line options above.
- 
--\subsection{blktrace.h Definitions}
--Files which include $<linux/blktrace.h>$ are supplied with the following
--definitions:
-+\subsection{blktrace\_api.h Definitions}
-+Files which include $<$linux/blktrace\_api.h$>$ are supplied with the following
-+definitions (from include/uapi/linux/blktrace\_api.h):
- 
- \subsubsection{Trace Action Specifiers}
- \begin{tabular}{|l|l|}\hline
-@@ -904,24 +923,26 @@ definitions:
-     event correspond to the schedule() unplug'') }
- 
- %..........................................
--\subsection{blktrace.h Routines}
--Files which include $<linux/blktrace.h>$ are supplied with the following
--kernel routine invocable interfaces:
-+\subsection{blktrace\_api.h Routines}
-+Files which include $<$linux/blktrace\_api.h$>$ used to be supplied with the following
-+kernel routine invocable interfaces. Meanwhile tracepoint macros
-+``trace\_block\_\dots'' from $<$trace/events/block.h$>$ are used:
- 
- \begin{description}
--  \item[blk\_add\_trace\_rq(struct request\_queue *q, struct request\_queue 
-+  \item[blk\_add\_trace\_rq(struct request\_queue *q, struct request
-   								*rq, u32 what)]
- 	Adds a trace event describing the state change of the passed in
- 	request\_queue. The \emph{what} parameter describes the change in
- 	the request\_queue state, and is one of the request queue action 
--	specifiers -- BLK\_TA\_QUEUE, BLK\_TA\_REQUEUE, BLK\_TA\_ISSUE,
-+	specifiers -- BLK\_TA\_INSERT, BLK\_TA\_REQUEUE, BLK\_TA\_ISSUE,
- 	or BLK\_TA\_COMPLETE.
- 
-   \item[blk\_add\_trace\_bio(struct request\_queue *q, struct bio *bio, 
-   								u32 what)]
- 	Adds a trace event for the BIO passed in. The \emph{what} parameter
- 	describes the action being performed on the BIO, and is one of
--	BLK\_TA\_BACKMERGE, BLK\_TA\_FRONTMERGE, or BLK\_TA\_QUEUE.
-+	BLK\_TA\_BACKMERGE, BLK\_TA\_FRONTMERGE,
-+	BLK\_TA\_BOUNCE, BLK\_TA\_COMPLETE, or BLK\_TA\_QUEUE.
- 
-   \item[blk\_add\_trace\_generic(struct request\_queue *q, struct bio *bio, 
- 							int rw, u32 what)]
-@@ -944,9 +965,119 @@ kernel routine invocable interfaces:
- 
-   \item[blk\_add\_trace\_msg(struct request\_queue *q, char *fmt, ...)]
- 	Adds a formatted message to the output stream. The total message
--	size can not exceed BLK\_TN\_MSG\_MSG characters (currently
--	1024). Standard format conversions are supported (as supplied
--	by \texttt{vscnprintf}.
-+	size can not exceed BLK\_TN\_MAX\_MSG characters (used to be 1024,
-+	meanwhile 128). Standard format conversions are supported (as supplied
-+	by \texttt{vscnprintf}).
-+
-+\end{description}
-+
-+\subsection{Trace Record Format}
-+\label{sec:record}
-+
-+The following describes trace record format version 7.
-+
-+\begin{verbatim}
-+struct blk_io_trace {
-+        __u32 magic;       /* MAGIC | version */
-+        __u32 sequence;    /* event number */
-+        __u64 time;        /* in nanoseconds */
-+        __u64 sector;      /* disk offset */
-+        __u32 bytes;       /* transfer length */
-+        __u32 action;      /* what happened */
-+        __u32 pid;         /* who did it */
-+        __u32 device;      /* device number */
-+        __u32 cpu;         /* on what cpu did it happen */
-+        __u16 error;       /* completion error */
-+        __u16 pdu_len;     /* length of data after this trace */
-+        /* cgroup id will be stored here if exists */
-+};
-+\end{verbatim}
-+
-+The field magic is the ASCII text string ``eat'' followed by one byte
-+indicating the blktrace version in binary. It is also used to determine
-+endianness on parsing trace records during postprocessing in user space.
-+
-+The field sequence is per CPU and per device (major, minor).
-+
-+The field time contains kernel monotonic time in nanoseconds. The
-+blkparse tool does not print this directly as ``time stamp'' but only the
-+relative time since the oldest trace record (``genesis\_time'').
- 
-+Any optional payload follows the last structure field immediately:
-+\begin{description}
-+\item[unplug (io or timer/schedule)] depth as big endian 64 bit value
-+\item[split] sector as big endian 64 bit value
-+\item[remap] remapping information:
-+\begin{verbatim}
-+struct blk_io_trace_remap {
-+        __be32 device_from;
-+        __be32 device_to;
-+        __be64 sector_from;
-+};
-+\end{verbatim}
-+\item[drv\_data] bytes provided by a device driver
- \end{description}
-+
-+\subsection{Special Notification Trace Records}
-+\label{sec:records-special}
-+
-+\subsubsection{Timestamp}
-+
-+On starting tracing, blktrace writes a notification record with time
-+of day. The message payload consists of u32 for seconds and u32 for
-+nanoseconds. This allows postprocessing user space to print wallclock
-+for each trace record instead of just monotonic nanoseconds as with
-+the time field of struct blk\_io\_trace.
-+
-+\subsubsection{Process Mapping}
-+
-+On writing any trace record, blktrace conditionally writes a preceding
-+additional process record if it has not done so already for this
-+process. The payload contains the ``comm'' string of the process. This
-+allows to print the process name in addition to the PID for
-+postprocessing user space.
-+
-+A kernel internal epoch counter is used to emit such record only for a
-+process it has not done so yet during the current epoch and tracer.
-+Starting tracing increases the epoch and the tracer is added to a
-+tracking list of active tracers. On trace emit, struct task\_struct of
-+the process remembers the current epoch.
-+
-+\subsubsection{Message}
-+
-+Text message generated via kernel call to
-+\texttt{blk\_add\_trace\_msg} from e.g.\ CFQ I/O scheduler, or written to
-+/sys/\linebreak[0]kernel/\linebreak[0]debug/\linebreak[0]block/\linebreak[0]\emph{dev}/\linebreak[0]msg.
-+
-+\subsection{CGroup Payload}
-+
-+This requires CONFIG\_BLK\_CGROUP and the blk tracer option
-+blk\_cgroup to be enabled\footnote{v4.14 commits ca1136c99b66
-+  (``blktrace: export cgroup info in trace'')\newline 35fe6d763229
-+  (``block: use standard blktrace API to output cgroup info for debug
-+  notes'')}.
-+
-+If so, message traces and trace actions except for (getrq, sleeprq,
-+(un)plug(timer)) contain a cgroup ID. It's the first payload content
-+with sizeof(union kernfs\_node\_id) and followed by the actual
-+payload. The trace record field pdu\_len is increased accordingly.
-+
-+The blkparse user space tool currently does not handle traces with
-+blk\_cgroup enabled. Such traces have a flag \_\_BLK\_TA\_CGROUP
-+(or \_\_BLK\_TN\_CGROUP if it's a notification (Sec.~\ref{sec:records-special}))
-+set for their action field to indicate the additional payload part.
-+blkparse reports ``Bad fs action'' for such trace records.
-+
-+With ftrace option blk\_cgroup, the text output of the ftrace tracer ``blk''
-+formats the cgroup information between the device and the action column.
-+The format is ``\textit{ino},\textit{generation}'' in hexadecimal numbers.
-+
-+With ftrace option blk\_cgname in addition to blk\_cgroup, the text
-+output of the ftrace tracer ``blk'' formats the cgroup information as
-+path name string instead of an ID\footnote{ v4.14 commit 69fd5c391763
-+  (``blktrace: add an option to allow displaying cgroup path'')}. If
-+it cannot get the path name, the output is ``$<\dots>$''.
-+
-+See also Sec.~\ref{sec:form-text-outp}.
-+
- \end{document}
 -- 
 2.14.2
 
