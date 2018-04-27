@@ -1,98 +1,130 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Date: Fri, 27 Apr 2018 13:07:26 +0000
-Subject: [PATCH 19/31] README: complete tool overview
-Message-Id: <20180427130738.102806-20-maier@linux.ibm.com>
+Date: Fri, 27 Apr 2018 13:07:36 +0000
+Subject: [PATCH 29/31] blkparse: enable custom output format also for message event type
+Message-Id: <20180427130738.102806-30-maier@linux.ibm.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
+
+Call regular processing chain rather than hardcoded direct output.
+
+Introduce a new format %g to output the message content from the
+payload as (length-limited) string. The other existing payload
+formats %P (hexdump) or %U (unsigned int) cannot reproduce the
+old hardcoded default message content output.
+
+$ blkparse -t -q sdw1
+ 65,97   1        0     0.000000000     0  m   N foo
+
+$ blkparse -t -q sdw1 -F m,"%D %2c %8s %5T.%9t %5p %2a %3d %g\n"
+ 65,97   1        0     0.000000000     0  m   N foo
+
+Fixes: 1a15f6a82d62 ("Added in handling of MESSAGE notes")
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
 ---
- README | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+ blkparse.c       | 9 +++------
+ blkparse_fmt.c   | 5 ++++-
+ doc/blkparse.1   | 9 +++++----
+ doc/blktrace.tex | 1 +
+ 4 files changed, 13 insertions(+), 11 deletions(-)
 
-diff --git a/README b/README
-index d7d1fbfd670c..2a3959cea2a9 100644
---- a/README
-+++ b/README
-@@ -70,6 +70,9 @@ $ blktrace -d <dev> [ -r debug_path ] [ -o output ] [ -k ] [ -w time ]
- 	-s Disable network client use of sendfile() to transfer data
- 	-V Print program version info.
+diff --git a/blkparse.c b/blkparse.c
+index 227cc444c280..8049bb55bb0e 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -576,6 +576,8 @@ static void handle_notify(struct blk_io_trace *bit)
+ {
+ 	void	*payload = (caddr_t) bit + sizeof(*bit);
+ 	__u32	two32[2];
++	/* sparse per_cpu_info contains only what process_fmt() chain uses */
++	struct per_cpu_info pci = { .cpu = bit->cpu };
  
-+	Records the I/O event trace information from the kernel for
-+	specific block device(s) to file(s).
-+
- $ blkparse -i <input> [ -o <output> ] [ -b rb_batch ] [ -s ] [ -t ] [ -q ]
- 		      [ -w start:stop ] [ -f output format ] [ -F format spec ]
- 		      [ -d <binary> ]
-@@ -130,6 +133,12 @@ $ blkparse -i <input> [ -o <output> ] [ -b rb_batch ] [ -s ] [ -t ] [ -q ]
- 	-v More verbose for marginal errors.
- 	-V Print program version info.
+ 	switch (bit->action) {
+ 	case BLK_TN_PROCESS:
+@@ -607,12 +609,7 @@ static void handle_notify(struct blk_io_trace *bit)
+ 			memcpy(msg, (char *)payload, bit->pdu_len);
+ 			msg[bit->pdu_len] = '\0';
  
-+	The blkparse utility attempts to combine streams of events for
-+	various devices on various CPUs, and produce a formatted
-+	output of the event information. Specifically, it takes the
-+	(machine-readable) output of the blktrace utility and convert
-+	it to a nicely formatted and human-readable form.
-+
- $ verify_blkparse filename
+-			fprintf(ofp,
+-				"%3d,%-3d %2d %8s %5d.%09lu %5u %2s %3s %s\n",
+-				MAJOR(bit->device), MINOR(bit->device),
+-				bit->cpu, "0", (int) SECONDS(bit->time),
+-				(unsigned long) NANO_SECONDS(bit->time),
+-				0, "m", "N", msg);
++			process_fmt("m", &pci, bit, -1, bit->pdu_len, payload);
+ 		}
+ 		break;
  
- 	Verifies an output file from blkparse. All it does is check if
-@@ -145,6 +154,52 @@ $ blkrawverify <dev> [<dev>...]
+diff --git a/blkparse_fmt.c b/blkparse_fmt.c
+index 551cb14d06db..14737f81c78d 100644
+--- a/blkparse_fmt.c
++++ b/blkparse_fmt.c
+@@ -11,7 +11,7 @@
  
- 	Errors found will be tracked in <dev>.verify.out.
+ #include "blktrace.h"
  
-+$ btrecord
-+$ btreplay
-+
-+	The btrecord and btreplay tools provide the ability to record
-+	and replay IOs captured by the blktrace utility. Attempts are
-+	made to maintain ordering, CPU mappings and time-separation of
-+	IOs.
-+
-+$ btt
-+
-+	btt takes binary dump data from blkparse, and analyse the
-+	events, producing a series of output from the analysis. It
-+	also builds .dat files containing "range data" -- showing
-+	things like Q activity (periods of time while Q events are
-+	being produced), C activity (likewise for command
-+	completions), and etc.
-+
-+$ iowatcher
-+
-+	iowatcher graphs the results of a blktrace run. It can graph
-+	the result of an existing blktrace, start a new blktrace, or
-+	start a new blktrace and a benchmark run. It can then create
-+	an image or movie of the IO from a given trace. iowatcher can
-+	produce either SVG files or movies in mp4 format (with ffmpeg)
-+	or ogg format (with png2theora).
-+
-+$ bno_plot.py
-+
-+	Utilizes gnuplot to generate a 3D plot of the block number
-+	output from btt.
-+
-+$ blkiomon
-+
-+	blkiomon is a block device I/O monitor. It periodically
-+	generates per-device request size and request latency
-+	statistics from blktrace data. It provides histograms as well
-+	as data that can be used to calculate min, max, average and
-+	variance. For this purpose, it consumes D and C traces read
-+	from stdin. Note, that this doesn’t work for logical volumes,
-+	as high-level drivers don’t see the completion of the events
-+	(C).
-+
-+$ btrace <device>
-+
-+	Short for: blktrace -d <device> -o - | blkparse -i -
-+
- If you want to do live tracing, you can pipe the data between blktrace
- and blkparse:
+-#define VALID_SPECS	"ABCDFGIMPQRSTUX"
++#define VALID_SPECS	"ABCDFGIMPQRSTUXm"
  
+ #define HEADER		"%D %2c %8s %5T.%9t %5p %2a %3d "
+ 
+@@ -213,6 +213,9 @@ static void print_field(char *act, struct per_cpu_info *pci,
+ 	case 'e':
+ 		fprintf(ofp, strcat(format, "d"), t->error);
+ 		break;
++	case 'g':
++		fprintf(ofp, strcat(format, "*s"), pdu_len, pdu_buf);
++		break;
+ 	case 'M':
+ 		fprintf(ofp, strcat(format, "d"), MAJOR(t->device));
+ 		break;
+diff --git a/doc/blkparse.1 b/doc/blkparse.1
+index 52fb84a788cb..5bc84d3ed5c2 100644
+--- a/doc/blkparse.1
++++ b/doc/blkparse.1
+@@ -354,6 +354,9 @@ the event's device (separated by a comma).
+ .IP \fBe\fR 4
+ Error value, decimal integer
+ 
++.IP \fBg\fR 4
++Message from payload, string limited by payload length
++
+ .IP \fBm\fR 4
+ Minor number of event's device, decimal integer.
+ 
+@@ -641,15 +644,13 @@ the following and modify individual parts as you like:
+     -F U,"%D %2c %8s %5T.%9t %5p %2a %3d [%C] %U\\n" \\
+     -F T,"%D %2c %8s %5T.%9t %5p %2a %3d [%C] %U\\n" \\
+     -F X,"%D %2c %8s %5T.%9t %5p %2a %3d %S / %U [%C]\\n" \\
+-    -F A,"%D %2c %8s %5T.%9t %5p %2a %3d %S + %n <- (\fIOmaj\fR,\fIOmin\fR) \fIOsec\fR\\n"
++    -F A,"%D %2c %8s %5T.%9t %5p %2a %3d %S + %n <- (\fIOmaj\fR,\fIOmin\fR) \fIOsec\fR\\n" \\
++    -F m,"%D %2c %8s %5T.%9t %5p %2a %3d %g\\n"
+ 
+ The custom format syntax from section OUTPUT DESCRIPTION AND FORMATTING
+ does not support conditional output. Thus, the example output differs
+ by printing all information instead of skipping some based on conditions.
+ 
+-Currently it is not possible to specify 'm' as custom type specifier
+-for message events. A custom field for the message text as string does
+-not exist, %P for a hexdump comes closest.
+ Also, for remap events (A), the major and minor number of the original
+ device as well as the original sector offset are currently not
+ available as custom fields.
+diff --git a/doc/blktrace.tex b/doc/blktrace.tex
+index aba3b3d87071..036bff283568 100644
+--- a/doc/blktrace.tex
++++ b/doc/blktrace.tex
+@@ -1089,6 +1089,7 @@ Specifier & \\ \hline\hline
+ the \\
+          & event's device (separated by a comma). \\ \hline
+ \emph{e} & Error value, decimal integer \\ \hline
++\emph{g} & Message from payload, string limited by payload length \\ \hline
+ \emph{m} & Minor number of event's device, decimal integer. \\ \hline
+ \emph{M} & Major number of event's device, decimal integer. \\ \hline
+ \emph{n} & Number of blocks, unsigned decimal integer \\ \hline
 -- 
 2.14.2
 
