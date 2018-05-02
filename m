@@ -1,194 +1,132 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Thu, 17 May 2018 12:00:01 +0000
-Subject: Recent changes (master)
-Message-Id: <20180517120001.DFEEB2C00E1@kernel.dk>
+From: herbo zhang <ygtat0@gmail.com>
+Date: Wed, 02 May 2018 07:55:38 +0000
+Subject: A heap overflow in blktrace
+Message-Id: <CAOLTLfkkdbjy5Yf-LqA1DZnM8eDUQEJm5vfOcUBO3z7MA6uUjQ@mail.gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20130320050001.E340522DFC@kernel.dk>
-In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit d61ff409cb4dda31386373d706ea0cfb1aaac5b7:
+Hello,
 
-  btt: make device/devno use PATH_MAX to avoid overflow (2018-05-02 10:24:17 -0600)
+I found a bug in blktrace/btt/devmap.c. The code is just as follows:
 
-are available in the git repository at:
+https://git.kernel.org/pub/scm/linux/kernel/git/axboe/blktrace.git/tree/btt=
+/devmap.c?id=8349ad2f2d19422a6241f94ea84d696b21de4757
 
-  git://git.kernel.dk/blktrace.git master
+       struct devmap {
 
-for you to fetch changes up to 70d5ca2d5f3d6b97c11c641b7e0c5836983219a0:
+struct list_head head;
+char device[32], devno[32];    // #1
+};
 
-  make btt scripts python3-ready (2018-05-16 13:09:58 -0600)
+LIST_HEAD(all_devmaps);
 
-----------------------------------------------------------------
-Eric Sandeen (1):
-      make btt scripts python3-ready
+static int dev_map_add(char *line)
+{
+struct devmap *dmp;
 
- btt/bno_plot.py | 28 +++++++++++++++-------------
- btt/btt_plot.py | 22 +++++++++++++---------
- 2 files changed, 28 insertions(+), 22 deletions(-)
+if (strstr(line, "Device") !=3D NULL)
+return 1;
 
----
+dmp =3D malloc(sizeof(struct devmap));
+if (sscanf(line, "%s %s", dmp->device, dmp->devno) !=3D 2) {  //#2
+free(dmp);
+return 1;
+}
 
-Diff of recent changes:
+list_add_tail(&dmp->head, &all_devmaps);
+return 0;
+}
 
-diff --git a/btt/bno_plot.py b/btt/bno_plot.py
-index aa92480..f05cfdc 100644
---- a/btt/bno_plot.py
-+++ b/btt/bno_plot.py
-@@ -38,6 +38,8 @@ automatically push the keys under the graph.
- To exit the plotter, enter 'quit' or ^D at the 'gnuplot> ' prompt.
- """
- 
-+from __future__ import absolute_import
-+from __future__ import print_function
- import getopt, glob, os, sys, tempfile
- 
- verbose	= 0
-@@ -60,14 +62,14 @@ def parse_args(in_args):
- 
- 	try:
- 		(opts, args) = getopt.getopt(in_args, s_opts, l_opts)
--	except getopt.error, msg:
--		print >>sys.stderr, msg
--		print >>sys.stderr, __doc__
-+	except getopt.error as msg:
-+		print(msg, file=sys.stderr)
-+		print(__doc__, file=sys.stderr)
- 		sys.exit(1)
- 
- 	for (o, a) in opts:
- 		if o in ('-h', '--help'):
--			print __doc__
-+			print(__doc__)
- 			sys.exit(0)
- 		elif o in ('-v', '--verbose'):
- 			verbose += 1
-@@ -84,10 +86,10 @@ if __name__ = '__main__':
- 	(bnos, keys_below) = parse_args(sys.argv[1:])
- 
- 	if verbose:
--		print 'Using files:',
--		for bno in bnos: print bno,
--		if keys_below:	print '\nKeys are to be placed below graph'
--		else:		print ''
-+		print('Using files:', end=' ')
-+		for bno in bnos: print(bno, end=' ')
-+		if keys_below:	print('\nKeys are to be placed below graph')
-+		else:		print('')
- 
- 	tmpdir = tempfile.mktemp()
- 	os.mkdir(tmpdir)
-@@ -99,7 +101,7 @@ if __name__ = '__main__':
- 		fo = open(t, 'w')
- 		for line in open(f, 'r'):
- 			fld = line.split(None)
--			print >>fo, fld[0], fld[1], int(fld[2])-int(fld[1])
-+			print(fld[0], fld[1], int(fld[2])-int(fld[1]), file=fo)
- 		fo.close()
- 
- 		t = t[t.rfind('/')+1:]
-@@ -107,16 +109,16 @@ if __name__ = '__main__':
- 		else:                plot_cmd = "%s,'%s'" % (plot_cmd, t)
- 
- 	fo = open('%s/plot.cmds' % tmpdir, 'w')
--	print >>fo, cmds
--	if len(bnos) > 10 or keys_below: print >>fo, 'set key below'
--	print >>fo, plot_cmd
-+	print(cmds, file=fo)
-+	if len(bnos) > 10 or keys_below: print('set key below', file=fo)
-+	print(plot_cmd, file=fo)
- 	fo.close()
- 
- 	pid = os.fork()
- 	if pid = 0:
- 		cmd = 'gnuplot %s/plot.cmds -' % tmpdir
- 
--		if verbose: print 'Executing %s' % cmd
-+		if verbose: print('Executing %s' % cmd)
- 
- 		os.chdir(tmpdir)
- 		os.system(cmd)
-diff --git a/btt/btt_plot.py b/btt/btt_plot.py
-index b81dad5..76fcca8 100755
---- a/btt/btt_plot.py
-+++ b/btt/btt_plot.py
-@@ -55,6 +55,10 @@ Arguments:
-   but the -o (--output) and -T (--title) options will be ignored.
- """
- 
-+from __future__ import absolute_import
-+from __future__ import print_function
-+import six
-+from six.moves import range
- __author__ = 'Alan D. Brunelle <alan.brunelle@hp.com>'
- 
- #------------------------------------------------------------------------------
-@@ -82,7 +86,7 @@ get_base 	= lambda file: file[file.find('_')+1:file.rfind('_')]
- def fatal(msg):
- 	"""Generate fatal error message and exit"""
- 
--	print >>sys.stderr, 'FATAL: %s' % msg
-+	print('FATAL: %s' % msg, file=sys.stderr)
- 	sys.exit(1)
- 
- #------------------------------------------------------------------------------
-@@ -163,7 +167,7 @@ def get_data(files):
- 		if not os.path.exists(file):
- 			fatal('%s not found' % file)
- 		elif verbose:
--			print 'Processing %s' % file
-+			print('Processing %s' % file)
- 
- 		xs = []
- 		ys = []
-@@ -214,8 +218,8 @@ def parse_args(args):
- 
- 	try:
- 		(opts, args) = getopt.getopt(args[1:], s_opts, l_opts)
--	except getopt.error, msg:
--		print >>sys.stderr, msg
-+	except getopt.error as msg:
-+		print(msg, file=sys.stderr)
- 		fatal(__doc__)
- 
- 	for (o, a) in opts:
-@@ -293,15 +297,15 @@ def generate_output(type, db):
- 	def color(idx, style):
- 		"""Returns a color/symbol type based upon the index passed."""
- 
--                colors = [ 'b', 'g', 'r', 'c', 'm', 'y', 'k' ]
-+		colors = [ 'b', 'g', 'r', 'c', 'm', 'y', 'k' ]
- 		l_styles = [ '-', ':', '--', '-.' ]
- 		m_styles = [ 'o', '+', '.', ',', 's', 'v', 'x', '<', '>' ]
- 
- 		color = colors[idx % len(colors)]
- 		if style = 'line':
--			style = l_styles[(idx / len(l_styles)) % len(l_styles)]
-+			style = l_styles[int((idx / len(l_styles)) % len(l_styles))]
- 		elif style = 'marker':
--			style = m_styles[(idx / len(m_styles)) % len(m_styles)]
-+			style = m_styles[int((idx / len(m_styles)) % len(m_styles))]
- 
- 		return '%s%s' % (color, style)
- 
-@@ -314,7 +318,7 @@ def generate_output(type, db):
- 		ofile = '%s.png' % type
- 
- 	if verbose:
--		print 'Generating plot into %s' % ofile
-+		print('Generating plot into %s' % ofile)
- 
- 	fig = plt.figure(figsize=plot_size)
- 	ax = fig.add_subplot(111)
-@@ -329,7 +333,7 @@ def generate_output(type, db):
- 		legends = None
- 
- 	keys = []
--	for file in db.iterkeys():
-+	for file in six.iterkeys(db):
- 		if not file in ['min_x', 'max_x', 'min_y', 'max_y']:
- 			keys.append(file)
- 
+
+
+int dev_map_read(char *fname)
+{
+char line[256];   // #3
+FILE *fp =3D my_fopen(fname, "r");
+
+if (!fp) {
+perror(fname);
+return 1;
+}
+
+while (fscanf(fp, "%255[a-zA-Z0-9 :.,/_-]\n", line) =3D 1) {
+if (dev_map_add(line))
+break;
+}
+
+fclose(fp);
+return 0;
+}
+
+
+
+ The line length is 256, but the dmp->device, dmp->devno  max length
+is only 32. We can put strings longer than 32 into dmp->device and
+dmp->devno , and then they will be overflowed.
+
+ we can trigger this bug just as follows:
+
+ $ python -c "print 'A'*256" > ./test
+    $ btt -M ./test
+
+    *** Error in btt': free(): invalid next size (fast): 0x000055ad7349b250=
+ ***
+    =3D=3D=3D=3D Backtrace: =3D=3D=3D=3D    /lib/x86_64-linux-gnu/libc.so.6=
+(+0x777e5)[0x7f7f158ce7e5]
+    /lib/x86_64-linux-gnu/libc.so.6(+0x7fe0a)[0x7f7f158d6e0a]
+    /lib/x86_64-linux-gnu/libc.so.6(cfree+0x4c)[0x7f7f158da98c]
+    btt(+0x32e0)[0x55ad7306f2e0]
+    btt(+0x2c5f)[0x55ad7306ec5f]
+    btt(+0x251f)[0x55ad7306e51f]
+    /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)[0x7f7f15877830]
+    btt(+0x26b9)[0x55ad7306e6b9]
+    =3D=3D=3D=3D Memory map: =3D=3D=3D=3D
+    55ad7306c000-55ad7307f000 r-xp 00000000 08:14 3698139
+      /usr/bin/btt
+    55ad7327e000-55ad7327f000 r--p 00012000 08:14 3698139
+      /usr/bin/btt
+    55ad7327f000-55ad73280000 rw-p 00013000 08:14 3698139
+      /usr/bin/btt
+    55ad73280000-55ad73285000 rw-p 00000000 00:00 0
+    55ad7349a000-55ad734bb000 rw-p 00000000 00:00 0
+      [heap]
+    7f7f10000000-7f7f10021000 rw-p 00000000 00:00 0
+    7f7f10021000-7f7f14000000 ---p 00000000 00:00 0
+    7f7f15640000-7f7f15656000 r-xp 00000000 08:14 14942237
+      /lib/x86_64-linux-gnu/libgcc_s.so.1
+    7f7f15656000-7f7f15855000 ---p 00016000 08:14 14942237
+      /lib/x86_64-linux-gnu/libgcc_s.so.1
+    7f7f15855000-7f7f15856000 r--p 00015000 08:14 14942237
+      /lib/x86_64-linux-gnu/libgcc_s.so.1
+    7f7f15856000-7f7f15857000 rw-p 00016000 08:14 14942237
+      /lib/x86_64-linux-gnu/libgcc_s.so.1
+    7f7f15857000-7f7f15a16000 r-xp 00000000 08:14 14948477
+      /lib/x86_64-linux-gnu/libc-2.23.so
+    7f7f15a16000-7f7f15c16000 ---p 001bf000 08:14 14948477
+      /lib/x86_64-linux-gnu/libc-2.23.so
+    7f7f15c16000-7f7f15c1a000 r--p 001bf000 08:14 14948477
+      /lib/x86_64-linux-gnu/libc-2.23.so
+    7f7f15c1a000-7f7f15c1c000 rw-p 001c3000 08:14 14948477
+      /lib/x86_64-linux-gnu/libc-2.23.so
+    7f7f15c1c000-7f7f15c20000 rw-p 00000000 00:00 0
+    7f7f15c20000-7f7f15c46000 r-xp 00000000 08:14 14948478
+      /lib/x86_64-linux-gnu/ld-2.23.so
+    7f7f15e16000-7f7f15e19000 rw-p 00000000 00:00 0
+    7f7f15e42000-7f7f15e45000 rw-p 00000000 00:00 0
+    7f7f15e45000-7f7f15e46000 r--p 00025000 08:14 14948478
+      /lib/x86_64-linux-gnu/ld-2.23.so
+    7f7f15e46000-7f7f15e47000 rw-p 00026000 08:14 14948478
+      /lib/x86_64-linux-gnu/ld-2.23.so
+    7f7f15e47000-7f7f15e48000 rw-p 00000000 00:00 0
+    7ffdebe5c000-7ffdebe7d000 rw-p 00000000 00:00 0
+      [stack]
+    7ffdebebc000-7ffdebebe000 r--p 00000000 00:00 0
+      [vvar]
+    7ffdebebe000-7ffdebec0000 r-xp 00000000 00:00 0
+      [vdso]
+    ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0
+      [vsyscall]
+    [1]    6272 abort      btt -M test
