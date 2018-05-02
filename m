@@ -1,132 +1,24 @@
-From: herbo zhang <ygtat0@gmail.com>
-Date: Wed, 02 May 2018 07:55:38 +0000
-Subject: A heap overflow in blktrace
-Message-Id: <CAOLTLfkkdbjy5Yf-LqA1DZnM8eDUQEJm5vfOcUBO3z7MA6uUjQ@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Wed, 02 May 2018 16:25:33 +0000
+Subject: Re: A heap overflow in blktrace
+Message-Id: <b127c936-69c3-b4d8-2619-998d08cb7984@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <CAOLTLfkkdbjy5Yf-LqA1DZnM8eDUQEJm5vfOcUBO3z7MA6uUjQ@mail.gmail.com>
+In-Reply-To: <CAOLTLfkkdbjy5Yf-LqA1DZnM8eDUQEJm5vfOcUBO3z7MA6uUjQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Hello,
+On 5/2/18 1:55 AM, herbo zhang wrote:
+> Hello,
+> 
+> I found a bug in blktrace/btt/devmap.c. The code is just as follows:
 
-I found a bug in blktrace/btt/devmap.c. The code is just as follows:
+[snip]
 
-https://git.kernel.org/pub/scm/linux/kernel/git/axboe/blktrace.git/tree/btt=
-/devmap.c?id=8349ad2f2d19422a6241f94ea84d696b21de4757
+Thanks for your report, I changed them to use PATH_MAX.
 
-       struct devmap {
+-- 
+Jens Axboe
 
-struct list_head head;
-char device[32], devno[32];    // #1
-};
-
-LIST_HEAD(all_devmaps);
-
-static int dev_map_add(char *line)
-{
-struct devmap *dmp;
-
-if (strstr(line, "Device") !=3D NULL)
-return 1;
-
-dmp =3D malloc(sizeof(struct devmap));
-if (sscanf(line, "%s %s", dmp->device, dmp->devno) !=3D 2) {  //#2
-free(dmp);
-return 1;
-}
-
-list_add_tail(&dmp->head, &all_devmaps);
-return 0;
-}
-
-
-
-int dev_map_read(char *fname)
-{
-char line[256];   // #3
-FILE *fp =3D my_fopen(fname, "r");
-
-if (!fp) {
-perror(fname);
-return 1;
-}
-
-while (fscanf(fp, "%255[a-zA-Z0-9 :.,/_-]\n", line) =3D 1) {
-if (dev_map_add(line))
-break;
-}
-
-fclose(fp);
-return 0;
-}
-
-
-
- The line length is 256, but the dmp->device, dmp->devno  max length
-is only 32. We can put strings longer than 32 into dmp->device and
-dmp->devno , and then they will be overflowed.
-
- we can trigger this bug just as follows:
-
- $ python -c "print 'A'*256" > ./test
-    $ btt -M ./test
-
-    *** Error in btt': free(): invalid next size (fast): 0x000055ad7349b250=
- ***
-    =3D=3D=3D=3D Backtrace: =3D=3D=3D=3D    /lib/x86_64-linux-gnu/libc.so.6=
-(+0x777e5)[0x7f7f158ce7e5]
-    /lib/x86_64-linux-gnu/libc.so.6(+0x7fe0a)[0x7f7f158d6e0a]
-    /lib/x86_64-linux-gnu/libc.so.6(cfree+0x4c)[0x7f7f158da98c]
-    btt(+0x32e0)[0x55ad7306f2e0]
-    btt(+0x2c5f)[0x55ad7306ec5f]
-    btt(+0x251f)[0x55ad7306e51f]
-    /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)[0x7f7f15877830]
-    btt(+0x26b9)[0x55ad7306e6b9]
-    =3D=3D=3D=3D Memory map: =3D=3D=3D=3D
-    55ad7306c000-55ad7307f000 r-xp 00000000 08:14 3698139
-      /usr/bin/btt
-    55ad7327e000-55ad7327f000 r--p 00012000 08:14 3698139
-      /usr/bin/btt
-    55ad7327f000-55ad73280000 rw-p 00013000 08:14 3698139
-      /usr/bin/btt
-    55ad73280000-55ad73285000 rw-p 00000000 00:00 0
-    55ad7349a000-55ad734bb000 rw-p 00000000 00:00 0
-      [heap]
-    7f7f10000000-7f7f10021000 rw-p 00000000 00:00 0
-    7f7f10021000-7f7f14000000 ---p 00000000 00:00 0
-    7f7f15640000-7f7f15656000 r-xp 00000000 08:14 14942237
-      /lib/x86_64-linux-gnu/libgcc_s.so.1
-    7f7f15656000-7f7f15855000 ---p 00016000 08:14 14942237
-      /lib/x86_64-linux-gnu/libgcc_s.so.1
-    7f7f15855000-7f7f15856000 r--p 00015000 08:14 14942237
-      /lib/x86_64-linux-gnu/libgcc_s.so.1
-    7f7f15856000-7f7f15857000 rw-p 00016000 08:14 14942237
-      /lib/x86_64-linux-gnu/libgcc_s.so.1
-    7f7f15857000-7f7f15a16000 r-xp 00000000 08:14 14948477
-      /lib/x86_64-linux-gnu/libc-2.23.so
-    7f7f15a16000-7f7f15c16000 ---p 001bf000 08:14 14948477
-      /lib/x86_64-linux-gnu/libc-2.23.so
-    7f7f15c16000-7f7f15c1a000 r--p 001bf000 08:14 14948477
-      /lib/x86_64-linux-gnu/libc-2.23.so
-    7f7f15c1a000-7f7f15c1c000 rw-p 001c3000 08:14 14948477
-      /lib/x86_64-linux-gnu/libc-2.23.so
-    7f7f15c1c000-7f7f15c20000 rw-p 00000000 00:00 0
-    7f7f15c20000-7f7f15c46000 r-xp 00000000 08:14 14948478
-      /lib/x86_64-linux-gnu/ld-2.23.so
-    7f7f15e16000-7f7f15e19000 rw-p 00000000 00:00 0
-    7f7f15e42000-7f7f15e45000 rw-p 00000000 00:00 0
-    7f7f15e45000-7f7f15e46000 r--p 00025000 08:14 14948478
-      /lib/x86_64-linux-gnu/ld-2.23.so
-    7f7f15e46000-7f7f15e47000 rw-p 00026000 08:14 14948478
-      /lib/x86_64-linux-gnu/ld-2.23.so
-    7f7f15e47000-7f7f15e48000 rw-p 00000000 00:00 0
-    7ffdebe5c000-7ffdebe7d000 rw-p 00000000 00:00 0
-      [stack]
-    7ffdebebc000-7ffdebebe000 r--p 00000000 00:00 0
-      [vvar]
-    7ffdebebe000-7ffdebec0000 r-xp 00000000 00:00 0
-      [vdso]
-    ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0
-      [vsyscall]
-    [1]    6272 abort      btt -M test
