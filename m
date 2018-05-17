@@ -1,7 +1,7 @@
 From: Jens Axboe <axboe@kernel.dk>
-Date: Thu, 03 May 2018 12:00:02 +0000
+Date: Thu, 17 May 2018 12:00:01 +0000
 Subject: Recent changes (master)
-Message-Id: <20180503120002.4C9322C00EF@kernel.dk>
+Message-Id: <20180517120001.DFEEB2C00E1@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <20130320050001.E340522DFC@kernel.dk>
 In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
@@ -10,39 +10,185 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 93d9e5b5082258f3570dbc56202276284575fc11:
+The following changes since commit d61ff409cb4dda31386373d706ea0cfb1aaac5b7:
 
-  blkparse: add documetation for 'R' requeue request (2018-04-09 08:36:43 -0600)
+  btt: make device/devno use PATH_MAX to avoid overflow (2018-05-02 10:24:17 -0600)
 
 are available in the git repository at:
 
   git://git.kernel.dk/blktrace.git master
 
-for you to fetch changes up to d61ff409cb4dda31386373d706ea0cfb1aaac5b7:
+for you to fetch changes up to 70d5ca2d5f3d6b97c11c641b7e0c5836983219a0:
 
-  btt: make device/devno use PATH_MAX to avoid overflow (2018-05-02 10:24:17 -0600)
+  make btt scripts python3-ready (2018-05-16 13:09:58 -0600)
 
 ----------------------------------------------------------------
-Jens Axboe (1):
-      btt: make device/devno use PATH_MAX to avoid overflow
+Eric Sandeen (1):
+      make btt scripts python3-ready
 
- btt/devmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ btt/bno_plot.py | 28 +++++++++++++++-------------
+ btt/btt_plot.py | 22 +++++++++++++---------
+ 2 files changed, 28 insertions(+), 22 deletions(-)
 
 ---
 
 Diff of recent changes:
 
-diff --git a/btt/devmap.c b/btt/devmap.c
-index 0553a9e..5fc1cb2 100644
---- a/btt/devmap.c
-+++ b/btt/devmap.c
-@@ -23,7 +23,7 @@
+diff --git a/btt/bno_plot.py b/btt/bno_plot.py
+index aa92480..f05cfdc 100644
+--- a/btt/bno_plot.py
++++ b/btt/bno_plot.py
+@@ -38,6 +38,8 @@ automatically push the keys under the graph.
+ To exit the plotter, enter 'quit' or ^D at the 'gnuplot> ' prompt.
+ """
  
- struct devmap {
- 	struct list_head head;
--	char device[32], devno[32];
-+	char device[PATH_MAX], devno[PATH_MAX];
- };
++from __future__ import absolute_import
++from __future__ import print_function
+ import getopt, glob, os, sys, tempfile
  
- LIST_HEAD(all_devmaps);
+ verbose	= 0
+@@ -60,14 +62,14 @@ def parse_args(in_args):
+ 
+ 	try:
+ 		(opts, args) = getopt.getopt(in_args, s_opts, l_opts)
+-	except getopt.error, msg:
+-		print >>sys.stderr, msg
+-		print >>sys.stderr, __doc__
++	except getopt.error as msg:
++		print(msg, file=sys.stderr)
++		print(__doc__, file=sys.stderr)
+ 		sys.exit(1)
+ 
+ 	for (o, a) in opts:
+ 		if o in ('-h', '--help'):
+-			print __doc__
++			print(__doc__)
+ 			sys.exit(0)
+ 		elif o in ('-v', '--verbose'):
+ 			verbose += 1
+@@ -84,10 +86,10 @@ if __name__ = '__main__':
+ 	(bnos, keys_below) = parse_args(sys.argv[1:])
+ 
+ 	if verbose:
+-		print 'Using files:',
+-		for bno in bnos: print bno,
+-		if keys_below:	print '\nKeys are to be placed below graph'
+-		else:		print ''
++		print('Using files:', end=' ')
++		for bno in bnos: print(bno, end=' ')
++		if keys_below:	print('\nKeys are to be placed below graph')
++		else:		print('')
+ 
+ 	tmpdir = tempfile.mktemp()
+ 	os.mkdir(tmpdir)
+@@ -99,7 +101,7 @@ if __name__ = '__main__':
+ 		fo = open(t, 'w')
+ 		for line in open(f, 'r'):
+ 			fld = line.split(None)
+-			print >>fo, fld[0], fld[1], int(fld[2])-int(fld[1])
++			print(fld[0], fld[1], int(fld[2])-int(fld[1]), file=fo)
+ 		fo.close()
+ 
+ 		t = t[t.rfind('/')+1:]
+@@ -107,16 +109,16 @@ if __name__ = '__main__':
+ 		else:                plot_cmd = "%s,'%s'" % (plot_cmd, t)
+ 
+ 	fo = open('%s/plot.cmds' % tmpdir, 'w')
+-	print >>fo, cmds
+-	if len(bnos) > 10 or keys_below: print >>fo, 'set key below'
+-	print >>fo, plot_cmd
++	print(cmds, file=fo)
++	if len(bnos) > 10 or keys_below: print('set key below', file=fo)
++	print(plot_cmd, file=fo)
+ 	fo.close()
+ 
+ 	pid = os.fork()
+ 	if pid = 0:
+ 		cmd = 'gnuplot %s/plot.cmds -' % tmpdir
+ 
+-		if verbose: print 'Executing %s' % cmd
++		if verbose: print('Executing %s' % cmd)
+ 
+ 		os.chdir(tmpdir)
+ 		os.system(cmd)
+diff --git a/btt/btt_plot.py b/btt/btt_plot.py
+index b81dad5..76fcca8 100755
+--- a/btt/btt_plot.py
++++ b/btt/btt_plot.py
+@@ -55,6 +55,10 @@ Arguments:
+   but the -o (--output) and -T (--title) options will be ignored.
+ """
+ 
++from __future__ import absolute_import
++from __future__ import print_function
++import six
++from six.moves import range
+ __author__ = 'Alan D. Brunelle <alan.brunelle@hp.com>'
+ 
+ #------------------------------------------------------------------------------
+@@ -82,7 +86,7 @@ get_base 	= lambda file: file[file.find('_')+1:file.rfind('_')]
+ def fatal(msg):
+ 	"""Generate fatal error message and exit"""
+ 
+-	print >>sys.stderr, 'FATAL: %s' % msg
++	print('FATAL: %s' % msg, file=sys.stderr)
+ 	sys.exit(1)
+ 
+ #------------------------------------------------------------------------------
+@@ -163,7 +167,7 @@ def get_data(files):
+ 		if not os.path.exists(file):
+ 			fatal('%s not found' % file)
+ 		elif verbose:
+-			print 'Processing %s' % file
++			print('Processing %s' % file)
+ 
+ 		xs = []
+ 		ys = []
+@@ -214,8 +218,8 @@ def parse_args(args):
+ 
+ 	try:
+ 		(opts, args) = getopt.getopt(args[1:], s_opts, l_opts)
+-	except getopt.error, msg:
+-		print >>sys.stderr, msg
++	except getopt.error as msg:
++		print(msg, file=sys.stderr)
+ 		fatal(__doc__)
+ 
+ 	for (o, a) in opts:
+@@ -293,15 +297,15 @@ def generate_output(type, db):
+ 	def color(idx, style):
+ 		"""Returns a color/symbol type based upon the index passed."""
+ 
+-                colors = [ 'b', 'g', 'r', 'c', 'm', 'y', 'k' ]
++		colors = [ 'b', 'g', 'r', 'c', 'm', 'y', 'k' ]
+ 		l_styles = [ '-', ':', '--', '-.' ]
+ 		m_styles = [ 'o', '+', '.', ',', 's', 'v', 'x', '<', '>' ]
+ 
+ 		color = colors[idx % len(colors)]
+ 		if style = 'line':
+-			style = l_styles[(idx / len(l_styles)) % len(l_styles)]
++			style = l_styles[int((idx / len(l_styles)) % len(l_styles))]
+ 		elif style = 'marker':
+-			style = m_styles[(idx / len(m_styles)) % len(m_styles)]
++			style = m_styles[int((idx / len(m_styles)) % len(m_styles))]
+ 
+ 		return '%s%s' % (color, style)
+ 
+@@ -314,7 +318,7 @@ def generate_output(type, db):
+ 		ofile = '%s.png' % type
+ 
+ 	if verbose:
+-		print 'Generating plot into %s' % ofile
++		print('Generating plot into %s' % ofile)
+ 
+ 	fig = plt.figure(figsize=plot_size)
+ 	ax = fig.add_subplot(111)
+@@ -329,7 +333,7 @@ def generate_output(type, db):
+ 		legends = None
+ 
+ 	keys = []
+-	for file in db.iterkeys():
++	for file in six.iterkeys(db):
+ 		if not file in ['min_x', 'max_x', 'min_y', 'max_y']:
+ 			keys.append(file)
+ 
