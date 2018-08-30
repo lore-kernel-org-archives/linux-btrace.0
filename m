@@ -1,37 +1,61 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Fri, 31 Aug 2018 12:00:02 +0000
-Subject: Recent changes (master)
-Message-Id: <20180831120002.A429E2C00A8@kernel.dk>
+From: Jeff Moyer <jmoyer@redhat.com>
+Date: Thu, 30 Aug 2018 22:14:20 +0000
+Subject: [patch] iowatcher: don't add Q events to the io hash
+Message-Id: <x49wos7wlhf.fsf@segfault.boston.devel.redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20130320050001.E340522DFC@kernel.dk>
-In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 70d5ca2d5f3d6b97c11c641b7e0c5836983219a0:
+Hi,
 
-  make btt scripts python3-ready (2018-05-16 13:09:58 -0600)
+Bryan Gurney reported iowatcher taking a *really* long time to generate
+a movie for 16GiB worth of trace data.  I took a look, and the io hash
+was growing without bounds.  The reason was that the I/O pattern looks
+like this:
 
-are available in the git repository at:
+259,0    5        8     0.000208501 31708  A   W 5435592 + 8 <- (259,1) 5433544
+259,1    5        9     0.000209537 31708  Q   W 5435592 + 8 [kvdo30:bioQ0]
+259,1    5       10     0.000209880 31708  G   W 5435592 + 8 [kvdo30:bioQ0]
+259,0    5       11     0.000211064 31708  A   W 5435600 + 8 <- (259,1) 5433552
+259,1    5       12     0.000211347 31708  Q   W 5435600 + 8 [kvdo30:bioQ0]
+259,1    5       13     0.000212957 31708  M   W 5435600 + 8 [kvdo30:bioQ0]
+259,0    5       14     0.000213379 31708  A   W 5435608 + 8 <- (259,1) 5433560
+259,1    5       15     0.000213629 31708  Q   W 5435608 + 8 [kvdo30:bioQ0]
+259,1    5       16     0.000213937 31708  M   W 5435608 + 8 [kvdo30:bioQ0]
+...
+259,1    5      107     0.000246274 31708  D   W 5435592 + 256 [kvdo30:bioQ0]
 
-  git://git.kernel.dk/blktrace.git master
+For each of those Q events, an entry was created in the io_hash.  Then,
+upon I/O completion, only the first event (with the right starting
+sector) was removed!  The runtime overhead of just iterating the hash
+chains was enormous.
 
-for you to fetch changes up to f011d96f260a2be5dcc2ad9f4d1bf2d591946723:
+The solution is to simply ignore the Q events, so long as there are D
+events in the trace.  If there are no D events, then go ahead and hash
+the Q events as before.  I'm hoping that if we only have Q and C, that
+they will actually be aligned.  If that's an incorrect assumption, we
+could account merges in an rbtree.  I'll defer that work until someone
+can show me blktrace data that needs it.
 
-  iowatcher: don't add Q events to the io hash (2018-08-30 20:57:53 -0600)
+The comments should be self explanatory.  Review would be appreciated
+as the code isn't well documented, and I don't know if I'm missing some
+hidden assumption about the data.
 
-----------------------------------------------------------------
-Jeff Moyer (1):
-      iowatcher: don't add Q events to the io hash
+Before applying this patch, iowatcher would take more than 12 hours to
+complete.  After the patch:
 
- iowatcher/blkparse.c | 32 ++++++++++++++++++++++----------
- 1 file changed, 22 insertions(+), 10 deletions(-)
+real	9m44.476s
+user	41m35.426s
+sys	3m29.106s
 
----
+'nuf said.
 
-Diff of recent changes:
+Cheers,
+Jeff
+
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 
 diff --git a/iowatcher/blkparse.c b/iowatcher/blkparse.c
 index c7d1d65..41e20f0 100644
