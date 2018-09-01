@@ -1,36 +1,56 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Date: Tue, 04 Sep 2018 10:42:26 +0000
-Subject: Re: [patch] iowatcher: spwan NPROCESSORS_ONLN rsvg-convert-s
-Message-Id: <x49o9ddfsrx.fsf@segfault.boston.devel.redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Sat, 01 Sep 2018 12:00:01 +0000
+Subject: Recent changes (master)
+Message-Id: <20180901120001.7B7612C00A8@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <x49pnxywbj5.fsf@segfault.boston.devel.redhat.com>
-In-Reply-To: <x49pnxywbj5.fsf@segfault.boston.devel.redhat.com>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Jens Axboe <axboe@kernel.dk> writes:
+The following changes since commit f011d96f260a2be5dcc2ad9f4d1bf2d591946723:
 
-> On 8/31/18 2:59 PM, Chris Mason wrote:
->> On 31 Aug 2018, at 16:56, Jeff Moyer wrote:
->> 
->>> Jeff Moyer <jmoyer@redhat.com> writes:
->>>
->>>> iowatcher currently always spawns 8 rsvg-convert processes, no matter
->>>> how many CPUs a system has.  I did some limited testing of different
->>>> numbers of rsvg-convert processes.  Here are the results:
->>>
->>> I forgot to mention that my system has 20 hyperthreads.
->>>
->>> Jens, can you also fix the spwan typo in the subject when you commit
->>> this?
->> 
->> Reviewed-by: Chris Mason <clm@fb.com> but only if the typo stays.
->
-> Haha damn, well I guess that worked out, since I committed it 5 min
-> ago, without the reviewed-by, but with typo fixed :-)
+  iowatcher: don't add Q events to the io hash (2018-08-30 20:57:53 -0600)
 
-You guys crack me up.
+are available in the git repository at:
 
-Jeff
+  git://git.kernel.dk/blktrace.git master
+
+for you to fetch changes up to 10df4b691a68dd440547e393b6d241fc54fd2fad:
+
+  iowatcher: spawn NPROCESSORS_ONLN for rsvg-convert-s (2018-08-31 14:57:57 -0600)
+
+----------------------------------------------------------------
+Jeff Moyer (1):
+      iowatcher: spawn NPROCESSORS_ONLN for rsvg-convert-s
+
+ iowatcher/main.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+---
+
+Diff of recent changes:
+
+diff --git a/iowatcher/main.c b/iowatcher/main.c
+index 54325fb..4b97013 100644
+--- a/iowatcher/main.c
++++ b/iowatcher/main.c
+@@ -1043,9 +1043,14 @@ static void system_check(const char *cmd)
+ 
+ static void convert_movie_files(char *movie_dir)
+ {
++	long nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
++
++	if (nr_cpus < 0)
++		nr_cpus = 8;
++
+ 	fprintf(stderr, "Converting svg files in %s\n", movie_dir);
+-	snprintf(line, line_len, "find %s -name \\*.svg | xargs -I{} -n 1 -P 8 rsvg-convert -o {}.png {}",
+-		 movie_dir);
++	snprintf(line, line_len, "find %s -name \\*.svg | xargs -I{} -n 1 -P %ld rsvg-convert -o {}.png {}",
++		 movie_dir, nr_cpus);
+ 	system_check(line);
+ }
+ 
