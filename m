@@ -1,50 +1,25 @@
-From: Souvik Banerjee <souvik1997@gmail.com>
-Date: Sun, 14 Apr 2019 13:11:06 +0000
+From: Chris Mason <clm@fb.com>
+Date: Sun, 14 Apr 2019 19:43:17 +0000
 Subject: Re: status of seekwater
-Message-Id: <CAA_L7Z5LLC=G+auJWjVSEZoLXWnQxD0Yvu0MnYCM6HP=jezksw@mail.gmail.com>
+Message-Id: <FA757FD1-BE06-48C7-8339-C5BCEA494DB2@fb.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <20190414114600.GA12039@lst.de>
 In-Reply-To: <20190414114600.GA12039@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-I had the same problem with seekwatcher when I tried to use it. I
-ended up writing my own tool to visualize blktrace files which you can
-find here: https://github.com/souvik1997/blkview
-
-It=E2=80=99s not exactly the same but it might be helpful.
-
-Thanks,
-
-Souvik
-
-On 4/14/19, Christoph Hellwig <hch@lst.de> wrote:
-> Has any tried to use seekwatcher lately?  For one the report on
-> oss.oracle.com seems to be gone.  I found a git repo that seems
-> to have the latest codebase from hg and two little fixes here:
->
-> https://github.com/trofi/seekwatcher
->
-> But even that doesn't seem to work in modern environments.  After
-> a build with a few warnings actually trying to run it creates doesn't
-> seem to actually work well:
->
->
-> $ /usr/local/bin/seekwatcher -o sda2.png -t sda2
-> using tracefile ./sda2
-> Traceback (most recent call last):
->   File "/usr/local/bin/seekwatcher", line 983, in <module>
->     run =3D run_blkparse(x)
->   File "/usr/local/bin/seekwatcher", line 614, in run_blkparse
->     loaddata(fh, rd)
->   File "/usr/local/bin/seekwatcher", line 130, in loaddata
->     tags, options)
->   File "rundata.pyx", line 234, in seekwatcher.rundata.rundata.load_data
-> (seekwatcher/rundata.c:3936)
-> ValueError: The truth value of an array with more than one element is
-> ambiguous. Use a.any() or a.all()
->
-> With not output produces.
->
+T24gMTQgQXByIDIwMTksIGF0IDc6NDYsIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOg0KDQo+IEhh
+cyBhbnkgdHJpZWQgdG8gdXNlIHNlZWt3YXRjaGVyIGxhdGVseT8gIEZvciBvbmUgdGhlIHJlcG9y
+dCBvbg0KPiBvc3Mub3JhY2xlLmNvbSBzZWVtcyB0byBiZSBnb25lLiAgSSBmb3VuZCBhIGdpdCBy
+ZXBvIHRoYXQgc2VlbXMNCj4gdG8gaGF2ZSB0aGUgbGF0ZXN0IGNvZGViYXNlIGZyb20gaGcgYW5k
+IHR3byBsaXR0bGUgZml4ZXMgaGVyZToNCj4NCj4gaHR0cHM6Ly9naXRodWIuY29tL3Ryb2ZpL3Nl
+ZWt3YXRjaGVyDQo+DQo+IEJ1dCBldmVuIHRoYXQgZG9lc24ndCBzZWVtIHRvIHdvcmsgaW4gbW9k
+ZXJuIGVudmlyb25tZW50cy4gIEFmdGVyDQo+IGEgYnVpbGQgd2l0aCBhIGZldyB3YXJuaW5ncyBh
+Y3R1YWxseSB0cnlpbmcgdG8gcnVuIGl0IGNyZWF0ZXMgZG9lc24ndA0KPiBzZWVtIHRvIGFjdHVh
+bGx5IHdvcmsgd2VsbDoNCg0KSSByZXBsYWNlZCBzZWVrd2F0Y2hlciB3aXRoIGlvd2F0Y2hlciBh
+IHdoaWxlIGFnbywgYW5kIGNvbnZpbmNlZCBKZW5zIHRvIA0Kc3R1ZmYgaXQgaW50byBibGt0cmFj
+ZSBnaXQuICBJdCdzIGRyYW1hdGljYWxseSBmYXN0ZXIgKEMgaW5zdGVhZCBvZiANCnB5dGhvbiks
+IGFuZCB0aGUgY29tbWFuZCBsaW5lIGlzIHNsaWdodGx5IGRpZmZlcmVudC4gIEJ1dCwgYWxsIHRo
+ZSANCmZlYXR1cmVzIHNob3VsZCBiZSB0aGVyZS4NCg0KLWNocmlzDQo
