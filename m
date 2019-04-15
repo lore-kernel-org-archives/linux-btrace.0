@@ -1,7 +1,7 @@
-From: Chris Mason <clm@fb.com>
-Date: Sun, 14 Apr 2019 19:43:17 +0000
+From: Christoph Hellwig <hch@lst.de>
+Date: Mon, 15 Apr 2019 05:24:56 +0000
 Subject: Re: status of seekwater
-Message-Id: <FA757FD1-BE06-48C7-8339-C5BCEA494DB2@fb.com>
+Message-Id: <20190415052456.GA15902@lst.de>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <20190414114600.GA12039@lst.de>
 In-Reply-To: <20190414114600.GA12039@lst.de>
@@ -10,16 +10,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-T24gMTQgQXByIDIwMTksIGF0IDc6NDYsIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOg0KDQo+IEhh
-cyBhbnkgdHJpZWQgdG8gdXNlIHNlZWt3YXRjaGVyIGxhdGVseT8gIEZvciBvbmUgdGhlIHJlcG9y
-dCBvbg0KPiBvc3Mub3JhY2xlLmNvbSBzZWVtcyB0byBiZSBnb25lLiAgSSBmb3VuZCBhIGdpdCBy
-ZXBvIHRoYXQgc2VlbXMNCj4gdG8gaGF2ZSB0aGUgbGF0ZXN0IGNvZGViYXNlIGZyb20gaGcgYW5k
-IHR3byBsaXR0bGUgZml4ZXMgaGVyZToNCj4NCj4gaHR0cHM6Ly9naXRodWIuY29tL3Ryb2ZpL3Nl
-ZWt3YXRjaGVyDQo+DQo+IEJ1dCBldmVuIHRoYXQgZG9lc24ndCBzZWVtIHRvIHdvcmsgaW4gbW9k
-ZXJuIGVudmlyb25tZW50cy4gIEFmdGVyDQo+IGEgYnVpbGQgd2l0aCBhIGZldyB3YXJuaW5ncyBh
-Y3R1YWxseSB0cnlpbmcgdG8gcnVuIGl0IGNyZWF0ZXMgZG9lc24ndA0KPiBzZWVtIHRvIGFjdHVh
-bGx5IHdvcmsgd2VsbDoNCg0KSSByZXBsYWNlZCBzZWVrd2F0Y2hlciB3aXRoIGlvd2F0Y2hlciBh
-IHdoaWxlIGFnbywgYW5kIGNvbnZpbmNlZCBKZW5zIHRvIA0Kc3R1ZmYgaXQgaW50byBibGt0cmFj
-ZSBnaXQuICBJdCdzIGRyYW1hdGljYWxseSBmYXN0ZXIgKEMgaW5zdGVhZCBvZiANCnB5dGhvbiks
-IGFuZCB0aGUgY29tbWFuZCBsaW5lIGlzIHNsaWdodGx5IGRpZmZlcmVudC4gIEJ1dCwgYWxsIHRo
-ZSANCmZlYXR1cmVzIHNob3VsZCBiZSB0aGVyZS4NCg0KLWNocmlzDQo
+On Sun, Apr 14, 2019 at 07:43:17PM +0000, Chris Mason wrote:
+> I replaced seekwatcher with iowatcher a while ago, and convinced Jens to 
+> stuff it into blktrace git.  It's dramatically faster (C instead of 
+> python), and the command line is slightly different.  But, all the 
+> features should be there.
+
+Ok.  Can we add a note to the blktrace repo that this replaces seekwatcher
+in a way that can be easily found?  Do we still have friends at Oracle
+that could add such a note to the old seekwatcher page at:
+
+    https://oss.oracle.com/~mason/seekwatcher/
