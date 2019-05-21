@@ -1,21 +1,40 @@
 From: Weiping Zhang <zhangweiping@didiglobal.com>
-Date: Wed, 24 Apr 2019 16:30:55 +0000
-Subject: [RFC PATCH 1/1] blkparse: add support sort program by io event
-Message-Id: <013ecafc493563a658b0dd10e256785b3c67917c.1556123360.git.zhangweiping@didiglobal.com>
+Date: Tue, 21 May 2019 13:29:13 +0000
+Subject: [PATCH V4] blkparse: add support sort program by io event
+Message-Id: <20190521132907.GA27742@192.168.3.9>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+Displays each program's data sorted by program name or io event, like
+Queued, Read, Write and Complete. When -S is specified the -s will be ignored.
+The capital letters Q,R,W,C stand for KB, then q/r/w/c stand for IO.
+The N is used for sorting programs by name, same to -s.
+
+If you want to sort programs by how many data they queued, you can use:
+
+blkparse -i sda.blktrace. -q -S Q -o sda.parse
+
 Signed-off-by: Weiping Zhang <zhangweiping@didiglobal.com>
 ---
- blkparse.c     | 155 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- doc/blkparse.1 |  12 +++++
- 2 files changed, 165 insertions(+), 2 deletions(-)
+Changes since V3:
+* fix mistakes in commit message.
+
+Changes since V2:
+* fix mistakes in commit message.
+
+Changes since V1:
+* update man documentations, add an example to use -S option.
+* add missed commit message.
+
+ blkparse.c     | 156 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ doc/blkparse.1 |  15 ++++++
+ 2 files changed, 169 insertions(+), 2 deletions(-)
 
 diff --git a/blkparse.c b/blkparse.c
-index 227cc44..bfaadde 100644
+index 227cc44..3de2ebe 100644
 --- a/blkparse.c
 +++ b/blkparse.c
 @@ -100,6 +100,19 @@ struct per_process_info {
@@ -213,18 +232,19 @@ index 227cc44..bfaadde 100644
  	"[ -t                | --track-ios ]\n" \
  	"[ -w <time>         | --stopwatch=<time> ]\n" \
  	"[ -M                | --no-msgs\n" \
-@@ -2764,6 +2906,10 @@ static char usage_str[] =    "\n\n" \
+@@ -2764,6 +2906,11 @@ static char usage_str[] =    "\n\n" \
  	"\t-O Do NOT output text data\n" \
  	"\t-q Quiet. Don't display any stats at the end of the trace\n" \
  	"\t-s Show per-program io statistics\n" \
 +	"\t-S Show per-program io statistics sorted by N/Q/q/R/r/W/w/C/c\n" \
 +	"\t   N:Name, Q/q:Queued(read & write), R/r:Queued Read, W/w:Queued Write, C/c:Complete.\n" \
-+	"\t   By KB: Q,R,W,C. By IO: q,r,w,c.\n" \
++	"\t   Sort programs by how much data(KB): Q,R,W,C.\n" \
++	"\t   Sort programs by how many IO operations: q,r,w,c.\n" \
 +	"\t   if -S was used, the -s parameter will be ignored.\n" \
  	"\t-t Track individual ios. Will tell you the time a request took\n" \
  	"\t   to get queued, to get dispatched, and to get completed\n" \
  	"\t-w Only parse data between the given time interval in seconds.\n" \
-@@ -2830,6 +2976,11 @@ int main(int argc, char *argv[])
+@@ -2830,6 +2977,11 @@ int main(int argc, char *argv[])
  		case 's':
  			per_process_stats = 1;
  			break;
@@ -237,10 +257,10 @@ index 227cc44..bfaadde 100644
  			track_ios = 1;
  			break;
 diff --git a/doc/blkparse.1 b/doc/blkparse.1
-index cb21fea..bc090ea 100644
+index cb21fea..627b7b1 100644
 --- a/doc/blkparse.1
 +++ b/doc/blkparse.1
-@@ -165,6 +165,18 @@ Quiet mode
+@@ -165,6 +165,21 @@ Quiet mode
  Displays data sorted by program
  .RE
  
@@ -250,9 +270,12 @@ index cb21fea..bc090ea 100644
 +.br
 +.RS
 +Displays each program's data sorted by program name or io event, like
-+Queued, Read, Write and Complete. When \-S is specified the \-s will be
-+ignored. The capital letters Q,R,W,C stand for KB, then q/r/w/c stand
-+for IO.
++Queued, Read, Write and Complete. When \-S is specified the \-s will be ignored.
++The capital letters Q,R,W,C stand for KB, then q/r/w/c stand for IO.
++
++If you want to soct programs by how many data they queued, you can use:
++
++blkparse -i sda.blktrace. -q \-S Q \-o sda.parse
 +.RE
 +
 +
