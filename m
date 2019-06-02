@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:18 +0000
-Subject: [RFC PATCH 09/46] blktrace: update blk_add_trace_rq()
-Message-Id: <20190602165055.14424-10-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:55 +0000
+Subject: [RFC PATCH 46/46] mm: set bio iopriority field
+Message-Id: <20190602165055.14424-47-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,53 +10,20 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
+ mm/page_io.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 5103b79bce2a..b27981bb9c89 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1077,21 +1077,32 @@ blk_trace_request_get_cgid(struct request_queue *q, struct request *rq)
-  *
-  **/
- static void blk_add_trace_rq(struct request *rq, int error,
--			     unsigned int nr_bytes, u32 what,
-+			     unsigned int nr_bytes, u64 what,
- 			     union kernfs_node_id *cgid)
- {
- 	struct blk_trace *bt = rq->q->blk_trace;
-+	struct blk_trace_ext *bte = rq->q->blk_trace_ext;
+diff --git a/mm/page_io.c b/mm/page_io.c
+index 2e8019d0e048..aee83476e0f4 100644
+--- a/mm/page_io.c
++++ b/mm/page_io.c
+@@ -38,6 +38,7 @@ static struct bio *get_swap_bio(gfp_t gfp_flags,
  
- 	if (likely(!bt))
- 		return;
+ 		bio->bi_iter.bi_sector = map_swap_page(page, &bdev);
+ 		bio_set_dev(bio, bdev);
++		bio_set_prio(bio, get_current_ioprio());
+ 		bio->bi_iter.bi_sector <<= PAGE_SHIFT - 9;
+ 		bio->bi_end_io = end_io;
  
--	if (blk_rq_is_passthrough(rq))
--		what |= BLK_TC_ACT(BLK_TC_PC);
--	else
--		what |= BLK_TC_ACT(BLK_TC_FS);
--
--	__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes, req_op(rq),
--			rq->cmd_flags, what, error, 0, NULL, cgid);
-+	if (rq->q->blk_trace) {
-+		if (blk_rq_is_passthrough(rq))
-+			what |= BLK_TC_ACT(BLK_TC_PC);
-+		else
-+			what |= BLK_TC_ACT(BLK_TC_FS);
-+		__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes,
-+				req_op(rq), rq->cmd_flags, (u32)what, error, 0,
-+				NULL, cgid);
-+	} else if (rq->q->blk_trace_ext) {
-+		if (blk_rq_is_passthrough(rq))
-+			what |= BLK_TC_ACT_EXT(BLK_TC_PC);
-+		else
-+			what |= BLK_TC_ACT_EXT(BLK_TC_FS);
-+		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq), nr_bytes,
-+				    req_op(rq), rq->cmd_flags, what, error, 0,
-+				    NULL, cgid, req_get_ioprio(rq));
-+	}
- }
- 
- static void blk_add_trace_rq_insert(void *ignore,
 -- 
 2.19.1
