@@ -1,143 +1,73 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:58:07 +0000
-Subject: [blktrace-tools RFC PATCH 2/5] blktrace.h: update tools header for trace extension
-Message-Id: <20190602165810.14817-3-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:41 +0000
+Subject: [RFC PATCH 32/46] blktrace: add trace event print helper
+Message-Id: <20190602165055.14424-33-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This patch updates blktrace tools header with various declarations and
-definitions to support the blktrace extension. We add iopriority
-definitions from the kernel header which are used in the blkparse tool
-in order to track the iopriority. We add blktrace-extension version
-to uniquely identify the trace along with the trace verification
-and endianness helper.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- blktrace.h | 72 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 72 insertions(+)
+ kernel/trace/blktrace.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-diff --git a/blktrace.h b/blktrace.h
-index 944fc08..c1eecc4 100644
---- a/blktrace.h
-+++ b/blktrace.h
-@@ -6,6 +6,8 @@
- #include <byteswap.h>
- #include <endian.h>
- #include <sys/types.h>
-+#include <stdbool.h>
-+#include <stdint.h>
- 
- #include "blktrace_api.h"
- #include "rbtree.h"
-@@ -26,6 +28,37 @@
- #define t_kb(t)		((t)->bytes >> 10)
- #define t_b(t)		((t)->bytes & 1023)
- 
-+/*
-+ * Gives us 8 prio classes with 13-bits of data for each class
-+ */
-+#define IOPRIO_CLASS_SHIFT      (13)
-+#define IOPRIO_PRIO_MASK        ((1UL << IOPRIO_CLASS_SHIFT) - 1)
-+
-+#define IOPRIO_PRIO_CLASS(mask) ((mask) >> IOPRIO_CLASS_SHIFT)
-+#define IOPRIO_PRIO_DATA(mask)  ((mask) & IOPRIO_PRIO_MASK)
-+#define IOPRIO_PRIO_VALUE(class, data)  (((class) << IOPRIO_CLASS_SHIFT) | data)
-+
-+#define ioprio_valid(mask)      (IOPRIO_PRIO_CLASS((mask)) != IOPRIO_CLASS_NONE)
-+
-+/*
-+ * These are the io priority groups as implemented by CFQ. RT is the realtime
-+ * class, it always gets premium service. BE is the best-effort scheduling
-+ * class, the default for any process. IDLE is the idle scheduling class, it
-+ * is only served when no one else is using the disk.
-+ */
-+enum {
-+	IOPRIO_CLASS_NONE,
-+	IOPRIO_CLASS_RT,
-+	IOPRIO_CLASS_BE,
-+	IOPRIO_CLASS_IDLE,
-+	IOPRIO_CLASS_LAST,
-+};
-+
-+#define TRACE_ALL_IOPRIO ((1 << IOPRIO_CLASS_NONE) | (1 << IOPRIO_CLASS_RT) | \
-+		(1 << IOPRIO_CLASS_BE) | (1 << IOPRIO_CLASS_IDLE))
-+
-+extern bool blkparse_track_prio;
-+extern uint32_t blkparse_prio_mask;
- typedef __u32 u32;
- typedef __u8 u8;
- 
-@@ -69,6 +102,7 @@ extern struct timespec abs_start_time;
- 
- #define CHECK_MAGIC(t)		(((t)->magic & 0xffffff00) = BLK_IO_TRACE_MAGIC)
- #define SUPPORTED_VERSION	(0x07)
-+#define SUPPORTED_VERSION_EXT	(0x08)
- 
- #if __BYTE_ORDER = __LITTLE_ENDIAN
- #define be16_to_cpu(x)		__bswap_16(x)
-@@ -95,6 +129,21 @@ static inline int verify_trace(struct blk_io_trace *t)
- 		return 1;
- 	}
- 	if ((t->magic & 0xff) != SUPPORTED_VERSION) {
-+		fprintf(stderr, "unsupported trace version %x\n",
-+			t->magic & 0xff);
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+static inline int verify_trace_ext(struct blk_io_trace_ext *t)
-+{
-+	if (!CHECK_MAGIC(t)) {
-+		fprintf(stderr, "bad trace magic %x\n", t->magic);
-+		return 1;
-+	}
-+	if ((t->magic & 0xff) != SUPPORTED_VERSION_EXT) {
- 		fprintf(stderr, "unsupported trace version %x\n", 
- 			t->magic & 0xff);
- 		return 1;
-@@ -121,6 +170,25 @@ static inline void trace_to_cpu(struct blk_io_trace *t)
- 	t->pdu_len	= be16_to_cpu(t->pdu_len);
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index e80d411e5e0b..71fc15ded5c6 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -2200,12 +2200,51 @@ static enum print_line_t print_one_line(struct trace_iterator *iter,
+ 	return trace_handle_return(s);
  }
  
-+static inline void trace_to_cpu_ext(struct blk_io_trace_ext *t)
++static enum print_line_t print_one_line_ext(struct trace_iterator *iter,
++					bool classic)
 +{
-+	if (data_is_native)
-+		return;
++	struct trace_array *tr = iter->tr;
++	struct trace_seq *s = &iter->seq;
++	const struct blk_io_trace_ext *t;
++	u32 what;
++	bool long_act;
++	blk_log_action_t *log_action;
++	bool has_cg;
 +
-+	t->magic	= be32_to_cpu(t->magic);
-+	t->sequence	= be32_to_cpu(t->sequence);
-+	t->time		= be64_to_cpu(t->time);
-+	t->sector	= be64_to_cpu(t->sector);
-+	t->bytes	= be32_to_cpu(t->bytes);
-+	t->action	= be64_to_cpu(t->action);
-+	t->ioprio	= be32_to_cpu(t->ioprio);
-+	t->pid		= be32_to_cpu(t->pid);
-+	t->device	= be32_to_cpu(t->device);
-+	t->cpu		= be32_to_cpu(t->cpu);
-+	t->error	= be16_to_cpu(t->error);
-+	t->pdu_len	= be16_to_cpu(t->pdu_len);
++	t	   = te_blk_io_trace_ext(iter->ent);
++	what	   = (t->action & ((1ULL << BLK_TC_SHIFT_EXT) - 1)) & ~__BLK_TA_CGROUP;
++	long_act   = !!(tr->trace_flags & TRACE_ITER_VERBOSE);
++	log_action = classic ? &blk_log_action_classic_ext : &blk_log_action_ext;
++	has_cg	   = t->action & __BLK_TA_CGROUP;
++
++	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
++		log_action(iter, long_act ? "message" : "m", has_cg);
++		blk_log_msg_ext(s, iter->ent, has_cg);
++		return trace_handle_return(s);
++	}
++
++	if (unlikely(what = 0 || what >= ARRAY_SIZE(what2act_ext)))
++		trace_seq_printf(s, "Unknown action %x\n", what);
++	else {
++		log_action(iter, what2act_ext[what].act[long_act], has_cg);
++		what2act_ext[what].print(s, iter->ent, has_cg);
++	}
++
++	return trace_handle_return(s);
 +}
 +
- /*
-  * check whether data is native or not
-  */
-@@ -145,7 +213,11 @@ extern int add_format_spec(char *);
- extern void process_fmt(char *, struct per_cpu_info *, struct blk_io_trace *,
- 			unsigned long long, int, unsigned char *);
- extern int valid_act_opt(int);
-+extern uint64_t valid_act_opt_ext(uint64_t x);
- extern int find_mask_map(char *);
-+extern int find_mask_map_ext(char *string);
-+extern bool valid_prio_opt(uint32_t x);
-+extern int find_prio_mask_map(char *string);
- extern char *find_process_name(pid_t);
+ static enum print_line_t blk_trace_event_print(struct trace_iterator *iter,
+ 					       int flags, struct trace_event *event)
+ {
+ 	return print_one_line(iter, false);
+ }
  
- #endif
++static enum print_line_t blk_trace_event_print_ext(struct trace_iterator *iter,
++					       int flags, struct trace_event *event)
++{
++	return print_one_line_ext(iter, false);
++}
++
+ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
+ {
+ 	struct trace_seq *s = &iter->seq;
 -- 
 2.19.1
