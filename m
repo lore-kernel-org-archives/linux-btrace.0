@@ -1,50 +1,65 @@
-From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Date: Thu, 13 Jun 2019 16:08:12 +0000
-Subject: Re: [COMPILE TESTED PATCH 6/8] target/pscsi: use helper in pscsi_get_blocks()
-Message-Id: <BYAPR04MB574928B826652B698EE6286886EF0@BYAPR04MB5749.namprd04.prod.outlook.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:16 +0000
+Subject: [RFC PATCH 07/46] blktrace: add act and prio check helpers
+Message-Id: <20190602165055.14424-8-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
- <20190613145955.4813-7-chaitanya.kulkarni@wdc.com>
- <ca5092fa-bc1b-08d5-888a-1ed6f909dfef@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bart Van Assche <bvanassche@acm.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Cc: "colyli@suse.de" <colyli@suse.de>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>
+To: linux-btrace@vger.kernel.org
 
-Okay, I'll drop this patch in the V2.
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ kernel/trace/blktrace.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-On 06/13/2019 08:36 AM, Bart Van Assche wrote:
-> On 6/13/19 7:59 AM, Chaitanya Kulkarni wrote:
->> This patch updates the pscsi_get_blocks() with newly introduced helper
->> function to read the nr_sects from block device's hd_parts with the
->> help if part_nr_sects_read() protected by appropriate locking.
->>
->> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
->> ---
->>    drivers/target/target_core_pscsi.c | 2 +-
->>    1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
->> index c9d92b3e777d..da481edab2de 100644
->> --- a/drivers/target/target_core_pscsi.c
->> +++ b/drivers/target/target_core_pscsi.c
->> @@ -1030,7 +1030,7 @@ static sector_t pscsi_get_blocks(struct se_device *dev)
->>    	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
->>
->>    	if (pdv->pdv_bd && pdv->pdv_bd->bd_part)
->> -		return pdv->pdv_bd->bd_part->nr_sects;
->> +		return bdev_nr_sects(pdv->pdv_bd);
->>
->>    	return 0;
->>    }
->
-> As far as I can see bd_part does not change between blkdev_get() and
-> blkdev_put(). Since the pscsi code guarantees that blkdev_put() is not
-> called concurrently with pscsi_get_blocks() this patch is not necessary.
->
-> Bart.
->
->
->
-
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index e6b0a914cb85..0ed4ce410ed8 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -310,6 +310,43 @@ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
+ 	return 0;
+ }
+ 
++static inline bool prio_log_check(struct blk_trace_ext *bt, u32 ioprio)
++{
++	bool ret;
++
++	switch (IOPRIO_PRIO_CLASS(ioprio)) {
++	case IOPRIO_CLASS_NONE:
++		ret = (bt->prio_mask & 0x01) ? true : false;
++		break;
++	case IOPRIO_CLASS_RT:
++		ret = (bt->prio_mask & 0x02) ? true : false;
++		break;
++	case IOPRIO_CLASS_BE:
++		ret = (bt->prio_mask & 0x04) ? true : false;
++		break;
++	case IOPRIO_CLASS_IDLE:
++		ret = (bt->prio_mask & 0x08) ? true : false;
++		break;
++	default:
++		/*XXX: print rate limit warn here */
++		ret = false;
++	}
++	return ret;
++}
++
++static inline int act_log_check_ext(struct blk_trace_ext *bt, u64 what,
++			     sector_t sector, pid_t pid)
++{
++	if (((bt->act_mask << BLK_TC_SHIFT_EXT) & what) = 0)
++		return 1;
++	if (sector && (sector < bt->start_lba || sector > bt->end_lba))
++		return 1;
++	if (bt->pid && pid != bt->pid)
++		return 1;
++
++	return 0;
++}
++
+ /*
+  * Data direction bit lookup
+  */
+-- 
+2.19.1
