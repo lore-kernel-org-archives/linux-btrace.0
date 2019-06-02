@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:54 +0000
-Subject: [RFC PATCH 45/46] power/swap: set bio iopriority field
-Message-Id: <20190602165055.14424-46-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:42 +0000
+Subject: [RFC PATCH 33/46] blktrace: add trace_synthesize helper
+Message-Id: <20190602165055.14424-34-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,20 +10,34 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/power/swap.c | 1 +
- 1 file changed, 1 insertion(+)
+ kernel/trace/blktrace.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/kernel/power/swap.c b/kernel/power/swap.c
-index d7f6c1a288d3..2ad770126719 100644
---- a/kernel/power/swap.c
-+++ b/kernel/power/swap.c
-@@ -273,6 +273,7 @@ static int hib_submit_io(int op, int op_flags, pgoff_t page_off, void *addr,
- 	bio->bi_iter.bi_sector = page_off * (PAGE_SIZE >> 9);
- 	bio_set_dev(bio, hib_resume_bdev);
- 	bio_set_op_attrs(bio, op, op_flags);
-+	bio_set_prio(bio, get_current_ioprio());
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 71fc15ded5c6..cd6110bb5fcd 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -2260,6 +2260,21 @@ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
+ 			 sizeof(old) - offset + t->pdu_len);
+ }
  
- 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
- 		pr_err("Adding page to bio failed at %llu\n",
++static void blk_trace_synthesize_old_trace_ext(struct trace_iterator *iter)
++{
++	struct trace_seq *s = &iter->seq;
++	struct blk_io_trace_ext *t = (struct blk_io_trace_ext *)iter->ent;
++	const int offset = offsetof(struct blk_io_trace_ext, sector);
++	struct blk_io_trace_ext old = {
++		.magic	  = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION_EXT,
++		.time     = iter->ts,
++	};
++
++	trace_seq_putmem(s, &old, offset);
++	trace_seq_putmem(s, &t->sector,
++			 sizeof(old) - offset + t->pdu_len);
++}
++
+ static enum print_line_t
+ blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
+ 			     struct trace_event *event)
 -- 
 2.19.1
