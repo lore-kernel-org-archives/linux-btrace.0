@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:37 +0000
-Subject: [RFC PATCH 28/46] blktrace: add a new formatting routine
-Message-Id: <20190602165055.14424-29-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:43 +0000
+Subject: [RFC PATCH 34/46] blktrace: add trace print helpers
+Message-Id: <20190602165055.14424-35-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,59 +10,43 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ kernel/trace/blktrace.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 57c5b5aace08..359562073d01 100644
+index cd6110bb5fcd..fb6cbaa08809 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1583,6 +1583,46 @@ static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
- 	rwbs[i] = '\0';
+@@ -2284,6 +2284,15 @@ blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
+ 	return trace_handle_return(&iter->seq);
  }
  
-+static void fill_rwbs_ext(char *rwbs, const struct blk_io_trace_ext *t)
++static enum print_line_t
++blk_trace_event_print_binary_ext(struct trace_iterator *iter, int flags,
++			     struct trace_event *event)
 +{
-+	int i = 0;
-+	int tc = t->action >> BLK_TC_SHIFT_EXT;
++	blk_trace_synthesize_old_trace_ext(iter);
 +
-+	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
-+		rwbs[i++] = 'N';
-+		goto out;
-+	}
-+
-+	if (tc & BLK_TC_FLUSH)
-+		rwbs[i++] = 'F';
-+
-+	if (tc & BLK_TC_DISCARD)
-+		rwbs[i++] = 'D';
-+	else if ((tc & BLK_TC_WRITE_ZEROES)) {
-+		rwbs[i++] = 'W';
-+		rwbs[i++] = 'Z';
-+	} else if ((tc & BLK_TC_ZONE_RESET)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'R';
-+	} else if (tc & BLK_TC_WRITE)
-+		rwbs[i++] = 'W';
-+	else if (t->bytes)
-+		rwbs[i++] = 'R';
-+	else
-+		rwbs[i++] = 'N';
-+
-+	if (tc & BLK_TC_FUA)
-+		rwbs[i++] = 'F';
-+	if (tc & BLK_TC_AHEAD)
-+		rwbs[i++] = 'A';
-+	if (tc & BLK_TC_SYNC)
-+		rwbs[i++] = 'S';
-+	if (tc & BLK_TC_META)
-+		rwbs[i++] = 'M';
-+out:
-+	rwbs[i] = '\0';
++	return trace_handle_return(&iter->seq);
 +}
 +
- static inline
- const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
+ static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
+ {
+ 	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
+@@ -2292,6 +2301,14 @@ static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
+ 	return print_one_line(iter, true);
+ }
+ 
++static enum print_line_t blk_tracer_print_line_ext(struct trace_iterator *iter)
++{
++	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
++		return TRACE_TYPE_UNHANDLED;
++
++	return print_one_line_ext(iter, true);
++}
++
+ static int
+ blk_tracer_set_flag(struct trace_array *tr, u32 old_flags, u32 bit, int set)
  {
 -- 
 2.19.1
