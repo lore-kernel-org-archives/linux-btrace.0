@@ -1,51 +1,32 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:35 +0000
-Subject: [RFC PATCH 26/46] blktrace: update blk_add_trace_rq_remap()
-Message-Id: <20190602165055.14424-27-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:14 +0000
+Subject: [RFC PATCH 05/46] blktrace: add a new global list
+Message-Id: <20190602165055.14424-6-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+Add a separate list to hold running extension traces.
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ kernel/trace/blktrace.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index d94a377fc7b8..1141be3273bf 100644
+index e1c6d79fb4cc..0741dd11531f 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1435,18 +1435,23 @@ static void blk_add_trace_rq_remap(void *ignore,
- 				   sector_t from)
- {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
- 	struct blk_io_trace_remap r;
+@@ -33,6 +33,9 @@ static bool blk_tracer_enabled __read_mostly;
+ static LIST_HEAD(running_trace_list);
+ static __cacheline_aligned_in_smp DEFINE_SPINLOCK(running_trace_lock);
  
--	if (likely(!bt))
--		return;
--
- 	r.device_from = cpu_to_be32(dev);
- 	r.device_to   = cpu_to_be32(disk_devt(rq->rq_disk));
- 	r.sector_from = cpu_to_be64(from);
- 
--	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
--			rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
--			sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
-+				rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
-+				sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, blk_rq_pos(rq), blk_rq_bytes(rq),
-+				    rq_data_dir(rq), 0, BLK_TA_REMAP_EXT, 0,
-+				    sizeof(r), &r, blk_trace_request_get_cgid(q, rq),
-+				    req_get_ioprio(rq));
-+	}
- }
- 
- /**
++static LIST_HEAD(running_trace_ext_list);
++static __cacheline_aligned_in_smp DEFINE_SPINLOCK(running_trace_ext_lock);
++
+ /* Select an alternative, minimalistic output than the original one */
+ #define TRACE_BLK_OPT_CLASSIC	0x1
+ #define TRACE_BLK_OPT_CGROUP	0x2
 -- 
 2.19.1
