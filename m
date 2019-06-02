@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:36 +0000
-Subject: [RFC PATCH 27/46] blktrace: update blk_add_driver_data()
-Message-Id: <20190602165055.14424-28-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:32 +0000
+Subject: [RFC PATCH 23/46] blktrace: update blk_add_trace_unplug()
+Message-Id: <20190602165055.14424-24-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,36 +10,50 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ kernel/trace/blktrace.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 1141be3273bf..57c5b5aace08 100644
+index ebb2de71159a..8ea8d987eb4b 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1470,13 +1470,18 @@ void blk_add_driver_data(struct request_queue *q,
- 			 void *data, size_t len)
+@@ -1329,17 +1329,30 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 				    unsigned int depth, bool explicit)
  {
  	struct blk_trace *bt = q->blk_trace;
 +	struct blk_trace_ext *bte = q->blk_trace_ext;
++	__be64 rpdu = cpu_to_be64(depth);
++	u64 what;
  
--	if (likely(!bt))
--		return;
+-	if (bt) {
+-		__be64 rpdu = cpu_to_be64(depth);
+-		u32 what;
 -
--	__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0, 0,
--				BLK_TA_DRV_DATA, 0, len, data,
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq),
-+				0, 0, BLK_TA_DRV_DATA, 0, len, data,
- 				blk_trace_request_get_cgid(q, rq));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq), blk_rq_bytes(rq),
-+				0, 0, BLK_TA_DRV_DATA_EXT, 0, len, data,
-+				blk_trace_request_get_cgid(q, rq),
-+				req_get_ioprio(rq));
+-		if (explicit)
++	if (explicit) {
++		if (q->blk_trace) {
+ 			what = BLK_TA_UNPLUG_IO;
+-		else
++		} else if (q->blk_trace_ext) {
++			what = BLK_TA_UNPLUG_IO_EXT;
++		}
++	} else {
++		if (q->blk_trace) {
+ 			what = BLK_TA_UNPLUG_TIMER;
++		} else if (q->blk_trace_ext) {
++			what = BLK_TA_UNPLUG_TIMER_EXT;
++		}
 +	}
+ 
+-		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, NULL);
++	if (q->blk_trace) {
++		__blk_add_trace(bt, 0, 0, 0, 0, (u32)what, 0, sizeof(rpdu),
++				&rpdu, NULL);
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, what, 0, sizeof(rpdu),
++				    &rpdu, NULL, 0);
+ 	}
  }
- EXPORT_SYMBOL_GPL(blk_add_driver_data);
  
 -- 
 2.19.1
