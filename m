@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:47 +0000
-Subject: [RFC PATCH 38/46] block: set ioprio for zone-reset bio
-Message-Id: <20190602165055.14424-39-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:31 +0000
+Subject: [RFC PATCH 22/46] blktrace: update blk_add_trace_plug()
+Message-Id: <20190602165055.14424-23-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,20 +10,36 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/blk-zoned.c | 1 +
- 1 file changed, 1 insertion(+)
+ kernel/trace/blktrace.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index ae7e91bd0618..0bd7981e9535 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -249,6 +249,7 @@ int blkdev_reset_zones(struct block_device *bdev,
- 		bio->bi_iter.bi_sector = sector;
- 		bio_set_dev(bio, bdev);
- 		bio_set_op_attrs(bio, REQ_OP_ZONE_RESET, 0);
-+		bio_set_prio(bio, get_current_ioprio());
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index fe1c9d549c0d..ebb2de71159a 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1287,7 +1287,6 @@ static void blk_add_trace_getrq(void *ignore,
+ 	}
+ }
  
- 		sector += zone_sectors;
+-
+ static void blk_add_trace_sleeprq(void *ignore,
+ 				  struct request_queue *q,
+ 				  struct bio *bio, int rw)
+@@ -1316,9 +1315,14 @@ static void blk_add_trace_sleeprq(void *ignore,
+ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
+ {
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
  
+-	if (bt)
++	if (q->blk_trace) {
+ 		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, NULL);
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, BLK_TA_PLUG_EXT, 0, 0,
++				    NULL, NULL, 0);
++	}
+ }
+ 
+ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
 -- 
 2.19.1
