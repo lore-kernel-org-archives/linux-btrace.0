@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:28 +0000
-Subject: [RFC PATCH 19/46] blktrace: update blk_add_trace_bio_queue()
-Message-Id: <20190602165055.14424-20-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:44 +0000
+Subject: [RFC PATCH 35/46] blktrace: add blkext tracer
+Message-Id: <20190602165055.14424-36-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,28 +10,100 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 47 ++++++++++++++++++++++++++++++++++++++---
+ kernel/trace/trace.h    |  1 +
+ 2 files changed, 45 insertions(+), 3 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index b64536e2b736..8fd5b385b5f1 100644
+index fb6cbaa08809..6ac55935d0e0 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1253,7 +1253,14 @@ static void blk_add_trace_bio_frontmerge(void *ignore,
- static void blk_add_trace_bio_queue(void *ignore,
- 				    struct request_queue *q, struct bio *bio)
- {
--	blk_add_trace_bio(q, bio, BLK_TA_QUEUE, 0);
-+	u64 ta = 0;
+@@ -2334,18 +2334,42 @@ static struct tracer blk_tracer __read_mostly = {
+ 	.set_flag	= blk_tracer_set_flag,
+ };
+ 
++static struct tracer blk_tracer_ext __read_mostly = {
++	.name		= "blkext",
++	.init		= blk_tracer_init,
++	.reset		= blk_tracer_reset,
++	.start		= blk_tracer_start,
++	.stop		= blk_tracer_stop,
++	.print_header	= blk_tracer_print_header,
++	.print_line	= blk_tracer_print_line_ext,
++	.flags		= &blk_tracer_flags,
++	.set_flag	= blk_tracer_set_flag,
++};
 +
-+	if (q->blk_trace) {
-+		ta = BLK_TA_QUEUE;
-+	} else if (q->blk_trace_ext) {
-+		ta = BLK_TA_QUEUE_EXT;
+ static struct trace_event_functions trace_blk_event_funcs = {
+ 	.trace		= blk_trace_event_print,
+ 	.binary		= blk_trace_event_print_binary,
+ };
+ 
++static struct trace_event_functions trace_blk_event_funcs_ext = {
++	.trace		= blk_trace_event_print_ext,
++	.binary		= blk_trace_event_print_binary_ext,
++};
++
+ static struct trace_event trace_blk_event = {
+ 	.type		= TRACE_BLK,
+ 	.funcs		= &trace_blk_event_funcs,
+ };
+ 
++static struct trace_event trace_blk_event_ext = {
++	.type		= TRACE_BLK_EXT,
++	.funcs		= &trace_blk_event_funcs_ext,
++};
++
+ static int __init init_blk_tracer(void)
+ {
++	int ret = 0;
++
+ 	if (!register_trace_event(&trace_blk_event)) {
+ 		pr_warn("Warning: could not register block events\n");
+ 		return 1;
+@@ -2353,11 +2377,28 @@ static int __init init_blk_tracer(void)
+ 
+ 	if (register_tracer(&blk_tracer) != 0) {
+ 		pr_warn("Warning: could not register the block tracer\n");
+-		unregister_trace_event(&trace_blk_event);
+-		return 1;
++		goto unregister_trace_event;
+ 	}
+ 
+-	return 0;
++	if (!register_trace_event(&trace_blk_event_ext)) {
++		pr_warn("Warning: could not register block events\n");
++		/* unregister blk_tracer */
++		goto unregister_trace_event;
 +	}
-+	blk_add_trace_bio(q, bio, ta, 0);
++
++	if (register_tracer(&blk_tracer_ext) != 0) {
++		pr_warn("Warning: could not register the block tracer\n");
++		goto unregister_trace_event_ext;
++	}
++out:
++	return ret;
++
++unregister_trace_event_ext:
++	unregister_trace_event(&trace_blk_event_ext);
++unregister_trace_event:
++	unregister_trace_event(&trace_blk_event);
++	ret = 1;
++	goto out;
  }
  
- static void blk_add_trace_getrq(void *ignore,
+ device_initcall(init_blk_tracer);
+diff --git a/kernel/trace/trace.h b/kernel/trace/trace.h
+index d80cee49e0eb..2bd8f67687ff 100644
+--- a/kernel/trace/trace.h
++++ b/kernel/trace/trace.h
+@@ -39,6 +39,7 @@ enum trace_type {
+ 	TRACE_GRAPH_ENT,
+ 	TRACE_USER_STACK,
+ 	TRACE_BLK,
++	TRACE_BLK_EXT,
+ 	TRACE_BPUTS,
+ 	TRACE_HWLAT,
+ 	TRACE_RAW_DATA,
 -- 
 2.19.1
