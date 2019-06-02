@@ -1,39 +1,55 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 13 Jun 2019 14:59:52 +0000
-Subject: [PATCH 5/8] bcache: update cached_dev_init() with helper
-Message-Id: <20190613145955.4813-6-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:58:05 +0000
+Subject: [blktrace-tools RFC PATCH 0/5] blktrace: add block trace extension support
+Message-Id: <20190602165810.14817-1-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To: linux-btrace@vger.kernel.org
 
-In the bcache when initializing the cached device we don't actually
-use any sort of locking when reading the number of sectors from the
-part. This patch updates the cached_dev_init() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help if part_nr_sects_read() protected by appropriate locking.
+Hi,
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- drivers/md/bcache/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch series adds support to track more request based flags and
+different request fields to the blktrace infrastructure, for RFC we
+only update blktrace and blkparse tools. As we make progress I'll
+also update the rest of the tools.
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 1b63ac876169..6a29ba89dae1 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1263,7 +1263,7 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
- 			q->limits.raid_partial_stripes_expensive;
- 
- 	ret = bcache_device_init(&dc->disk, block_size,
--			 dc->bdev->bd_part->nr_sects - dc->sb.data_offset);
-+			 bdev_nr_sects(dc->bdev) - dc->sb.data_offset);
- 	if (ret)
- 		return ret;
- 
+With reference to the kernel side patch-series, in this series, we increase
+the action, action mask field and add priority and priority mask field to
+existing infrastructure.  We add new structures to hold the trace where we
+increase the size of the action field and add a new member to track the
+priority of the I/O. For the trace management side, we add new IOCTLs so
+that user can configure trace extensions from the blktrace user-space tools.
+
+For this RFC I kept the patches simple and per tool basis where the first 3
+patches update the user API which is mostly common code and reflection
+of the kernel side changes and later two patches are for blktrace and
+blkparse tool. Please have a look at Kernel Side RFC reference :-
+https://marc.info/?l=linux-btrace&m5949445123407&w=2
+
+The RFC is still light on the details but with new IOCTLs I was able to
+get the code running with user-space tools. There is still some more
+scope to optimize the code and reducing the duplicate code, but I kept
+it simple for now so that it is easy to review.
+
+Chaitanya Kulkarni (5):
+  blktrace_api.h: add trace extension definitions
+  blktrace.h: update tools header for trace extension
+  act_mask: add support for trace extension
+  blktrace: add support for trace extension
+  blkparse: add support for trace extension
+
+ Makefile       |    2 +-
+ act_mask.c     |   75 ++++
+ blkparse.c     | 1072 +++++++++++++++++++++++++++++++++++-------------
+ blkparse.h     |   78 ++++
+ blkparse_fmt.c |  204 ++++++---
+ blktrace.c     |  342 +++++++++++++--
+ blktrace.h     |   78 +++-
+ blktrace_api.h |  107 ++++-
+ 8 files changed, 1567 insertions(+), 391 deletions(-)
+ create mode 100644 blkparse.h
+
 -- 
 2.19.1
