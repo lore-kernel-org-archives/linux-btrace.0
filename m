@@ -1,37 +1,50 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 13 Jun 2019 14:59:49 +0000
-Subject: [PATCH 2/8] blk-zoned: update blkdev_nr_zones() with helper
-Message-Id: <20190613145955.4813-3-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:40 +0000
+Subject: [RFC PATCH 31/46] blktrace: link blk_log_xxx() to trace action
+Message-Id: <20190602165055.14424-32-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the blkdev_nr_zones() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help if part_nr_sects_read() protected by appropriate locking.
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/blk-zoned.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index ae7e91bd0618..5051db35c3fd 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -90,7 +90,7 @@ unsigned int blkdev_nr_zones(struct block_device *bdev)
- 	if (!blk_queue_is_zoned(q))
- 		return 0;
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 17160b02b259..e80d411e5e0b 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -2145,6 +2145,28 @@ static const struct {
+ 	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap },
+ };
  
--	return __blkdev_nr_zones(q, bdev->bd_part->nr_sects);
-+	return __blkdev_nr_zones(q, bdev_nr_sects(bdev));
- }
- EXPORT_SYMBOL_GPL(blkdev_nr_zones);
- 
++static const struct {
++	const char *act[2];
++	void	   (*print)(struct trace_seq *s, const struct trace_entry *ent,
++			    bool has_cg);
++} what2act_ext[] = {
++	[__BLK_TA_QUEUE]	= {{  "Q", "queue" },	   blk_log_generic_ext },
++	[__BLK_TA_BACKMERGE]	= {{  "M", "backmerge" },  blk_log_generic_ext },
++	[__BLK_TA_FRONTMERGE]	= {{  "F", "frontmerge" }, blk_log_generic_ext },
++	[__BLK_TA_GETRQ]	= {{  "G", "getrq" },	   blk_log_generic_ext },
++	[__BLK_TA_SLEEPRQ]	= {{  "S", "sleeprq" },	   blk_log_generic_ext },
++	[__BLK_TA_REQUEUE]	= {{  "R", "requeue" },	   blk_log_with_error_ext },
++	[__BLK_TA_ISSUE]	= {{  "D", "issue" },	   blk_log_generic_ext },
++	[__BLK_TA_COMPLETE]	= {{  "C", "complete" },   blk_log_with_error_ext },
++	[__BLK_TA_PLUG]		= {{  "P", "plug" },	   blk_log_plug },
++	[__BLK_TA_UNPLUG_IO]	= {{  "U", "unplug_io" },  blk_log_unplug_ext },
++	[__BLK_TA_UNPLUG_TIMER]	= {{ "UT", "unplug_timer" }, blk_log_unplug_ext},
++	[__BLK_TA_INSERT]	= {{  "I", "insert" },	   blk_log_generic_ext},
++	[__BLK_TA_SPLIT]	= {{  "X", "split" },	   blk_log_split_ext },
++	[__BLK_TA_BOUNCE]	= {{  "B", "bounce" },	   blk_log_generic_ext },
++	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap_ext },
++};
++
+ static enum print_line_t print_one_line(struct trace_iterator *iter,
+ 					bool classic)
+ {
 -- 
 2.19.1
