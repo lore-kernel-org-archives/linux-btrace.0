@@ -1,53 +1,62 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 13 Jun 2019 14:59:50 +0000
-Subject: [PATCH 3/8] blk-zoned: update blkdev_report_zone() with helper
-Message-Id: <20190613145955.4813-4-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:49 +0000
+Subject: [RFC PATCH 40/46] block: set ioprio for write-zeroes, discard etc
+Message-Id: <20190602165055.14424-41-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the blkdev_report_zone(s)() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help of part_nr_sects_read() protected by appropriate locking.
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/blk-zoned.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ block/blk-lib.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 5051db35c3fd..9faf4488339d 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -106,7 +106,7 @@ static bool blkdev_report_zone(struct block_device *bdev, struct blk_zone *rep)
- 		return false;
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 5f2c429d4378..efc9a1bf5262 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -7,6 +7,7 @@
+ #include <linux/bio.h>
+ #include <linux/blkdev.h>
+ #include <linux/scatterlist.h>
++#include <linux/ioprio.h>
  
- 	rep->start -= offset;
--	if (rep->start + rep->len > bdev->bd_part->nr_sects)
-+	if (rep->start + rep->len > bdev_nr_sects(bdev))
- 		return false;
+ #include "blk.h"
  
- 	if (rep->type = BLK_ZONE_TYPE_CONVENTIONAL)
-@@ -176,13 +176,13 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
- 	if (WARN_ON_ONCE(!bdev->bd_disk->fops->report_zones))
- 		return -EOPNOTSUPP;
+@@ -64,6 +65,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio_set_op_attrs(bio, op, 0);
++		bio_set_prio(bio, get_current_ioprio());
  
--	if (!*nr_zones || sector >= bdev->bd_part->nr_sects) {
-+	if (!*nr_zones || sector >= bdev_nr_sects(bdev)) {
- 		*nr_zones = 0;
- 		return 0;
- 	}
+ 		bio->bi_iter.bi_size = req_sects << 9;
+ 		sector += req_sects;
+@@ -162,6 +164,7 @@ static int __blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 		bio->bi_io_vec->bv_offset = 0;
+ 		bio->bi_io_vec->bv_len = bdev_logical_block_size(bdev);
+ 		bio_set_op_attrs(bio, REQ_OP_WRITE_SAME, 0);
++		bio_set_prio(bio, get_current_ioprio());
  
- 	nrz = min(*nr_zones,
--		  __blkdev_nr_zones(q, bdev->bd_part->nr_sects - sector));
-+		  __blkdev_nr_zones(q, bdev_nr_sects(bdev) - sector));
- 	ret = blk_report_zones(bdev->bd_disk, get_start_sect(bdev) + sector,
- 			       zones, &nrz, gfp_mask);
- 	if (ret)
+ 		if (nr_sects > max_write_same_sectors) {
+ 			bio->bi_iter.bi_size = max_write_same_sectors << 9;
+@@ -234,6 +237,8 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio->bi_opf = REQ_OP_WRITE_ZEROES;
++		bio_set_prio(bio, get_current_ioprio());
++
+ 		if (flags & BLKDEV_ZERO_NOUNMAP)
+ 			bio->bi_opf |= REQ_NOUNMAP;
+ 
+@@ -286,6 +291,7 @@ static int __blkdev_issue_zero_pages(struct block_device *bdev,
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
++		bio_set_prio(bio, get_current_ioprio());
+ 
+ 		while (nr_sects != 0) {
+ 			sz = min((sector_t) PAGE_SIZE, nr_sects << 9);
 -- 
 2.19.1
