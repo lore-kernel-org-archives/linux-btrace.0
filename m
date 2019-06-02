@@ -1,46 +1,50 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 17 Jun 2019 01:28:29 +0000
-Subject: [PATCH V2 4/7] blk-zoned: update blkdev_reset_zones() with helper
-Message-Id: <20190617012832.4311-5-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:30 +0000
+Subject: [RFC PATCH 21/46] blktrace: update blk_add_trace_sleeprq()
+Message-Id: <20190602165055.14424-22-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190617012832.4311-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190617012832.4311-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the blkdev_reset_zones() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help of part_nr_sects_read().
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/blk-zoned.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ kernel/trace/blktrace.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 9faf4488339d..e7f2874b5d37 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -229,7 +229,7 @@ int blkdev_reset_zones(struct block_device *bdev,
- 	if (bdev_read_only(bdev))
- 		return -EPERM;
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 4bca03475336..fe1c9d549c0d 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1292,14 +1292,24 @@ static void blk_add_trace_sleeprq(void *ignore,
+ 				  struct request_queue *q,
+ 				  struct bio *bio, int rw)
+ {
+-	if (bio)
+-		blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
+-	else {
++	if (bio) {
++		if (q->blk_trace) {
++			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
++		} else if (q->blk_trace_ext) {
++			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ_EXT, 0);
++		}
++	} else {
+ 		struct blk_trace *bt = q->blk_trace;
++		struct blk_trace_ext *bte = q->blk_trace_ext;
  
--	if (!nr_sectors || end_sector > bdev->bd_part->nr_sects)
-+	if (!nr_sectors || end_sector > bdev_nr_sects(bdev))
- 		/* Out of range */
- 		return -EINVAL;
+-		if (bt)
++		if (q->blk_trace) {
+ 			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
+ 					0, 0, NULL, NULL);
++		} else if (q->blk_trace_ext) {
++			__blk_add_trace_ext(bte, 0, 0, rw, 0,
++					    BLK_TA_SLEEPRQ_EXT,
++					    0, 0, NULL, NULL, 0);
++		}
+ 	}
+ }
  
-@@ -239,7 +239,7 @@ int blkdev_reset_zones(struct block_device *bdev,
- 		return -EINVAL;
- 
- 	if ((nr_sectors & (zone_sectors - 1)) &&
--	    end_sector != bdev->bd_part->nr_sects)
-+	    end_sector != bdev_nr_sects(bdev))
- 		return -EINVAL;
- 
- 	blk_start_plug(&plug);
 -- 
 2.19.1
