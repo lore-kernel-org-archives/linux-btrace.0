@@ -1,148 +1,121 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:38 +0000
-Subject: [RFC PATCH 29/46] blktrace: add trace entry & pdu helpers
-Message-Id: <20190602165055.14424-30-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:51 +0000
+Subject: [RFC PATCH 42/46] null_blk: add module param discard/write-zeroes
+Message-Id: <20190602165055.14424-43-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+This patch adds a two new module params discard and write-zeroes
+in order to test the REQ_OP_DISACRD and REQ_OP_WRITE_ZEROES
+operations.
+
+This is needed to test latest blktrace code changes which enables
+us to track more request based operations such as write-zeroes.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 65 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 65 insertions(+)
+ drivers/block/null_blk_main.c | 37 +++++++++++++++++++++++++++++++----
+ 1 file changed, 33 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 359562073d01..f0ae1bdadfc9 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1629,54 +1629,108 @@ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
- 	return (const struct blk_io_trace *)ent;
+diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
+index d7ac09c092f2..93fe2c843d03 100644
+--- a/drivers/block/null_blk_main.c
++++ b/drivers/block/null_blk_main.c
+@@ -192,6 +192,14 @@ static unsigned int g_zone_nr_conv;
+ module_param_named(zone_nr_conv, g_zone_nr_conv, uint, 0444);
+ MODULE_PARM_DESC(zone_nr_conv, "Number of conventional zones when block device is zoned. Default: 0");
+ 
++static bool g_discard;
++module_param_named(discard, g_discard, bool, 0444);
++MODULE_PARM_DESC(discard, "Allow REQ_OP_DISCARD processing. Default: false");
++
++static bool g_write_zeroes;
++module_param_named(write_zeroes, g_write_zeroes, bool, 0444);
++MODULE_PARM_DESC(write_zeroes, "Allow REQ_OP_WRITE_ZEROES processing. Default: false");
++
+ static struct nullb_device *null_alloc_dev(void);
+ static void null_free_dev(struct nullb_device *dev);
+ static void null_del_dev(struct nullb *nullb);
+@@ -527,6 +535,12 @@ static struct nullb_device *null_alloc_dev(void)
+ 	dev->zoned = g_zoned;
+ 	dev->zone_size = g_zone_size;
+ 	dev->zone_nr_conv = g_zone_nr_conv;
++	dev->discard = g_discard;
++	dev->write_zeroes = g_write_zeroes;
++	pr_info("null_blk: discard  %s\n",
++			dev->discard = true ? "TRUE" : "FALSE");
++	pr_info("null_blk: write_zeroes %s\n",
++			dev->write_zeroes = true ? "TRUE" : "FALSE");
+ 	return dev;
  }
  
-+static inline
-+const struct blk_io_trace_ext *te_blk_io_trace_ext(const struct trace_entry *ent)
-+{
-+	return (const struct blk_io_trace_ext *)ent;
-+}
-+
- static inline const void *pdu_start(const struct trace_entry *ent, bool has_cg)
+@@ -1059,7 +1073,11 @@ static int null_handle_rq(struct nullb_cmd *cmd)
+ 
+ 	sector = blk_rq_pos(rq);
+ 
+-	if (req_op(rq) = REQ_OP_DISCARD) {
++	/* just discard for write zeroes for now */
++	switch (req_op(rq)) {
++	case REQ_OP_DISCARD:
++		/* fall through */
++	case REQ_OP_WRITE_ZEROES:
+ 		null_handle_discard(nullb, sector, blk_rq_bytes(rq));
+ 		return 0;
+ 	}
+@@ -1093,7 +1111,11 @@ static int null_handle_bio(struct nullb_cmd *cmd)
+ 
+ 	sector = bio->bi_iter.bi_sector;
+ 
+-	if (bio_op(bio) = REQ_OP_DISCARD) {
++	/* just discard for write zeroes for now */
++	switch (bio_op(bio)) {
++	case REQ_OP_DISCARD:
++		/* fall through */
++	case REQ_OP_WRITE_ZEROES:
+ 		null_handle_discard(nullb, sector,
+ 			bio_sectors(bio) << SECTOR_SHIFT);
+ 		return 0;
+@@ -1192,7 +1214,6 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd)
+ 		}
+ 	}
+ 	cmd->error = errno_to_blk_status(err);
+-
+ 	if (!cmd->error && dev->zoned) {
+ 		sector_t sector;
+ 		unsigned int nr_sectors;
+@@ -1402,7 +1423,7 @@ static void null_del_dev(struct nullb *nullb)
+ 
+ static void null_config_discard(struct nullb *nullb)
  {
- 	return (void *)(te_blk_io_trace(ent) + 1) +
- 		(has_cg ? sizeof(union kernfs_node_id) : 0);
+-	if (nullb->dev->discard = false)
++	if (!nullb->dev->discard)
+ 		return;
+ 	nullb->q->limits.discard_granularity = nullb->dev->blocksize;
+ 	nullb->q->limits.discard_alignment = nullb->dev->blocksize;
+@@ -1410,6 +1431,13 @@ static void null_config_discard(struct nullb *nullb)
+ 	blk_queue_flag_set(QUEUE_FLAG_DISCARD, nullb->q);
  }
  
-+static inline const void *pdu_start_ext(const struct trace_entry *ent, bool has_cg)
++static void null_config_write_zeroes(struct nullb *nullb)
 +{
-+	return (void *)(te_blk_io_trace_ext(ent) + 1) +
-+		(has_cg ? sizeof(union kernfs_node_id) : 0);
++	if (!nullb->dev->write_zeroes)
++		return;
++	blk_queue_max_write_zeroes_sectors(nullb->q, UINT_MAX >> 9);
 +}
 +
- static inline const void *cgid_start(const struct trace_entry *ent)
+ static int null_open(struct block_device *bdev, fmode_t mode)
  {
- 	return (void *)(te_blk_io_trace(ent) + 1);
- }
+ 	return 0;
+@@ -1702,6 +1730,7 @@ static int null_add_dev(struct nullb_device *dev)
+ 	blk_queue_physical_block_size(nullb->q, dev->blocksize);
  
-+static inline const void *cgid_start_ext(const struct trace_entry *ent)
-+{
-+	return (void *)(te_blk_io_trace_ext(ent) + 1);
-+}
-+
- static inline int pdu_real_len(const struct trace_entry *ent, bool has_cg)
- {
- 	return te_blk_io_trace(ent)->pdu_len -
- 			(has_cg ? sizeof(union kernfs_node_id) : 0);
- }
+ 	null_config_discard(nullb);
++	null_config_write_zeroes(nullb);
  
-+static inline int pdu_real_len_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	return te_blk_io_trace_ext(ent)->pdu_len -
-+			(has_cg ? sizeof(union kernfs_node_id) : 0);
-+}
-+
- static inline u32 t_action(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->action;
- }
- 
-+static inline u64 t_action_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->action;
-+}
-+
- static inline u32 t_bytes(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->bytes;
- }
- 
-+static inline u32 t_bytes_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->bytes;
-+}
-+
- static inline u32 t_sec(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->bytes >> 9;
- }
- 
-+static inline u32 t_sec_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->bytes >> 9;
-+}
-+
- static inline unsigned long long t_sector(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->sector;
- }
- 
-+static inline unsigned long long t_sector_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->sector;
-+}
-+
- static inline __u16 t_error(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->error;
- }
- 
-+static inline __u16 t_error_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->error;
-+}
-+
- static __u64 get_pdu_int(const struct trace_entry *ent, bool has_cg)
- {
- 	const __u64 *val = pdu_start(ent, has_cg);
- 	return be64_to_cpu(*val);
- }
- 
-+static __u64 get_pdu_int_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	const __u64 *val = pdu_start_ext(ent, has_cg);
-+	return be64_to_cpu(*val);
-+}
-+
- static void get_pdu_remap(const struct trace_entry *ent,
- 			  struct blk_io_trace_remap *r, bool has_cg)
- {
-@@ -1688,6 +1742,17 @@ static void get_pdu_remap(const struct trace_entry *ent,
- 	r->sector_from = be64_to_cpu(sector_from);
- }
- 
-+static void get_pdu_remap_ext(const struct trace_entry *ent,
-+			  struct blk_io_trace_remap *r, bool has_cg)
-+{
-+	const struct blk_io_trace_remap *__r = pdu_start_ext(ent, has_cg);
-+	__u64 sector_from = __r->sector_from;
-+
-+	r->device_from = be32_to_cpu(__r->device_from);
-+	r->device_to   = be32_to_cpu(__r->device_to);
-+	r->sector_from = be64_to_cpu(sector_from);
-+}
-+
- typedef void (blk_log_action_t) (struct trace_iterator *iter, const char *act,
- 	bool has_cg);
+ 	sprintf(nullb->disk_name, "nullb%d", nullb->index);
  
 -- 
 2.19.1
