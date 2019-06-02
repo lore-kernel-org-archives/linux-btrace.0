@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:24 +0000
-Subject: [RFC PATCH 15/46] blktrace: update blk_add_trace_bio_bounce()
-Message-Id: <20190602165055.14424-16-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:25 +0000
+Subject: [RFC PATCH 16/46] blktrace: update blk_add_trace_bio_complete()
+Message-Id: <20190602165055.14424-17-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,24 +14,24 @@ Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 52c5b9a5c45c..23f5312c41d0 100644
+index 23f5312c41d0..649dd69a0a95 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1196,7 +1196,14 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
- static void blk_add_trace_bio_bounce(void *ignore,
- 				     struct request_queue *q, struct bio *bio)
+@@ -1210,7 +1210,14 @@ static void blk_add_trace_bio_complete(void *ignore,
+ 				       struct request_queue *q, struct bio *bio,
+ 				       int error)
  {
--	blk_add_trace_bio(q, bio, BLK_TA_BOUNCE, 0);
+-	blk_add_trace_bio(q, bio, BLK_TA_COMPLETE, error);
 +	u64 ta = 0;
 +
 +	if (q->blk_trace) {
-+		ta = BLK_TA_BOUNCE;
++		ta = BLK_TA_COMPLETE;
 +	} else if (q->blk_trace_ext) {
-+		ta = BLK_TA_BOUNCE_EXT;
++		ta = BLK_TA_COMPLETE_EXT;
 +	}
-+	blk_add_trace_bio(q, bio, ta, 0);
++	blk_add_trace_bio(q, bio, ta, error);
  }
  
- static void blk_add_trace_bio_complete(void *ignore,
+ static void blk_add_trace_bio_backmerge(void *ignore,
 -- 
 2.19.1
