@@ -1,37 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 13 Jun 2019 14:59:55 +0000
-Subject: [PATCH 8/8] blktrace: use helper in blk_trace_setup_lba()
-Message-Id: <20190613145955.4813-9-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:26 +0000
+Subject: [RFC PATCH 17/46] blktrace: update blk_add_trace_bio_backmerge()
+Message-Id: <20190602165055.14424-18-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the blk_trace_setup_lba() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help if part_nr_sects_read() protected by appropriate locking.
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index e1c6d79fb4cc..35ff49503b85 100644
+index 649dd69a0a95..c2233e47e0b4 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -461,7 +461,7 @@ static void blk_trace_setup_lba(struct blk_trace *bt,
+@@ -1225,7 +1225,14 @@ static void blk_add_trace_bio_backmerge(void *ignore,
+ 					struct request *rq,
+ 					struct bio *bio)
+ {
+-	blk_add_trace_bio(q, bio, BLK_TA_BACKMERGE, 0);
++	u64 ta = 0;
++
++	if (q->blk_trace) {
++		ta = BLK_TA_BACKMERGE;
++	} else if (q->blk_trace_ext) {
++		ta = BLK_TA_BACKMERGE_EXT;
++	}
++	blk_add_trace_bio(q, bio, ta, 0);
+ }
  
- 	if (part) {
- 		bt->start_lba = part->start_sect;
--		bt->end_lba = part->start_sect + part->nr_sects;
-+		bt->end_lba = part->start_sect + bdev_nr_sects(bdev);
- 	} else {
- 		bt->start_lba = 0;
- 		bt->end_lba = -1ULL;
+ static void blk_add_trace_bio_frontmerge(void *ignore,
 -- 
 2.19.1
