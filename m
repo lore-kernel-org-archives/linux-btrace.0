@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:33 +0000
-Subject: [RFC PATCH 24/46] blktrace: update blk_add_trace_split()
-Message-Id: <20190602165055.14424-25-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:48 +0000
+Subject: [RFC PATCH 39/46] block: set ioprio for flush bio
+Message-Id: <20190602165055.14424-40-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,36 +10,28 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ block/blk-flush.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 8ea8d987eb4b..23911e969e8b 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1361,14 +1361,20 @@ static void blk_add_trace_split(void *ignore,
- 				unsigned int pdu)
- {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
-+	__be64 rpdu = cpu_to_be64(pdu);
+diff --git a/block/blk-flush.c b/block/blk-flush.c
+index aedd9320e605..21013fcdf42c 100644
+--- a/block/blk-flush.c
++++ b/block/blk-flush.c
+@@ -69,6 +69,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/gfp.h>
+ #include <linux/blk-mq.h>
++#include <linux/ioprio.h>
  
--	if (bt) {
--		__be64 rpdu = cpu_to_be64(pdu);
--
-+	if (q->blk_trace) {
- 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
- 				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
- 				BLK_TA_SPLIT, bio->bi_status, sizeof(rpdu),
- 				&rpdu, blk_trace_bio_get_cgid(q, bio));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_SPLIT_EXT, bio->bi_status, sizeof(rpdu),
-+				&rpdu, blk_trace_bio_get_cgid(q, bio),
-+				bio_prio(bio));
- 	}
- }
+ #include "blk.h"
+ #include "blk-mq.h"
+@@ -445,6 +446,7 @@ int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
+ 	bio = bio_alloc(gfp_mask, 0);
+ 	bio_set_dev(bio, bdev);
+ 	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
++	bio_set_prio(bio, get_current_ioprio());
+ 
+ 	ret = submit_bio_wait(bio);
  
 -- 
 2.19.1
