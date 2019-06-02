@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:26 +0000
-Subject: [RFC PATCH 17/46] blktrace: update blk_add_trace_bio_backmerge()
-Message-Id: <20190602165055.14424-18-chaitanya.kulkarni@wdc.com>
+Date: Sun, 02 Jun 2019 16:50:20 +0000
+Subject: [RFC PATCH 11/46] blktrace: update blk_add_trace_rq_issue()
+Message-Id: <20190602165055.14424-12-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,24 +14,24 @@ Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 649dd69a0a95..c2233e47e0b4 100644
+index c982ff73ca63..f73c8187cf4f 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1225,7 +1225,14 @@ static void blk_add_trace_bio_backmerge(void *ignore,
- 					struct request *rq,
- 					struct bio *bio)
+@@ -1122,7 +1122,14 @@ static void blk_add_trace_rq_insert(void *ignore,
+ static void blk_add_trace_rq_issue(void *ignore,
+ 				   struct request_queue *q, struct request *rq)
  {
--	blk_add_trace_bio(q, bio, BLK_TA_BACKMERGE, 0);
+-	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_ISSUE,
 +	u64 ta = 0;
 +
-+	if (q->blk_trace) {
-+		ta = BLK_TA_BACKMERGE;
-+	} else if (q->blk_trace_ext) {
-+		ta = BLK_TA_BACKMERGE_EXT;
++	if (rq->q->blk_trace) {
++		ta = BLK_TA_ISSUE;
++	} else if (rq->q->blk_trace_ext) {
++		ta = BLK_TA_ISSUE_EXT;
 +	}
-+	blk_add_trace_bio(q, bio, ta, 0);
++	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), ta,
+ 			 blk_trace_request_get_cgid(q, rq));
  }
  
- static void blk_add_trace_bio_frontmerge(void *ignore,
 -- 
 2.19.1
