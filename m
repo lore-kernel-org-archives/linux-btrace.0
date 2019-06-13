@@ -1,52 +1,47 @@
-From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Date: Mon, 17 Jun 2019 16:56:11 +0000
-Subject: Re: [PATCH V2 5/7] bcache: update cached_dev_init() with helper
-Message-Id: <BYAPR04MB5749C877C444A5A2144A921886EB0@BYAPR04MB5749.namprd04.prod.outlook.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Thu, 13 Jun 2019 14:59:48 +0000
+Subject: [PATCH 1/8] block: add a helper function to read nr_setcs
+Message-Id: <20190613145955.4813-2-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190617012832.4311-1-chaitanya.kulkarni@wdc.com>
- <20190617012832.4311-6-chaitanya.kulkarni@wdc.com>
- <ae48b013-6e5f-1300-557e-1dbe0f4ad31c@suse.de>
+References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Coly Li <colyli@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Cc: "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-On 06/16/2019 11:54 PM, Coly Li wrote:
-> On 2019/6/17 9:28 上午, Chaitanya Kulkarni wrote:
->> In the bcache when initializing the device we don't actually use any
->> sort of locking when reading the number of sectors from the part. This
->> patch updates the cached_dev_init() with newly introduced helper
->> function to read the nr_sects from block device's hd_parts with the help
->> of part_nr_sects_read().
->>
->> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
->
-> Acked-by: Coly Li <colyli@suse.de>
+This patch introduces helper function to read the number of sectors
+from struct block_device->bd_part member. For more details Please refer
+to the comment in the include/linux/genhd.h for part_nr_sects_read().
 
-Thanks Coly.
->
-> Thanks.
->
-> Coly Li
->
->> ---
->>   drivers/md/bcache/super.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
->> index 1b63ac876169..6a29ba89dae1 100644
->> --- a/drivers/md/bcache/super.c
->> +++ b/drivers/md/bcache/super.c
->> @@ -1263,7 +1263,7 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
->>   			q->limits.raid_partial_stripes_expensive;
->>
->>   	ret = bcache_device_init(&dc->disk, block_size,
->> -			 dc->bdev->bd_part->nr_sects - dc->sb.data_offset);
->> +			 bdev_nr_sects(dc->bdev) - dc->sb.data_offset);
->>   	if (ret)
->>   		return ret;
->>
->>
->
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ include/linux/blkdev.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 592669bcc536..1ae65107182a 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1475,6 +1475,18 @@ static inline void put_dev_sector(Sector p)
+ 	put_page(p.v);
+ }
+ 
++/* Helper function to read the bdev->bd_part->nr_sects */
++static inline sector_t bdev_nr_sects(struct block_device *bdev)
++{
++	sector_t nr_sects;
++
++	rcu_read_lock();
++	nr_sects = part_nr_sects_read(bdev->bd_part);
++	rcu_read_unlock();
++
++	return nr_sects;
++}
++
+ int kblockd_schedule_work(struct work_struct *work);
+ int kblockd_schedule_work_on(int cpu, struct work_struct *work);
+ int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork, unsigned long delay);
+-- 
+2.19.1
