@@ -1,43 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:42 +0000
-Subject: [RFC PATCH 33/46] blktrace: add trace_synthesize helper
-Message-Id: <20190602165055.14424-34-chaitanya.kulkarni@wdc.com>
+Date: Thu, 13 Jun 2019 14:59:55 +0000
+Subject: [PATCH 8/8] blktrace: use helper in blk_trace_setup_lba()
+Message-Id: <20190613145955.4813-9-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+
+This patch updates the blk_trace_setup_lba() with newly introduced helper
+function to read the nr_sects from block device's hd_parts with the
+help if part_nr_sects_read() protected by appropriate locking.
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ kernel/trace/blktrace.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 71fc15ded5c6..cd6110bb5fcd 100644
+index e1c6d79fb4cc..35ff49503b85 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2260,6 +2260,21 @@ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
- 			 sizeof(old) - offset + t->pdu_len);
- }
+@@ -461,7 +461,7 @@ static void blk_trace_setup_lba(struct blk_trace *bt,
  
-+static void blk_trace_synthesize_old_trace_ext(struct trace_iterator *iter)
-+{
-+	struct trace_seq *s = &iter->seq;
-+	struct blk_io_trace_ext *t = (struct blk_io_trace_ext *)iter->ent;
-+	const int offset = offsetof(struct blk_io_trace_ext, sector);
-+	struct blk_io_trace_ext old = {
-+		.magic	  = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION_EXT,
-+		.time     = iter->ts,
-+	};
-+
-+	trace_seq_putmem(s, &old, offset);
-+	trace_seq_putmem(s, &t->sector,
-+			 sizeof(old) - offset + t->pdu_len);
-+}
-+
- static enum print_line_t
- blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
- 			     struct trace_event *event)
+ 	if (part) {
+ 		bt->start_lba = part->start_sect;
+-		bt->end_lba = part->start_sect + part->nr_sects;
++		bt->end_lba = part->start_sect + bdev_nr_sects(bdev);
+ 	} else {
+ 		bt->start_lba = 0;
+ 		bt->end_lba = -1ULL;
 -- 
 2.19.1
