@@ -1,65 +1,56 @@
-From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Date: Thu, 13 Jun 2019 16:07:19 +0000
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Thu, 13 Jun 2019 16:28:41 +0000
 Subject: Re: [PATCH 1/8] block: add a helper function to read nr_setcs
-Message-Id: <BYAPR04MB57498CEB8869ED7B54F08E2286EF0@BYAPR04MB5749.namprd04.prod.outlook.com>
+Message-Id: <1560443321.3329.42.camel@HansenPartnership.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
- <20190613145955.4813-2-chaitanya.kulkarni@wdc.com>
- <9abfc2b8-4496-db7a-fcbb-b52102a67f8e@acm.org>
+         <20190613145955.4813-2-chaitanya.kulkarni@wdc.com>
+         <9abfc2b8-4496-db7a-fcbb-b52102a67f8e@acm.org>
+         <f8ab9587-309b-79a0-e6fc-f6683176f498@interlog.com>
+In-Reply-To: <f8ab9587-309b-79a0-e6fc-f6683176f498@interlog.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bart Van Assche <bvanassche@acm.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Cc: "colyli@suse.de" <colyli@suse.de>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>
+To: dgilbert@interlog.com, Bart Van Assche <bvanassche@acm.org>, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com
 
-On 06/13/2019 08:31 AM, Bart Van Assche wrote:
-> On 6/13/19 7:59 AM, Chaitanya Kulkarni wrote:
->> This patch introduces helper function to read the number of sectors
->> from struct block_device->bd_part member. For more details Please refer
->> to the comment in the include/linux/genhd.h for part_nr_sects_read().
->>
->> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
->> ---
->>    include/linux/blkdev.h | 12 ++++++++++++
->>    1 file changed, 12 insertions(+)
->>
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->> index 592669bcc536..1ae65107182a 100644
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -1475,6 +1475,18 @@ static inline void put_dev_sector(Sector p)
->>    	put_page(p.v);
->>    }
->>
->> +/* Helper function to read the bdev->bd_part->nr_sects */
->> +static inline sector_t bdev_nr_sects(struct block_device *bdev)
->> +{
->> +	sector_t nr_sects;
->> +
->> +	rcu_read_lock();
->> +	nr_sects = part_nr_sects_read(bdev->bd_part);
->> +	rcu_read_unlock();
->> +
->> +	return nr_sects;
->> +}
->> +
->>    int kblockd_schedule_work(struct work_struct *work);
->>    int kblockd_schedule_work_on(int cpu, struct work_struct *work);
->>    int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork, unsigned long delay);
->>
->
-> Please explain what makes you think that part_nr_sects_read() must be
-> protected by an RCU read lock.
+On Thu, 2019-06-13 at 12:07 -0400, Douglas Gilbert wrote:
+> On 2019-06-13 11:31 a.m., Bart Van Assche wrote:
+[...]
+> > Please explain what makes you think that part_nr_sects_read() must
+> > be protected 
+> > by an RCU read lock.
+> 
+> Dear reviewer,
+> Please rephrase the above sentence without the accusative tone.
+> Specifically, please do not use the phrase "what makes you think"
+> in this or any other code review. For example: "I believe that..."
+> is more accurate and less provocative.
 
-Thanks Bart for looking into this, we actually don't need those locking.
+Imputing "tone" to email is something we try to avoid because it never
+ends well, particularly for non-native speakers. Some languages
+(Russian) have no articles and if you take any English phrase and strip
+out all the articles it sounds a lot more aggressive.
 
-I'll fix this in the V2.
+> Observation: as a Canadian citizen when crossing the US border I
+> believe contradicting a US border official with the phrase "what
+> makes you think ..." could lead to a rather bad outcome :-)
+> Please make review comments with that in mind.
 
-Please let me know if you find any other issues with this series.
+Different situation: we aren't profiling reviewers ...
 
->
-> Thanks,
->
-> Bart.
->
+> Thanks.
+> 
+> Doug Gilbert
+> 
+> P.S. Do we have any Linux code-of-conduct for reviewers?
 
+It's the same one for all interactions:
+
+Documentation/process/code-of-conduct-interpretation.rst
+
+But I would remind everyone that diversity isn't just a
+gender/race/LGBT issue it also means being understanding of the
+potential difficulties non-native speakers have with email in English.
+
+James
