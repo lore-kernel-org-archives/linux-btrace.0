@@ -1,52 +1,66 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:34 +0000
-Subject: [RFC PATCH 25/46] blktrace: update blk_add_trace_bio_remap()
-Message-Id: <20190602165055.14424-26-chaitanya.kulkarni@wdc.com>
+Date: Thu, 13 Jun 2019 14:59:47 +0000
+Subject: [PATCH 0/8] block: use right accessor to read nr_sects
+Message-Id: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- kernel/trace/blktrace.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+Hi,
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 23911e969e8b..d94a377fc7b8 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1396,18 +1396,24 @@ static void blk_add_trace_bio_remap(void *ignore,
- 				    dev_t dev, sector_t from)
- {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
- 	struct blk_io_trace_remap r;
- 
--	if (likely(!bt))
--		return;
--
- 	r.device_from = cpu_to_be32(dev);
- 	r.device_to   = cpu_to_be32(bio_dev(bio));
- 	r.sector_from = cpu_to_be64(from);
- 
--	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
--			bio_op(bio), bio->bi_opf, BLK_TA_REMAP, bio->bi_status,
--			sizeof(r), &r, blk_trace_bio_get_cgid(q, bio));
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_REMAP, bio->bi_status, sizeof(r), &r,
-+				blk_trace_bio_get_cgid(q, bio));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_REMAP_EXT, bio->bi_status, sizeof(r), &r,
-+				blk_trace_bio_get_cgid(q, bio), bio_prio(bio));
-+	}
- }
- 
- /**
+In the current block layer implementation including drivers and fs
+there are some places in the code where block device->hd_part->number
+of sectors is accessed directly without any locking. There is an
+existing accessor function present in the include/linux/genhd.h
+which should be used to read the bdev->hd_part->nr_sects
+with the help of appropriate locking.
+
+From ${KERN_DIR}/include/linux/genhd.h:-
+<snip>
+714 /*
+715  * Any access of part->nr_sects which is not protected by partition
+716  * bd_mutex or gendisk bdev bd_mutex, should be done using this
+717  * accessor function.
+718  *
+719  * Code written along the lines of i_size_read() and i_size_write().
+720  * CONFIG_PREEMPT case optimizes the case of UP kernel with preemption
+721  * on.
+722  */
+723 static inline sector_t part_nr_sects_read(struct hd_struct *part)
+724 {
+<snip>
+
+This patch series introduces a helper function on the top of the
+part_nr_sects_read() with expected rcu locking and removes the direct
+accesses to the bdev->hd_part->nr_sects.
+
+This is based on :-
+1. Repo :- git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git.
+2. Branch :- for-next.
+
+Regards,
+Chaitanya
+
+Chaitanya Kulkarni (8):
+  block: add a helper function to read nr_setcs
+  blk-zoned: update blkdev_nr_zones() with helper
+  blk-zoned: update blkdev_report_zone() with helper
+  blk-zoned: update blkdev_reset_zones() with helper
+  bcache: update cached_dev_init() with helper
+  target/pscsi: use helper in pscsi_get_blocks()
+  f2fs: use helper in init_blkz_info()
+  blktrace: use helper in blk_trace_setup_lba()
+
+ block/blk-zoned.c                  | 12 ++++++------
+ drivers/md/bcache/super.c          |  2 +-
+ drivers/target/target_core_pscsi.c |  2 +-
+ fs/f2fs/super.c                    |  2 +-
+ include/linux/blkdev.h             | 12 ++++++++++++
+ kernel/trace/blktrace.c            |  2 +-
+ 6 files changed, 22 insertions(+), 10 deletions(-)
+
 -- 
 2.19.1
