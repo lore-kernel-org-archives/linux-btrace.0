@@ -1,40 +1,37 @@
-From: Steffen Maier <maier@linux.ibm.com>
-Date: Tue, 25 Jun 2019 11:00:36 +0000
-Subject: Re: [blktrace-tools RFC PATCH 5/5] blkparse: add support for trace extension
-Message-Id: <6f1816f0-42fd-478f-bda6-1dfc0e653d29@linux.ibm.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Thu, 13 Jun 2019 14:59:53 +0000
+Subject: [COMPILE TESTED PATCH 6/8] target/pscsi: use helper in pscsi_get_blocks()
+Message-Id: <20190613145955.4813-7-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190602165810.14817-6-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190602165810.14817-6-chaitanya.kulkarni@wdc.com>
+References: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190613145955.4813-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-On 6/24/19 6:51 PM, Chaitanya Kulkarni wrote:
-> On 6/24/19 2:58 AM, Steffen Maier wrote:
->> On 6/23/19 10:45 PM, Chaitanya Kulkarni wrote:
->>> On 6/18/19 5:33 AM, Steffen Maier wrote:
->>>> On 6/2/19 6:58 PM, Chaitanya Kulkarni wrote:
+This patch updates the pscsi_get_blocks() with newly introduced helper
+function to read the nr_sects from block device's hd_parts with the
+help if part_nr_sects_read() protected by appropriate locking.
 
-> It will be great if you can provide a feedback on kernel part.
-> 
-> There is much room for improvement/optimization for kernel code but
-> would like to get some feedback on the approach.
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ drivers/target/target_core_pscsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Sorry, I fear I'm not qualified to comment on the approach. I'm roughly a 
-somewhat recent newbie regarding the blktrace (kernel) code. With the entire 
-SCSI layer inbetween, the device driver zfcp I co-maintain is "far" away from 
-the block layer from my point of view. ;-)
-
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index c9d92b3e777d..da481edab2de 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1030,7 +1030,7 @@ static sector_t pscsi_get_blocks(struct se_device *dev)
+ 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
+ 
+ 	if (pdv->pdv_bd && pdv->pdv_bd->bd_part)
+-		return pdv->pdv_bd->bd_part->nr_sects;
++		return bdev_nr_sects(pdv->pdv_bd);
+ 
+ 	return 0;
+ }
 -- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+2.19.1
