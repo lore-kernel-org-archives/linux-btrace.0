@@ -1,58 +1,70 @@
-From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Date: Mon, 17 Jun 2019 16:55:43 +0000
-Subject: Re: [PATCH V2 1/7] block: add a helper function to read nr_setcs
-Message-Id: <BYAPR04MB5749AC0801F021068F84F81186EB0@BYAPR04MB5749.namprd04.prod.outlook.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Mon, 17 Jun 2019 01:28:25 +0000
+Subject: [PATCH V2 0/7] block: use right accessor to read nr_setcs
+Message-Id: <20190617012832.4311-1-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190617012832.4311-1-chaitanya.kulkarni@wdc.com>
- <20190617012832.4311-2-chaitanya.kulkarni@wdc.com>
- <67bcc55e-a674-7a71-7ce3-3a6745977740@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bart Van Assche <bvanassche@acm.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Cc: "colyli@suse.de" <colyli@suse.de>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-On 06/17/2019 08:47 AM, Bart Van Assche wrote:
-> On 6/16/19 6:28 PM, Chaitanya Kulkarni wrote:
->> This patch introduces helper function to read the number of sectors
->> from struct block_device->bd_part member. For more details Please refer
->> to the comment in the include/linux/genhd.h for part_nr_sects_read().
->>
->> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
->> ---
->>    include/linux/blkdev.h | 10 ++++++++++
->>    1 file changed, 10 insertions(+)
->>
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->> index 592669bcc536..2ef1de20fd22 100644
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -1475,6 +1475,16 @@ static inline void put_dev_sector(Sector p)
->>    	put_page(p.v);
->>    }
->>
->> +/* Helper function to read the bdev->bd_part->nr_sects */
->> +static inline sector_t bdev_nr_sects(struct block_device *bdev)
->> +{
->> +	sector_t nr_sects;
->> +
->> +	nr_sects = part_nr_sects_read(bdev->bd_part);
->> +
->> +	return nr_sects;
->> +}
->
-> Although this looks fine to me, is there any reason why the body of that
-> function has not been written as follows?
->
-> static inline sector_t bdev_nr_sects(struct block_device *bdev)
-> {
-> 	return part_nr_sects_read(bdev->bd_part);
-> }
-This perfectly make sense, thanks for the suggestion, will add it in a 
-next version.
->
-> Thanks,
->
-> Bart.
->
+Hi,
 
+In the blk-zoned, bcache, f2fs and blktrace implementation
+block device->hd_part->number of sectors field is accessed directly
+without any appropriate locking or accessor function. There is
+an existing accessor function present in the in include/linux/genhd.h
+which should be used to read the bdev->hd_part->nr_sects.
+
+From ${KERN_DIR}/include/linux/genhd.h:-
+<snip>
+714 /*
+715  * Any access of part->nr_sects which is not protected by partition
+716  * bd_mutex or gendisk bdev bd_mutex, should be done using this
+717  * accessor function.
+718  *
+719  * Code written along the lines of i_size_read() and i_size_write().
+720  * CONFIG_PREEMPT case optimizes the case of UP kernel with preemption
+721  * on.
+722  */
+723 static inline sector_t part_nr_sects_read(struct hd_struct *part)
+724 {
+<snip>
+
+This patch series introduces a helper function on the top of the
+part_nr_sects_read() and removes the all direct accesses to the
+bdev->hd_part->nr_sects for blk-zoned.c.
+
+This series is based on :-
+
+1. Repo :-
+   git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git.
+2. Branch :- for-next.
+
+Regards,
+Chaitanya
+
+Changes from V1:-
+
+1. Drop the target_pscsi patch. (Bart)
+2. Remove rcu locking which is not needed. (Bart)
+
+Chaitanya Kulkarni (7):
+  block: add a helper function to read nr_setcs
+  blk-zoned: update blkdev_nr_zones() with helper
+  blk-zoned: update blkdev_report_zone() with helper
+  blk-zoned: update blkdev_reset_zones() with helper
+  bcache: update cached_dev_init() with helper
+  f2fs: use helper in init_blkz_info()
+  blktrace: use helper in blk_trace_setup_lba()
+
+ block/blk-zoned.c         | 12 ++++++------
+ drivers/md/bcache/super.c |  2 +-
+ fs/f2fs/super.c           |  2 +-
+ include/linux/blkdev.h    | 10 ++++++++++
+ kernel/trace/blktrace.c   |  2 +-
+ 5 files changed, 19 insertions(+), 9 deletions(-)
+
+-- 
+2.19.1
