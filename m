@@ -1,34 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Sun, 02 Jun 2019 16:50:13 +0000
-Subject: [RFC PATCH 04/46] blktrace: introduce new ioctls
-Message-Id: <20190602165055.14424-5-chaitanya.kulkarni@wdc.com>
+Date: Mon, 17 Jun 2019 01:28:32 +0000
+Subject: [PATCH V2 7/7] blktrace: use helper in blk_trace_setup_lba()
+Message-Id: <20190617012832.4311-8-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190617012832.4311-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190617012832.4311-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, kent.overstreet@gmail.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-Add new IOCTLs definitions.
+This patch updates the blk_trace_setup_lba() with newly introduced helper
+function to read the nr_sects from block device's hd_parts with the
+help if part_nr_sects_read().
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- include/uapi/linux/fs.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ kernel/trace/blktrace.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 121e82ce296b..7e9f38eaba33 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -181,6 +181,10 @@ struct fsxattr {
- #define BLKSECDISCARD _IO(0x12,125)
- #define BLKROTATIONAL _IO(0x12,126)
- #define BLKZEROOUT _IO(0x12,127)
-+#define BLKTRACESETUP_EXT _IOWR(0x12,128,struct blk_user_trace_setup_ext)
-+#define BLKTRACESTART_EXT _IO(0x12,129)
-+#define BLKTRACESTOP_EXT _IO(0x12,130)
-+#define BLKTRACETEARDOWN_EXT _IO(0x12,131)
- /*
-  * A jump here: 130-131 are reserved for zoned block devices
-  * (see uapi/linux/blkzoned.h)
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index e1c6d79fb4cc..35ff49503b85 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -461,7 +461,7 @@ static void blk_trace_setup_lba(struct blk_trace *bt,
+ 
+ 	if (part) {
+ 		bt->start_lba = part->start_sect;
+-		bt->end_lba = part->start_sect + part->nr_sects;
++		bt->end_lba = part->start_sect + bdev_nr_sects(bdev);
+ 	} else {
+ 		bt->start_lba = 0;
+ 		bt->end_lba = -1ULL;
 -- 
 2.19.1
