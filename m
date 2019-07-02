@@ -1,65 +1,40 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:04 +0000
-Subject: [RFC PATCH 07/38] blktrace: add act and prio check helpers
-Message-Id: <20190717212435.2990-8-chaitanya.kulkarni@wdc.com>
+Date: Tue, 02 Jul 2019 17:42:31 +0000
+Subject: [PATCH V3 5/9] bcache: update cached_dev_init() with helper
+Message-Id: <20190702174236.3332-6-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
+In the bcache when initializing the cached device we don't actually
+use any sort of locking when reading the number of sectors from the
+part. This patch updates the cached_dev_init() with newly introduced
+helper function to read the nr_sects from block device's hd_parts with
+the help of part_nr_sects_read().
+
+Acked-by: Coly Li <colyli@suse.de>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ drivers/md/bcache/super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index e6b0a914cb85..0ed4ce410ed8 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -310,6 +310,43 @@ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
- 	return 0;
- }
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 1b63ac876169..6a29ba89dae1 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1263,7 +1263,7 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
+ 			q->limits.raid_partial_stripes_expensive;
  
-+static inline bool prio_log_check(struct blk_trace_ext *bt, u32 ioprio)
-+{
-+	bool ret;
-+
-+	switch (IOPRIO_PRIO_CLASS(ioprio)) {
-+	case IOPRIO_CLASS_NONE:
-+		ret = (bt->prio_mask & 0x01) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_RT:
-+		ret = (bt->prio_mask & 0x02) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_BE:
-+		ret = (bt->prio_mask & 0x04) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_IDLE:
-+		ret = (bt->prio_mask & 0x08) ? true : false;
-+		break;
-+	default:
-+		/*XXX: print rate limit warn here */
-+		ret = false;
-+	}
-+	return ret;
-+}
-+
-+static inline int act_log_check_ext(struct blk_trace_ext *bt, u64 what,
-+			     sector_t sector, pid_t pid)
-+{
-+	if (((bt->act_mask << BLK_TC_SHIFT_EXT) & what) = 0)
-+		return 1;
-+	if (sector && (sector < bt->start_lba || sector > bt->end_lba))
-+		return 1;
-+	if (bt->pid && pid != bt->pid)
-+		return 1;
-+
-+	return 0;
-+}
-+
- /*
-  * Data direction bit lookup
-  */
+ 	ret = bcache_device_init(&dc->disk, block_size,
+-			 dc->bdev->bd_part->nr_sects - dc->sb.data_offset);
++			 bdev_nr_sects(dc->bdev) - dc->sb.data_offset);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
-2.17.0
+2.19.1
