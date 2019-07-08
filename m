@@ -1,118 +1,53 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:23:57 +0000
-Subject: [RFC PATCH 00/38] blktrace: add block trace extension support
-Message-Id: <20190717212435.2990-1-chaitanya.kulkarni@wdc.com>
+Date: Mon, 08 Jul 2019 18:47:05 +0000
+Subject: [PATCH V4 3/9] blk-zoned: update blkdev_report_zone() with helper
+Message-Id: <20190708184711.2984-4-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-Hi,
+This patch updates the blkdev_report_zone(s)() with newly introduced
+helper function to read the nr_sects from block device's hd_parts with
+the help of part_nr_sects_read().
 
-This is an updated RFC with added support to track the block layer
-integrity fields from the feedback I got from Martin. The only change
-from the original series is the following patch:-
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ block/blk-zoned.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-        blktrace: add integrity tracking support
-
-Also, I've removed the other patches which are part of the auxiliary 
-work and kept this RFC only for blktrace code.
-
-I've not made the userspace changes for the integrity related code yet,
-as I'm still waiting for some feedback.
-
-Following is the link to the kernel and userspace RFC and cover-letter:-
-
-1. Original Kernel RFC :-
-        https://marc.info/?l=linux-btrace&m5949445123407&w=2
-
-2. Original Userspace RFC :-
-        https://marc.info/?l=linux-btrace&m5950039424783&w=2
-
-3. Original Cover letter :-
-
-This patch series adds support to track more request based flags and
-different request fields to the blktrace infrastructure.
-
-In this series, we increase the action, action mask field and add 
-priority and priority mask field to existing infrastructure.
-
-We add new structures to hold the trace where we increase the size of
-the action field and add a new member to track the priority of the I/O.
-For the trace management side we add new IOCTLs so that user can 
-configure trace extensions from the blktrace user-space tools.
-
-The RFC is still light on the details but with new IOCTLs I was able to
-get the code running with user-space tools. There is still some more
-scope to optimize the code and reduce the duplicate code, but I kept
-it simple for now so that it is easy to review. I'm aware of some
-checkpatch.pl warnings mostly about 80 col, I'll fix that in the
-next version.
-
-It will be great if someone can review this code and provide some
-feedback.
-
-Please find the patch distribution at the end.
-
-Regards,
-Chaitanya
-
-Chaitanya Kulkarni (38):
-
-Update headers and introduce new structures and IOCTLs.
-  blktrace_api: add new trace definitions
-  blktrace_api: add new trace definition
-  blkdev.h: add new trace ext as a queue member
-  blktrace: introduce new ioctls
-Update blktrace.c with core APIs.
-  blktrace: add a new global list
-  blktrace: add trace note APIs
-  blktrace: add act and prio check helpers
-  blktrace: add core trace API
-Update indivisual tracepoints.
-  blktrace: update blk_add_trace_rq()
-  blktrace: update blk_add_trace_rq_insert()
-  blktrace: update blk_add_trace_rq_issue()
-  blktrace: update blk_add_trace_rq_requeue()
-  blktrace: update blk_add_trace_rq_complete()
-  blktrace: update blk_add_trace_bio()
-  blktrace: update blk_add_trace_bio_bounce()
-  blktrace: update blk_add_trace_bio_complete()
-  blktrace: update blk_add_trace_bio_backmerge()
-  blktrace: update blk_add_trace_bio_frontmerge()
-  blktrace: update blk_add_trace_bio_queue()
-  blktrace: update blk_add_trace_getrq()
-  blktrace: update blk_add_trace_sleeprq()
-  blktrace: update blk_add_trace_plug()
-  blktrace: update blk_add_trace_unplug()
-  blktrace: update blk_add_trace_split()
-  blktrace: update blk_add_trace_bio_remap()
-  blktrace: update blk_add_trace_rq_remap()
-  blktrace: update blk_add_driver_data()
-Misc updates for tracer.
-  blktrace: add a new formatting routine
-  blktrace: add trace entry & pdu helpers
-  blktrace: add blk_log_xxx helpers()
-  blktrace: link blk_log_xxx() to trace action
-  blktrace: add trace event print helper
-  blktrace: add trace_synthesize helper
-  blktrace: add trace print helpers
-  blktrace: add blkext tracer
-Implement new IOCTLs.
-  blktrace: implement setup-start-stop ioclts
-  block: update blkdev_ioctl with new trace ioctls
-Integrity related code chanegs.
-  blktrace: add integrity tracking support
-
- block/ioctl.c                     |    4 +
- include/linux/blkdev.h            |    3 +
- include/linux/blktrace_api.h      |   18 +
- include/uapi/linux/blktrace_api.h |  109 ++-
- include/uapi/linux/fs.h           |    4 +
- kernel/trace/blktrace.c           | 1281 +++++++++++++++++++++++++++--
- kernel/trace/trace.h              |    1 +
- 7 files changed, 1329 insertions(+), 91 deletions(-)
-
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 5051db35c3fd..9faf4488339d 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -106,7 +106,7 @@ static bool blkdev_report_zone(struct block_device *bdev, struct blk_zone *rep)
+ 		return false;
+ 
+ 	rep->start -= offset;
+-	if (rep->start + rep->len > bdev->bd_part->nr_sects)
++	if (rep->start + rep->len > bdev_nr_sects(bdev))
+ 		return false;
+ 
+ 	if (rep->type = BLK_ZONE_TYPE_CONVENTIONAL)
+@@ -176,13 +176,13 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 	if (WARN_ON_ONCE(!bdev->bd_disk->fops->report_zones))
+ 		return -EOPNOTSUPP;
+ 
+-	if (!*nr_zones || sector >= bdev->bd_part->nr_sects) {
++	if (!*nr_zones || sector >= bdev_nr_sects(bdev)) {
+ 		*nr_zones = 0;
+ 		return 0;
+ 	}
+ 
+ 	nrz = min(*nr_zones,
+-		  __blkdev_nr_zones(q, bdev->bd_part->nr_sects - sector));
++		  __blkdev_nr_zones(q, bdev_nr_sects(bdev) - sector));
+ 	ret = blk_report_zones(bdev->bd_disk, get_start_sect(bdev) + sector,
+ 			       zones, &nrz, gfp_mask);
+ 	if (ret)
 -- 
 2.17.0
