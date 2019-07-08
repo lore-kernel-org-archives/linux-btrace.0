@@ -1,37 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:10 +0000
-Subject: [RFC PATCH 13/38] blktrace: update blk_add_trace_rq_complete()
-Message-Id: <20190717212435.2990-14-chaitanya.kulkarni@wdc.com>
+Date: Mon, 08 Jul 2019 18:47:09 +0000
+Subject: [PATCH V4 7/9] blktrace: use helper in blk_trace_setup_lba()
+Message-Id: <20190708184711.2984-8-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+
+This patch updates the blk_trace_setup_lba() with newly introduced
+helper function to read the nr_sects from block device's hd_parts with
+the help of part_nr_sects_read().
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index f51c4de4d953..a5e33da53861 100644
+index e1c6d79fb4cc..35ff49503b85 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1151,7 +1151,14 @@ static void blk_add_trace_rq_requeue(void *ignore,
- static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
- 			int error, unsigned int nr_bytes)
- {
--	blk_add_trace_rq(rq, error, nr_bytes, BLK_TA_COMPLETE,
-+	u64 ta = 0;
-+
-+	if (rq->q->blk_trace) {
-+		ta = BLK_TA_COMPLETE;
-+	} else if (rq->q->blk_trace_ext) {
-+		ta = BLK_TA_COMPLETE_EXT;
-+	}
-+	blk_add_trace_rq(rq, error, nr_bytes, ta,
- 			 blk_trace_request_get_cgid(rq->q, rq));
- }
+@@ -461,7 +461,7 @@ static void blk_trace_setup_lba(struct blk_trace *bt,
  
+ 	if (part) {
+ 		bt->start_lba = part->start_sect;
+-		bt->end_lba = part->start_sect + part->nr_sects;
++		bt->end_lba = part->start_sect + bdev_nr_sects(bdev);
+ 	} else {
+ 		bt->start_lba = 0;
+ 		bt->end_lba = -1ULL;
 -- 
 2.17.0
