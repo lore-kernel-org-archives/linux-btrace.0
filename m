@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:30 +0000
-Subject: [RFC PATCH 33/38] blktrace: add trace_synthesize helper
-Message-Id: <20190717212435.2990-34-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:23 +0000
+Subject: [RFC PATCH 26/38] blktrace: update blk_add_trace_rq_remap()
+Message-Id: <20190717212435.2990-27-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,34 +10,42 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ kernel/trace/blktrace.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 71fc15ded5c6..cd6110bb5fcd 100644
+index d94a377fc7b8..1141be3273bf 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2260,6 +2260,21 @@ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
- 			 sizeof(old) - offset + t->pdu_len);
+@@ -1435,18 +1435,23 @@ static void blk_add_trace_rq_remap(void *ignore,
+ 				   sector_t from)
+ {
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
+ 	struct blk_io_trace_remap r;
+ 
+-	if (likely(!bt))
+-		return;
+-
+ 	r.device_from = cpu_to_be32(dev);
+ 	r.device_to   = cpu_to_be32(disk_devt(rq->rq_disk));
+ 	r.sector_from = cpu_to_be64(from);
+ 
+-	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
+-			rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
+-			sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
++	if (q->blk_trace) {
++		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
++				rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
++				sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, blk_rq_pos(rq), blk_rq_bytes(rq),
++				    rq_data_dir(rq), 0, BLK_TA_REMAP_EXT, 0,
++				    sizeof(r), &r, blk_trace_request_get_cgid(q, rq),
++				    req_get_ioprio(rq));
++	}
  }
  
-+static void blk_trace_synthesize_old_trace_ext(struct trace_iterator *iter)
-+{
-+	struct trace_seq *s = &iter->seq;
-+	struct blk_io_trace_ext *t = (struct blk_io_trace_ext *)iter->ent;
-+	const int offset = offsetof(struct blk_io_trace_ext, sector);
-+	struct blk_io_trace_ext old = {
-+		.magic	  = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION_EXT,
-+		.time     = iter->ts,
-+	};
-+
-+	trace_seq_putmem(s, &old, offset);
-+	trace_seq_putmem(s, &t->sector,
-+			 sizeof(old) - offset + t->pdu_len);
-+}
-+
- static enum print_line_t
- blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
- 			     struct trace_event *event)
+ /**
 -- 
 2.17.0
