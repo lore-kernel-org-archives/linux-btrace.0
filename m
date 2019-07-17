@@ -1,40 +1,59 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 08 Jul 2019 18:47:07 +0000
-Subject: [PATCH V4 5/9] bcache: update cached_dev_init() with helper
-Message-Id: <20190708184711.2984-6-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:20 +0000
+Subject: [RFC PATCH 23/38] blktrace: update blk_add_trace_unplug()
+Message-Id: <20190717212435.2990-24-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To: linux-btrace@vger.kernel.org
 
-In the bcache when initializing the cached device we don't actually
-use any sort of locking when reading the number of sectors from the
-part. This patch updates the cached_dev_init() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help of part_nr_sects_read().
-
-Acked-by: Coly Li <colyli@suse.de>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/md/bcache/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 26e374fbf57c..024c52d11b0f 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1302,7 +1302,7 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
- 			q->limits.raid_partial_stripes_expensive;
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index ebb2de71159a..8ea8d987eb4b 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1329,17 +1329,30 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 				    unsigned int depth, bool explicit)
+ {
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
++	__be64 rpdu = cpu_to_be64(depth);
++	u64 what;
  
- 	ret = bcache_device_init(&dc->disk, block_size,
--			 dc->bdev->bd_part->nr_sects - dc->sb.data_offset);
-+			 bdev_nr_sects(dc->bdev) - dc->sb.data_offset);
- 	if (ret)
- 		return ret;
+-	if (bt) {
+-		__be64 rpdu = cpu_to_be64(depth);
+-		u32 what;
+-
+-		if (explicit)
++	if (explicit) {
++		if (q->blk_trace) {
+ 			what = BLK_TA_UNPLUG_IO;
+-		else
++		} else if (q->blk_trace_ext) {
++			what = BLK_TA_UNPLUG_IO_EXT;
++		}
++	} else {
++		if (q->blk_trace) {
+ 			what = BLK_TA_UNPLUG_TIMER;
++		} else if (q->blk_trace_ext) {
++			what = BLK_TA_UNPLUG_TIMER_EXT;
++		}
++	}
+ 
+-		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, NULL);
++	if (q->blk_trace) {
++		__blk_add_trace(bt, 0, 0, 0, 0, (u32)what, 0, sizeof(rpdu),
++				&rpdu, NULL);
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, what, 0, sizeof(rpdu),
++				    &rpdu, NULL, 0);
+ 	}
+ }
  
 -- 
 2.17.0
