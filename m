@@ -1,37 +1,52 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 02 Jul 2019 17:42:33 +0000
-Subject: [PATCH V3 7/9] blktrace: use helper in blk_trace_setup_lba()
-Message-Id: <20190702174236.3332-8-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:11 +0000
+Subject: [RFC PATCH 14/38] blktrace: update blk_add_trace_bio()
+Message-Id: <20190717212435.2990-15-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the blk_trace_setup_lba() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help of part_nr_sects_read().
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index e1c6d79fb4cc..35ff49503b85 100644
+index a5e33da53861..52c5b9a5c45c 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -461,7 +461,7 @@ static void blk_trace_setup_lba(struct blk_trace *bt,
+@@ -1174,16 +1174,23 @@ static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
+  *
+  **/
+ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+-			      u32 what, int error)
++			      u64 what, int error)
+ {
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
  
- 	if (part) {
- 		bt->start_lba = part->start_sect;
--		bt->end_lba = part->start_sect + part->nr_sects;
-+		bt->end_lba = part->start_sect + bdev_nr_sects(bdev);
- 	} else {
- 		bt->start_lba = 0;
- 		bt->end_lba = -1ULL;
+-	if (likely(!bt))
+-		return;
+-
+-	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio_op(bio), bio->bi_opf, what, error, 0, NULL,
+-			blk_trace_bio_get_cgid(q, bio));
++	if (q->blk_trace) {
++		__blk_add_trace(bt, bio->bi_iter.bi_sector,
++				bio->bi_iter.bi_size, bio_op(bio),
++				bio->bi_opf,(u32)what, error, 0, NULL,
++				blk_trace_bio_get_cgid(q, bio));
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
++				    bio->bi_iter.bi_size, bio_op(bio),
++				    bio->bi_opf,what, error, 0, NULL,
++				    blk_trace_bio_get_cgid(q, bio),
++				    bio_prio(bio));
++	}
+ }
+ 
+ static void blk_add_trace_bio_bounce(void *ignore,
 -- 
-2.19.1
+2.17.0
