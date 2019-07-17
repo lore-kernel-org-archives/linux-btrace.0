@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:26 +0000
-Subject: [RFC PATCH 29/38] blktrace: add trace entry & pdu helpers
-Message-Id: <20190717212435.2990-30-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:05 +0000
+Subject: [RFC PATCH 08/38] blktrace: add core trace API
+Message-Id: <20190717212435.2990-9-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,139 +10,139 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 65 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 65 insertions(+)
+ kernel/trace/blktrace.c | 120 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 120 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 359562073d01..f0ae1bdadfc9 100644
+index 0ed4ce410ed8..5103b79bce2a 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1629,54 +1629,108 @@ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
- 	return (const struct blk_io_trace *)ent;
+@@ -461,6 +461,126 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	local_irq_restore(flags);
  }
  
-+static inline
-+const struct blk_io_trace_ext *te_blk_io_trace_ext(const struct trace_entry *ent)
++/*
++ * Data direction bit lookup
++ */
++static const u64 ddir_act_ext[2] = { BLK_TC_ACT_EXT(BLK_TC_READ),
++				 BLK_TC_ACT_EXT(BLK_TC_WRITE) };
++
++/* The ilog2() calls fall out because they're constant */
++#define MASK_TC_BIT_EXT(rw, __name) ((rw & REQ_ ## __name) << \
++	  (ilog2(BLK_TC_ ## __name) + BLK_TC_SHIFT_EXT - __REQ_ ## __name))
++
++/*
++ * The worker for the various blk_add_trace*() types. Fills out a
++ * blk_io_trace structure and places it in a per-cpu subbuffer.
++ */
++static void __blk_add_trace_ext(struct blk_trace_ext *bt, sector_t sector, int bytes,
++		     int op, int op_flags, u64 what, int error, int pdu_len,
++		     void *pdu_data, union kernfs_node_id *cgid, u32 ioprio)
 +{
-+	return (const struct blk_io_trace_ext *)ent;
++	struct task_struct *tsk = current;
++	struct ring_buffer_event *event = NULL;
++	struct ring_buffer *buffer = NULL;
++	struct blk_io_trace_ext *t;
++	unsigned long flags = 0;
++	unsigned long *sequence;
++	pid_t pid;
++	int cpu, pc = 0;
++	bool blk_tracer = blk_tracer_enabled;
++	ssize_t cgid_len = cgid ? sizeof(*cgid) : 0;
++
++	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
++		return;
++
++	what |= ddir_act_ext[op_is_write(op) ? WRITE : READ];
++	what |= MASK_TC_BIT_EXT(op_flags, SYNC);
++	what |= MASK_TC_BIT_EXT(op_flags, RAHEAD);
++	what |= MASK_TC_BIT_EXT(op_flags, META);
++	what |= MASK_TC_BIT_EXT(op_flags, PREFLUSH);
++	what |= MASK_TC_BIT_EXT(op_flags, FUA);
++	if (op = REQ_OP_DISCARD || op = REQ_OP_SECURE_ERASE)
++		what |= BLK_TC_ACT_EXT(BLK_TC_DISCARD);
++	if (op = REQ_OP_FLUSH)
++		what |= BLK_TC_ACT_EXT(BLK_TC_FLUSH);
++	if (unlikely(op = REQ_OP_WRITE_ZEROES))
++		what |= BLK_TC_ACT_EXT(BLK_TC_WRITE_ZEROES);
++	if (unlikely(op = REQ_OP_ZONE_RESET))
++		what |= BLK_TC_ACT_EXT(BLK_TC_ZONE_RESET);
++
++	if (cgid)
++		what |= __BLK_TA_CGROUP;
++
++	pid = tsk->pid;
++	if (act_log_check_ext(bt, what, sector, pid))
++		return;
++	if (bt->prio_mask && !prio_log_check(bt, ioprio))
++		return;
++
++	cpu = raw_smp_processor_id();
++
++	if (blk_tracer) {
++		tracing_record_cmdline(current);
++
++		buffer = blk_tr->trace_buffer.buffer;
++		pc = preempt_count();
++		event = trace_buffer_lock_reserve(buffer, TRACE_BLK,
++						  sizeof(*t) + pdu_len + cgid_len,
++						  0, pc);
++		if (!event)
++			return;
++		t = ring_buffer_event_data(event);
++		goto record_it;
++	}
++
++	if (unlikely(tsk->btrace_seq != blktrace_seq))
++		trace_note_tsk_ext(tsk, ioprio);
++
++	/*
++	 * A word about the locking here - we disable interrupts to reserve
++	 * some space in the relay per-cpu buffer, to prevent an irq
++	 * from coming in and stepping on our toes.
++	 */
++	local_irq_save(flags);
++	t = relay_reserve(bt->rchan, sizeof(*t) + pdu_len + cgid_len);
++	if (t) {
++		sequence = per_cpu_ptr(bt->sequence, cpu);
++
++		t->magic = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION_EXT;
++		t->sequence = ++(*sequence);
++		t->time = ktime_to_ns(ktime_get());
++record_it:
++		/*
++		 * These two are not needed in ftrace as they are in the
++		 * generic trace_entry, filled by tracing_generic_entry_update,
++		 * but for the trace_event->bin() synthesizer benefit we do it
++		 * here too.
++		 */
++		t->cpu = cpu;
++		t->pid = pid;
++
++		t->sector = sector;
++		t->bytes = bytes;
++		t->action = what;
++		t->ioprio = ioprio;
++		t->device = bt->dev;
++		t->error = error;
++		t->pdu_len = pdu_len + cgid_len;
++
++		if (cgid_len)
++			memcpy((void *)t + sizeof(*t), cgid, cgid_len);
++		if (pdu_len)
++			memcpy((void *)t + sizeof(*t) + cgid_len, pdu_data, pdu_len);
++
++		if (blk_tracer) {
++			trace_buffer_unlock_commit(blk_tr, buffer, event, 0, pc);
++			return;
++		}
++	}
++
++	local_irq_restore(flags);
 +}
 +
- static inline const void *pdu_start(const struct trace_entry *ent, bool has_cg)
+ static void blk_trace_free(struct blk_trace *bt)
  {
- 	return (void *)(te_blk_io_trace(ent) + 1) +
- 		(has_cg ? sizeof(union kernfs_node_id) : 0);
- }
- 
-+static inline const void *pdu_start_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	return (void *)(te_blk_io_trace_ext(ent) + 1) +
-+		(has_cg ? sizeof(union kernfs_node_id) : 0);
-+}
-+
- static inline const void *cgid_start(const struct trace_entry *ent)
- {
- 	return (void *)(te_blk_io_trace(ent) + 1);
- }
- 
-+static inline const void *cgid_start_ext(const struct trace_entry *ent)
-+{
-+	return (void *)(te_blk_io_trace_ext(ent) + 1);
-+}
-+
- static inline int pdu_real_len(const struct trace_entry *ent, bool has_cg)
- {
- 	return te_blk_io_trace(ent)->pdu_len -
- 			(has_cg ? sizeof(union kernfs_node_id) : 0);
- }
- 
-+static inline int pdu_real_len_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	return te_blk_io_trace_ext(ent)->pdu_len -
-+			(has_cg ? sizeof(union kernfs_node_id) : 0);
-+}
-+
- static inline u32 t_action(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->action;
- }
- 
-+static inline u64 t_action_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->action;
-+}
-+
- static inline u32 t_bytes(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->bytes;
- }
- 
-+static inline u32 t_bytes_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->bytes;
-+}
-+
- static inline u32 t_sec(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->bytes >> 9;
- }
- 
-+static inline u32 t_sec_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->bytes >> 9;
-+}
-+
- static inline unsigned long long t_sector(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->sector;
- }
- 
-+static inline unsigned long long t_sector_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->sector;
-+}
-+
- static inline __u16 t_error(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->error;
- }
- 
-+static inline __u16 t_error_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->error;
-+}
-+
- static __u64 get_pdu_int(const struct trace_entry *ent, bool has_cg)
- {
- 	const __u64 *val = pdu_start(ent, has_cg);
- 	return be64_to_cpu(*val);
- }
- 
-+static __u64 get_pdu_int_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	const __u64 *val = pdu_start_ext(ent, has_cg);
-+	return be64_to_cpu(*val);
-+}
-+
- static void get_pdu_remap(const struct trace_entry *ent,
- 			  struct blk_io_trace_remap *r, bool has_cg)
- {
-@@ -1688,6 +1742,17 @@ static void get_pdu_remap(const struct trace_entry *ent,
- 	r->sector_from = be64_to_cpu(sector_from);
- }
- 
-+static void get_pdu_remap_ext(const struct trace_entry *ent,
-+			  struct blk_io_trace_remap *r, bool has_cg)
-+{
-+	const struct blk_io_trace_remap *__r = pdu_start_ext(ent, has_cg);
-+	__u64 sector_from = __r->sector_from;
-+
-+	r->device_from = be32_to_cpu(__r->device_from);
-+	r->device_to   = be32_to_cpu(__r->device_to);
-+	r->sector_from = be64_to_cpu(sector_from);
-+}
-+
- typedef void (blk_log_action_t) (struct trace_iterator *iter, const char *act,
- 	bool has_cg);
- 
+ 	debugfs_remove(bt->msg_file);
 -- 
 2.17.0
