@@ -1,37 +1,45 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 08 Jul 2019 18:47:10 +0000
-Subject: [PATCH V4 8/9] target/pscsi: use helper in pscsi_get_blocks()
-Message-Id: <20190708184711.2984-9-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:21 +0000
+Subject: [RFC PATCH 24/38] blktrace: update blk_add_trace_split()
+Message-Id: <20190717212435.2990-25-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the pscsi_get_blocks() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help of part_nr_sects_read().
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/target/target_core_pscsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index c9d92b3e777d..da481edab2de 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -1030,7 +1030,7 @@ static sector_t pscsi_get_blocks(struct se_device *dev)
- 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 8ea8d987eb4b..23911e969e8b 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1361,14 +1361,20 @@ static void blk_add_trace_split(void *ignore,
+ 				unsigned int pdu)
+ {
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
++	__be64 rpdu = cpu_to_be64(pdu);
  
- 	if (pdv->pdv_bd && pdv->pdv_bd->bd_part)
--		return pdv->pdv_bd->bd_part->nr_sects;
-+		return bdev_nr_sects(pdv->pdv_bd);
- 
- 	return 0;
+-	if (bt) {
+-		__be64 rpdu = cpu_to_be64(pdu);
+-
++	if (q->blk_trace) {
+ 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
+ 				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
+ 				BLK_TA_SPLIT, bio->bi_status, sizeof(rpdu),
+ 				&rpdu, blk_trace_bio_get_cgid(q, bio));
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
++				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
++				BLK_TA_SPLIT_EXT, bio->bi_status, sizeof(rpdu),
++				&rpdu, blk_trace_bio_get_cgid(q, bio),
++				bio_prio(bio));
+ 	}
  }
+ 
 -- 
 2.17.0
