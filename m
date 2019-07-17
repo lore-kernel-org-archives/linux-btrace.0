@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:21 +0000
-Subject: [RFC PATCH 24/38] blktrace: update blk_add_trace_split()
-Message-Id: <20190717212435.2990-25-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:13 +0000
+Subject: [RFC PATCH 16/38] blktrace: update blk_add_trace_bio_complete()
+Message-Id: <20190717212435.2990-17-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,36 +10,28 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ kernel/trace/blktrace.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 8ea8d987eb4b..23911e969e8b 100644
+index 23f5312c41d0..649dd69a0a95 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1361,14 +1361,20 @@ static void blk_add_trace_split(void *ignore,
- 				unsigned int pdu)
+@@ -1210,7 +1210,14 @@ static void blk_add_trace_bio_complete(void *ignore,
+ 				       struct request_queue *q, struct bio *bio,
+ 				       int error)
  {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
-+	__be64 rpdu = cpu_to_be64(pdu);
- 
--	if (bt) {
--		__be64 rpdu = cpu_to_be64(pdu);
--
+-	blk_add_trace_bio(q, bio, BLK_TA_COMPLETE, error);
++	u64 ta = 0;
++
 +	if (q->blk_trace) {
- 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
- 				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
- 				BLK_TA_SPLIT, bio->bi_status, sizeof(rpdu),
- 				&rpdu, blk_trace_bio_get_cgid(q, bio));
++		ta = BLK_TA_COMPLETE;
 +	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_SPLIT_EXT, bio->bi_status, sizeof(rpdu),
-+				&rpdu, blk_trace_bio_get_cgid(q, bio),
-+				bio_prio(bio));
- 	}
++		ta = BLK_TA_COMPLETE_EXT;
++	}
++	blk_add_trace_bio(q, bio, ta, error);
  }
  
+ static void blk_add_trace_bio_backmerge(void *ignore,
 -- 
 2.17.0
