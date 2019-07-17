@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:15 +0000
-Subject: [RFC PATCH 18/38] blktrace: update blk_add_trace_bio_frontmerge()
-Message-Id: <20190717212435.2990-19-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:18 +0000
+Subject: [RFC PATCH 21/38] blktrace: update blk_add_trace_sleeprq()
+Message-Id: <20190717212435.2990-22-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,28 +10,41 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index c2233e47e0b4..b64536e2b736 100644
+index 4bca03475336..fe1c9d549c0d 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1240,7 +1240,14 @@ static void blk_add_trace_bio_frontmerge(void *ignore,
- 					 struct request *rq,
- 					 struct bio *bio)
+@@ -1292,14 +1292,24 @@ static void blk_add_trace_sleeprq(void *ignore,
+ 				  struct request_queue *q,
+ 				  struct bio *bio, int rw)
  {
--	blk_add_trace_bio(q, bio, BLK_TA_FRONTMERGE, 0);
-+	u64 ta = 0;
-+
-+	if (q->blk_trace) {
-+		ta = BLK_TA_FRONTMERGE;
-+	} else if (q->blk_trace_ext) {
-+		ta = BLK_TA_FRONTMERGE_EXT;
-+	}
-+	blk_add_trace_bio(q, bio, ta, 0);
+-	if (bio)
+-		blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
+-	else {
++	if (bio) {
++		if (q->blk_trace) {
++			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
++		} else if (q->blk_trace_ext) {
++			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ_EXT, 0);
++		}
++	} else {
+ 		struct blk_trace *bt = q->blk_trace;
++		struct blk_trace_ext *bte = q->blk_trace_ext;
+ 
+-		if (bt)
++		if (q->blk_trace) {
+ 			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
+ 					0, 0, NULL, NULL);
++		} else if (q->blk_trace_ext) {
++			__blk_add_trace_ext(bte, 0, 0, rw, 0,
++					    BLK_TA_SLEEPRQ_EXT,
++					    0, 0, NULL, NULL, 0);
++		}
+ 	}
  }
  
- static void blk_add_trace_bio_queue(void *ignore,
 -- 
 2.17.0
