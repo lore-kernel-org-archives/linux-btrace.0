@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:25 +0000
-Subject: [RFC PATCH 28/38] blktrace: add a new formatting routine
-Message-Id: <20190717212435.2990-29-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:27 +0000
+Subject: [RFC PATCH 30/38] blktrace: add blk_log_xxx helpers()
+Message-Id: <20190717212435.2990-31-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,59 +10,247 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ kernel/trace/blktrace.c | 165 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 165 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 57c5b5aace08..359562073d01 100644
+index f0ae1bdadfc9..17160b02b259 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1583,6 +1583,46 @@ static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
- 	rwbs[i] = '\0';
+@@ -1773,6 +1773,23 @@ static void blk_log_action_classic(struct trace_iterator *iter, const char *act,
+ 			 secs, nsec_rem, iter->ent->pid, act, rwbs);
  }
  
-+static void fill_rwbs_ext(char *rwbs, const struct blk_io_trace_ext *t)
++static void blk_log_action_classic_ext(struct trace_iterator *iter, const char *act,
++	bool has_cg)
 +{
-+	int i = 0;
-+	int tc = t->action >> BLK_TC_SHIFT_EXT;
++	char rwbs[RWBS_LEN];
++	unsigned long long ts  = iter->ts;
++	unsigned long nsec_rem = do_div(ts, NSEC_PER_SEC);
++	unsigned secs	       = (unsigned long)ts;
++	const struct blk_io_trace_ext *t = te_blk_io_trace_ext(iter->ent);
 +
-+	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
-+		rwbs[i++] = 'N';
-+		goto out;
-+	}
++	fill_rwbs_ext(rwbs, t);
 +
-+	if (tc & BLK_TC_FLUSH)
-+		rwbs[i++] = 'F';
-+
-+	if (tc & BLK_TC_DISCARD)
-+		rwbs[i++] = 'D';
-+	else if ((tc & BLK_TC_WRITE_ZEROES)) {
-+		rwbs[i++] = 'W';
-+		rwbs[i++] = 'Z';
-+	} else if ((tc & BLK_TC_ZONE_RESET)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'R';
-+	} else if (tc & BLK_TC_WRITE)
-+		rwbs[i++] = 'W';
-+	else if (t->bytes)
-+		rwbs[i++] = 'R';
-+	else
-+		rwbs[i++] = 'N';
-+
-+	if (tc & BLK_TC_FUA)
-+		rwbs[i++] = 'F';
-+	if (tc & BLK_TC_AHEAD)
-+		rwbs[i++] = 'A';
-+	if (tc & BLK_TC_SYNC)
-+		rwbs[i++] = 'S';
-+	if (tc & BLK_TC_META)
-+		rwbs[i++] = 'M';
-+out:
-+	rwbs[i] = '\0';
++	trace_seq_printf(&iter->seq,
++			 "%3d,%-3d %2d %5d.%09lu %5u %2s %3s ",
++			 MAJOR(t->device), MINOR(t->device), iter->cpu,
++			 secs, nsec_rem, iter->ent->pid, act, rwbs);
 +}
 +
- static inline
- const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
+ static void blk_log_action(struct trace_iterator *iter, const char *act,
+ 	bool has_cg)
  {
+@@ -1801,6 +1818,34 @@ static void blk_log_action(struct trace_iterator *iter, const char *act,
+ 				 MAJOR(t->device), MINOR(t->device), act, rwbs);
+ }
+ 
++static void blk_log_action_ext(struct trace_iterator *iter, const char *act,
++	bool has_cg)
++{
++	char rwbs[RWBS_LEN];
++	const struct blk_io_trace_ext *t = te_blk_io_trace_ext(iter->ent);
++
++	fill_rwbs_ext(rwbs, t);
++	if (has_cg) {
++		const union kernfs_node_id *id = cgid_start(iter->ent);
++
++		if (blk_tracer_flags.val & TRACE_BLK_OPT_CGNAME) {
++			char blkcg_name_buf[NAME_MAX + 1] = "<...>";
++
++			cgroup_path_from_kernfs_id(id, blkcg_name_buf,
++				sizeof(blkcg_name_buf));
++			trace_seq_printf(&iter->seq, "%3d,%-3d %s %2s %3s ",
++				 MAJOR(t->device), MINOR(t->device),
++				 blkcg_name_buf, act, rwbs);
++		} else
++			trace_seq_printf(&iter->seq,
++				 "%3d,%-3d %x,%-x %2s %3s ",
++				 MAJOR(t->device), MINOR(t->device),
++				 id->ino, id->generation, act, rwbs);
++	} else
++		trace_seq_printf(&iter->seq, "%3d,%-3d %2s %3s ",
++				 MAJOR(t->device), MINOR(t->device), act, rwbs);
++}
++
+ static void blk_log_dump_pdu(struct trace_seq *s,
+ 	const struct trace_entry *ent, bool has_cg)
+ {
+@@ -1840,6 +1885,45 @@ static void blk_log_dump_pdu(struct trace_seq *s,
+ 	trace_seq_puts(s, ") ");
+ }
+ 
++static void blk_log_dump_pdu_ext(struct trace_seq *s,
++	const struct trace_entry *ent, bool has_cg)
++{
++	const unsigned char *pdu_buf;
++	int pdu_len;
++	int i, end;
++
++	pdu_buf = pdu_start_ext(ent, has_cg);
++	pdu_len = pdu_real_len_ext(ent, has_cg);
++
++	if (!pdu_len)
++		return;
++
++	/* find the last zero that needs to be printed */
++	for (end = pdu_len - 1; end >= 0; end--)
++		if (pdu_buf[end])
++			break;
++	end++;
++
++	trace_seq_putc(s, '(');
++
++	for (i = 0; i < pdu_len; i++) {
++
++		trace_seq_printf(s, "%s%02x",
++				 i = 0 ? "" : " ", pdu_buf[i]);
++
++		/*
++		 * stop when the rest is just zeroes and indicate so
++		 * with a ".." appended
++		 */
++		if (i = end && end != pdu_len - 1) {
++			trace_seq_puts(s, " ..) ");
++			return;
++		}
++	}
++
++	trace_seq_puts(s, ") ");
++}
++
+ static void blk_log_generic(struct trace_seq *s, const struct trace_entry *ent, bool has_cg)
+ {
+ 	char cmd[TASK_COMM_LEN];
+@@ -1859,6 +1943,28 @@ static void blk_log_generic(struct trace_seq *s, const struct trace_entry *ent,
+ 	}
+ }
+ 
++static void blk_log_generic_ext(struct trace_seq *s,
++				const struct trace_entry *ent,
++				bool has_cg)
++{
++	char cmd[TASK_COMM_LEN];
++
++	trace_find_cmdline(ent->pid, cmd);
++
++	if (t_action(ent) & BLK_TC_ACT_EXT(BLK_TC_PC)) {
++		trace_seq_printf(s, "%u ", t_bytes_ext(ent));
++		blk_log_dump_pdu_ext(s, ent, has_cg);
++		trace_seq_printf(s, "[%s]\n", cmd);
++	} else {
++		if (t_sec_ext(ent))
++			trace_seq_printf(s, "%llu + %u [%s]\n",
++						t_sector_ext(ent),
++						t_sec_ext(ent), cmd);
++		else
++			trace_seq_printf(s, "[%s]\n", cmd);
++	}
++}
++
+ static void blk_log_with_error(struct trace_seq *s,
+ 			      const struct trace_entry *ent, bool has_cg)
+ {
+@@ -1876,6 +1982,23 @@ static void blk_log_with_error(struct trace_seq *s,
+ 	}
+ }
+ 
++static void blk_log_with_error_ext(struct trace_seq *s,
++			      const struct trace_entry *ent, bool has_cg)
++{
++	if (t_action_ext(ent) & BLK_TC_ACT_EXT(BLK_TC_PC)) {
++		blk_log_dump_pdu_ext(s, ent, has_cg);
++		trace_seq_printf(s, "[%d]\n", t_error_ext(ent));
++	} else {
++		if (t_sec_ext(ent))
++			trace_seq_printf(s, "%llu + %u [%d]\n",
++					 t_sector_ext(ent),
++					 t_sec_ext(ent), t_error_ext(ent));
++		else
++			trace_seq_printf(s, "%llu [%d]\n",
++					 t_sector_ext(ent), t_error_ext(ent));
++	}
++}
++
+ static void blk_log_remap(struct trace_seq *s, const struct trace_entry *ent, bool has_cg)
+ {
+ 	struct blk_io_trace_remap r = { .device_from = 0, };
+@@ -1887,6 +2010,18 @@ static void blk_log_remap(struct trace_seq *s, const struct trace_entry *ent, bo
+ 			 (unsigned long long)r.sector_from);
+ }
+ 
++static void blk_log_remap_ext(struct trace_seq *s, const struct trace_entry *ent,
++		bool has_cg)
++{
++	struct blk_io_trace_remap r = { .device_from = 0, };
++
++	get_pdu_remap_ext(ent, &r, has_cg);
++	trace_seq_printf(s, "%llu + %u <- (%d,%d) %llu\n",
++			 t_sector_ext(ent), t_sec_ext(ent),
++			 MAJOR(r.device_from), MINOR(r.device_from),
++			 (unsigned long long)r.sector_from);
++}
++
+ static void blk_log_plug(struct trace_seq *s, const struct trace_entry *ent, bool has_cg)
+ {
+ 	char cmd[TASK_COMM_LEN];
+@@ -1896,6 +2031,7 @@ static void blk_log_plug(struct trace_seq *s, const struct trace_entry *ent, boo
+ 	trace_seq_printf(s, "[%s]\n", cmd);
+ }
+ 
++
+ static void blk_log_unplug(struct trace_seq *s, const struct trace_entry *ent, bool has_cg)
+ {
+ 	char cmd[TASK_COMM_LEN];
+@@ -1905,6 +2041,16 @@ static void blk_log_unplug(struct trace_seq *s, const struct trace_entry *ent, b
+ 	trace_seq_printf(s, "[%s] %llu\n", cmd, get_pdu_int(ent, has_cg));
+ }
+ 
++static void blk_log_unplug_ext(struct trace_seq *s, const struct trace_entry *ent,
++		bool has_cg)
++{
++	char cmd[TASK_COMM_LEN];
++
++	trace_find_cmdline(ent->pid, cmd);
++
++	trace_seq_printf(s, "[%s] %llu\n", cmd, get_pdu_int_ext(ent, has_cg));
++}
++
+ static void blk_log_split(struct trace_seq *s, const struct trace_entry *ent, bool has_cg)
+ {
+ 	char cmd[TASK_COMM_LEN];
+@@ -1915,6 +2061,16 @@ static void blk_log_split(struct trace_seq *s, const struct trace_entry *ent, bo
+ 			 get_pdu_int(ent, has_cg), cmd);
+ }
+ 
++static void blk_log_split_ext(struct trace_seq *s, const struct trace_entry *ent, bool has_cg)
++{
++	char cmd[TASK_COMM_LEN];
++
++	trace_find_cmdline(ent->pid, cmd);
++
++	trace_seq_printf(s, "%llu / %llu [%s]\n", t_sector_ext(ent),
++			 get_pdu_int_ext(ent, has_cg), cmd);
++}
++
+ static void blk_log_msg(struct trace_seq *s, const struct trace_entry *ent,
+ 			bool has_cg)
+ {
+@@ -1924,6 +2080,15 @@ static void blk_log_msg(struct trace_seq *s, const struct trace_entry *ent,
+ 	trace_seq_putc(s, '\n');
+ }
+ 
++static void blk_log_msg_ext(struct trace_seq *s, const struct trace_entry *ent,
++			bool has_cg)
++{
++
++	trace_seq_putmem(s, pdu_start_ext(ent, has_cg),
++		pdu_real_len_ext(ent, has_cg));
++	trace_seq_putc(s, '\n');
++}
++
+ /*
+  * struct tracer operations
+  */
 -- 
 2.17.0
