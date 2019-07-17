@@ -1,37 +1,62 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 08 Jul 2019 18:47:09 +0000
-Subject: [PATCH V4 7/9] blktrace: use helper in blk_trace_setup_lba()
-Message-Id: <20190708184711.2984-8-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:06 +0000
+Subject: [RFC PATCH 09/38] blktrace: update blk_add_trace_rq()
+Message-Id: <20190717212435.2990-10-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the blk_trace_setup_lba() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help of part_nr_sects_read().
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index e1c6d79fb4cc..35ff49503b85 100644
+index 5103b79bce2a..b27981bb9c89 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -461,7 +461,7 @@ static void blk_trace_setup_lba(struct blk_trace *bt,
+@@ -1077,21 +1077,32 @@ blk_trace_request_get_cgid(struct request_queue *q, struct request *rq)
+  *
+  **/
+ static void blk_add_trace_rq(struct request *rq, int error,
+-			     unsigned int nr_bytes, u32 what,
++			     unsigned int nr_bytes, u64 what,
+ 			     union kernfs_node_id *cgid)
+ {
+ 	struct blk_trace *bt = rq->q->blk_trace;
++	struct blk_trace_ext *bte = rq->q->blk_trace_ext;
  
- 	if (part) {
- 		bt->start_lba = part->start_sect;
--		bt->end_lba = part->start_sect + part->nr_sects;
-+		bt->end_lba = part->start_sect + bdev_nr_sects(bdev);
- 	} else {
- 		bt->start_lba = 0;
- 		bt->end_lba = -1ULL;
+ 	if (likely(!bt))
+ 		return;
+ 
+-	if (blk_rq_is_passthrough(rq))
+-		what |= BLK_TC_ACT(BLK_TC_PC);
+-	else
+-		what |= BLK_TC_ACT(BLK_TC_FS);
+-
+-	__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes, req_op(rq),
+-			rq->cmd_flags, what, error, 0, NULL, cgid);
++	if (rq->q->blk_trace) {
++		if (blk_rq_is_passthrough(rq))
++			what |= BLK_TC_ACT(BLK_TC_PC);
++		else
++			what |= BLK_TC_ACT(BLK_TC_FS);
++		__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes,
++				req_op(rq), rq->cmd_flags, (u32)what, error, 0,
++				NULL, cgid);
++	} else if (rq->q->blk_trace_ext) {
++		if (blk_rq_is_passthrough(rq))
++			what |= BLK_TC_ACT_EXT(BLK_TC_PC);
++		else
++			what |= BLK_TC_ACT_EXT(BLK_TC_FS);
++		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq), nr_bytes,
++				    req_op(rq), rq->cmd_flags, what, error, 0,
++				    NULL, cgid, req_get_ioprio(rq));
++	}
+ }
+ 
+ static void blk_add_trace_rq_insert(void *ignore,
 -- 
 2.17.0
