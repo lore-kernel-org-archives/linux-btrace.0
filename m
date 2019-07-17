@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:20 +0000
-Subject: [RFC PATCH 23/38] blktrace: update blk_add_trace_unplug()
-Message-Id: <20190717212435.2990-24-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:15 +0000
+Subject: [RFC PATCH 18/38] blktrace: update blk_add_trace_bio_frontmerge()
+Message-Id: <20190717212435.2990-19-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,50 +10,28 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 27 ++++++++++++++++++++-------
- 1 file changed, 20 insertions(+), 7 deletions(-)
+ kernel/trace/blktrace.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index ebb2de71159a..8ea8d987eb4b 100644
+index c2233e47e0b4..b64536e2b736 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1329,17 +1329,30 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
- 				    unsigned int depth, bool explicit)
+@@ -1240,7 +1240,14 @@ static void blk_add_trace_bio_frontmerge(void *ignore,
+ 					 struct request *rq,
+ 					 struct bio *bio)
  {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
-+	__be64 rpdu = cpu_to_be64(depth);
-+	u64 what;
- 
--	if (bt) {
--		__be64 rpdu = cpu_to_be64(depth);
--		u32 what;
--
--		if (explicit)
-+	if (explicit) {
-+		if (q->blk_trace) {
- 			what = BLK_TA_UNPLUG_IO;
--		else
-+		} else if (q->blk_trace_ext) {
-+			what = BLK_TA_UNPLUG_IO_EXT;
-+		}
-+	} else {
-+		if (q->blk_trace) {
- 			what = BLK_TA_UNPLUG_TIMER;
-+		} else if (q->blk_trace_ext) {
-+			what = BLK_TA_UNPLUG_TIMER_EXT;
-+		}
-+	}
- 
--		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, NULL);
+-	blk_add_trace_bio(q, bio, BLK_TA_FRONTMERGE, 0);
++	u64 ta = 0;
++
 +	if (q->blk_trace) {
-+		__blk_add_trace(bt, 0, 0, 0, 0, (u32)what, 0, sizeof(rpdu),
-+				&rpdu, NULL);
++		ta = BLK_TA_FRONTMERGE;
 +	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, 0, 0, 0, 0, what, 0, sizeof(rpdu),
-+				    &rpdu, NULL, 0);
- 	}
++		ta = BLK_TA_FRONTMERGE_EXT;
++	}
++	blk_add_trace_bio(q, bio, ta, 0);
  }
  
+ static void blk_add_trace_bio_queue(void *ignore,
 -- 
 2.17.0
