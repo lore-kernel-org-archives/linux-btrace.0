@@ -1,34 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 17 Jul 2019 21:24:34 +0000
-Subject: [RFC PATCH 37/38] block: update blkdev_ioctl with new trace ioctls
-Message-Id: <20190717212435.2990-38-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:12 +0000
+Subject: [RFC PATCH 15/38] blktrace: update blk_add_trace_bio_bounce()
+Message-Id: <20190717212435.2990-16-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Add newly intoduce IOCTLs so that userspace tools can call them.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/ioctl.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ kernel/trace/blktrace.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 15a0eb80ada9..e5393d2bbe65 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -589,6 +589,10 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case BLKTRACESTOP:
- 	case BLKTRACESETUP:
- 	case BLKTRACETEARDOWN:
-+	case BLKTRACESETUP_EXT:
-+	case BLKTRACESTART_EXT:
-+	case BLKTRACESTOP_EXT:
-+	case BLKTRACETEARDOWN_EXT:
- 		return blk_trace_ioctl(bdev, cmd, argp);
- 	case IOC_PR_REGISTER:
- 		return blkdev_pr_register(bdev, argp);
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 52c5b9a5c45c..23f5312c41d0 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1196,7 +1196,14 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+ static void blk_add_trace_bio_bounce(void *ignore,
+ 				     struct request_queue *q, struct bio *bio)
+ {
+-	blk_add_trace_bio(q, bio, BLK_TA_BOUNCE, 0);
++	u64 ta = 0;
++
++	if (q->blk_trace) {
++		ta = BLK_TA_BOUNCE;
++	} else if (q->blk_trace_ext) {
++		ta = BLK_TA_BOUNCE_EXT;
++	}
++	blk_add_trace_bio(q, bio, ta, 0);
+ }
+ 
+ static void blk_add_trace_bio_complete(void *ignore,
 -- 
 2.17.0
