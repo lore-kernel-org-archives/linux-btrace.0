@@ -1,37 +1,45 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 08 Jul 2019 18:47:08 +0000
-Subject: [PATCH V4 6/9] f2fs: use helper in init_blkz_info()
-Message-Id: <20190708184711.2984-7-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:19 +0000
+Subject: [RFC PATCH 22/38] blktrace: update blk_add_trace_plug()
+Message-Id: <20190717212435.2990-23-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the init_blkz_info() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help of part_nr_sects_read().
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- fs/f2fs/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 6b959bbb336a..24e2848afcf5 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -2798,7 +2798,7 @@ static int init_percpu_info(struct f2fs_sb_info *sbi)
- static int init_blkz_info(struct f2fs_sb_info *sbi, int devi)
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index fe1c9d549c0d..ebb2de71159a 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1287,7 +1287,6 @@ static void blk_add_trace_getrq(void *ignore,
+ 	}
+ }
+ 
+-
+ static void blk_add_trace_sleeprq(void *ignore,
+ 				  struct request_queue *q,
+ 				  struct bio *bio, int rw)
+@@ -1316,9 +1315,14 @@ static void blk_add_trace_sleeprq(void *ignore,
+ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
  {
- 	struct block_device *bdev = FDEV(devi).bdev;
--	sector_t nr_sectors = bdev->bd_part->nr_sects;
-+	sector_t nr_sectors = bdev_nr_sects(bdev);
- 	sector_t sector = 0;
- 	struct blk_zone *zones;
- 	unsigned int i, nr_zones;
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
+ 
+-	if (bt)
++	if (q->blk_trace) {
+ 		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, NULL);
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, BLK_TA_PLUG_EXT, 0, 0,
++				    NULL, NULL, 0);
++	}
+ }
+ 
+ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
 -- 
 2.17.0
