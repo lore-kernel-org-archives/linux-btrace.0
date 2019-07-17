@@ -1,37 +1,34 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 02 Jul 2019 17:42:32 +0000
-Subject: [PATCH V3 6/9] f2fs: use helper in init_blkz_info()
-Message-Id: <20190702174236.3332-7-chaitanya.kulkarni@wdc.com>
+Date: Wed, 17 Jul 2019 21:24:01 +0000
+Subject: [RFC PATCH 04/38] blktrace: introduce new ioctls
+Message-Id: <20190717212435.2990-5-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To: linux-btrace@vger.kernel.org
 
-This patch updates the init_blkz_info() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help of part_nr_sects_read().
+Add new IOCTLs definitions.
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- fs/f2fs/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/uapi/linux/fs.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 6b959bbb336a..24e2848afcf5 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -2798,7 +2798,7 @@ static int init_percpu_info(struct f2fs_sb_info *sbi)
- static int init_blkz_info(struct f2fs_sb_info *sbi, int devi)
- {
- 	struct block_device *bdev = FDEV(devi).bdev;
--	sector_t nr_sectors = bdev->bd_part->nr_sects;
-+	sector_t nr_sectors = bdev_nr_sects(bdev);
- 	sector_t sector = 0;
- 	struct blk_zone *zones;
- 	unsigned int i, nr_zones;
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 59c71fa8c553..4a473c9c2bd7 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -181,6 +181,10 @@ struct fsxattr {
+ #define BLKSECDISCARD _IO(0x12,125)
+ #define BLKROTATIONAL _IO(0x12,126)
+ #define BLKZEROOUT _IO(0x12,127)
++#define BLKTRACESETUP_EXT _IOWR(0x12,128,struct blk_user_trace_setup_ext)
++#define BLKTRACESTART_EXT _IO(0x12,129)
++#define BLKTRACESTOP_EXT _IO(0x12,130)
++#define BLKTRACETEARDOWN_EXT _IO(0x12,131)
+ /*
+  * A jump here: 130-131 are reserved for zoned block devices
+  * (see uapi/linux/blkzoned.h)
 -- 
-2.19.1
+2.17.0
