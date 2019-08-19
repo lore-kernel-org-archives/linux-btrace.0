@@ -1,40 +1,40 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 21 Aug 2019 06:14:19 +0000
-Subject: [PATCH V5 5/9] bcache: update cached_dev_init() with helper
-Message-Id: <20190821061423.3408-6-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:34 +0000
+Subject: [RFC PATCH 03/38] blkdev.h: add new trace ext as a queue member
+Message-Id: <20190819044109.3405-4-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To: linux-btrace@vger.kernel.org
 
-In the bcache when initializing the cached device we don't actually
-use any sort of locking when reading the number of sectors from the
-part. This patch updates the cached_dev_init() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help of part_nr_sects_read().
+Update a struct queue with block trace extension.
 
-Acked-by: Coly Li <colyli@suse.de>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/md/bcache/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/blkdev.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 20ed838e9413..79c848fa5912 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1305,7 +1305,7 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
- 			q->limits.raid_partial_stripes_expensive;
- 
- 	ret = bcache_device_init(&dc->disk, block_size,
--			 dc->bdev->bd_part->nr_sects - dc->sb.data_offset);
-+			 bdev_nr_sects(dc->bdev) - dc->sb.data_offset);
- 	if (ret)
- 		return ret;
- 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 167bf879f072..e3bb9a3c7639 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -34,6 +34,7 @@ struct scsi_ioctl_command;
+ struct request_queue;
+ struct elevator_queue;
+ struct blk_trace;
++struct blk_trace_ext;
+ struct request;
+ struct sg_io_hdr;
+ struct bsg_job;
+@@ -528,6 +529,8 @@ struct request_queue {
+ #ifdef CONFIG_BLK_DEV_IO_TRACE
+ 	struct blk_trace	*blk_trace;
+ 	struct mutex		blk_trace_mutex;
++	struct blk_trace_ext	*blk_trace_ext;
++	struct mutex		blk_trace_ext_mutex;
+ #endif
+ 	/*
+ 	 * for flush operations
 -- 
 2.17.0
