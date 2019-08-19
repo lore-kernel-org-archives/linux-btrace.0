@@ -1,50 +1,49 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:52 +0000
-Subject: [RFC PATCH 21/38] blktrace: update blk_add_trace_sleeprq()
-Message-Id: <20190819044109.3405-22-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:33 +0000
+Subject: [RFC PATCH 02/38] blktrace_api: add new trace definition
+Message-Id: <20190819044109.3405-3-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+This patch adds new structure similar to struct blk_trace to support
+block trace extensions.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ include/linux/blktrace_api.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 31b4fc636e04..d9c56e6d34f6 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1288,14 +1288,24 @@ static void blk_add_trace_sleeprq(void *ignore,
- 				  struct request_queue *q,
- 				  struct bio *bio, int rw)
- {
--	if (bio)
--		blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
--	else {
-+	if (bio) {
-+		if (q->blk_trace) {
-+			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
-+		} else if (q->blk_trace_ext) {
-+			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ_EXT, 0);
-+		}
-+	} else {
- 		struct blk_trace *bt = q->blk_trace;
-+		struct blk_trace_ext *bte = q->blk_trace_ext;
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index 7bb2d8de9f30..83103c1194fb 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -29,6 +29,24 @@ struct blk_trace {
+ 	atomic_t dropped;
+ };
  
--		if (bt)
-+		if (q->blk_trace) {
- 			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
- 					0, 0, NULL, NULL);
-+		} else if (q->blk_trace_ext) {
-+			__blk_add_trace_ext(bte, 0, 0, rw, 0,
-+					    BLK_TA_SLEEPRQ_EXT,
-+					    0, 0, NULL, NULL, 0);
-+		}
- 	}
- }
++struct blk_trace_ext {
++	int trace_state;
++	struct rchan *rchan;
++	unsigned long __percpu *sequence;
++	unsigned char __percpu *msg_data;
++	u64 act_mask;
++	u32 prio_mask;
++	u64 start_lba;
++	u64 end_lba;
++	u32 pid;
++	u32 dev;
++	struct dentry *dir;
++	struct dentry *dropped_file;
++	struct dentry *msg_file;
++	struct list_head running_ext_list;
++	atomic_t dropped;
++};
++
+ struct blkcg;
  
+ extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
 -- 
 2.17.0
