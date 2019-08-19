@@ -1,40 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:34 +0000
-Subject: [RFC PATCH 03/38] blkdev.h: add new trace ext as a queue member
-Message-Id: <20190819044109.3405-4-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:42 +0000
+Subject: [RFC PATCH 11/38] blktrace: update blk_add_trace_rq_issue()
+Message-Id: <20190819044109.3405-12-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Update a struct queue with block trace extension.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- include/linux/blkdev.h | 3 +++
- 1 file changed, 3 insertions(+)
+ kernel/trace/blktrace.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 167bf879f072..e3bb9a3c7639 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -34,6 +34,7 @@ struct scsi_ioctl_command;
- struct request_queue;
- struct elevator_queue;
- struct blk_trace;
-+struct blk_trace_ext;
- struct request;
- struct sg_io_hdr;
- struct bsg_job;
-@@ -528,6 +529,8 @@ struct request_queue {
- #ifdef CONFIG_BLK_DEV_IO_TRACE
- 	struct blk_trace	*blk_trace;
- 	struct mutex		blk_trace_mutex;
-+	struct blk_trace_ext	*blk_trace_ext;
-+	struct mutex		blk_trace_ext_mutex;
- #endif
- 	/*
- 	 * for flush operations
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 4f3241522232..be39b99531ff 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1118,7 +1118,14 @@ static void blk_add_trace_rq_insert(void *ignore,
+ static void blk_add_trace_rq_issue(void *ignore,
+ 				   struct request_queue *q, struct request *rq)
+ {
+-	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_ISSUE,
++	u64 ta = 0;
++
++	if (rq->q->blk_trace) {
++		ta = BLK_TA_ISSUE;
++	} else if (rq->q->blk_trace_ext) {
++		ta = BLK_TA_ISSUE_EXT;
++	}
++	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), ta,
+ 			 blk_trace_request_get_cgid(q, rq));
+ }
+ 
 -- 
 2.17.0
