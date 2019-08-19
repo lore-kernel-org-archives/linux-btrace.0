@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:57 +0000
-Subject: [RFC PATCH 26/38] blktrace: update blk_add_trace_rq_remap()
-Message-Id: <20190819044109.3405-27-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:54 +0000
+Subject: [RFC PATCH 23/38] blktrace: update blk_add_trace_unplug()
+Message-Id: <20190819044109.3405-24-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,42 +10,50 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ kernel/trace/blktrace.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index d9418335ec26..1659bab715ae 100644
+index 51cb190eddea..1813f039f6ec 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1431,18 +1431,23 @@ static void blk_add_trace_rq_remap(void *ignore,
- 				   sector_t from)
+@@ -1325,17 +1325,30 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 				    unsigned int depth, bool explicit)
  {
  	struct blk_trace *bt = q->blk_trace;
 +	struct blk_trace_ext *bte = q->blk_trace_ext;
- 	struct blk_io_trace_remap r;
++	__be64 rpdu = cpu_to_be64(depth);
++	u64 what;
  
--	if (likely(!bt))
--		return;
+-	if (bt) {
+-		__be64 rpdu = cpu_to_be64(depth);
+-		u32 what;
 -
- 	r.device_from = cpu_to_be32(dev);
- 	r.device_to   = cpu_to_be32(disk_devt(rq->rq_disk));
- 	r.sector_from = cpu_to_be64(from);
- 
--	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
--			rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
--			sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
-+				rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
-+				sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, blk_rq_pos(rq), blk_rq_bytes(rq),
-+				    rq_data_dir(rq), 0, BLK_TA_REMAP_EXT, 0,
-+				    sizeof(r), &r, blk_trace_request_get_cgid(q, rq),
-+				    req_get_ioprio(rq));
+-		if (explicit)
++	if (explicit) {
++		if (q->blk_trace) {
+ 			what = BLK_TA_UNPLUG_IO;
+-		else
++		} else if (q->blk_trace_ext) {
++			what = BLK_TA_UNPLUG_IO_EXT;
++		}
++	} else {
++		if (q->blk_trace) {
+ 			what = BLK_TA_UNPLUG_TIMER;
++		} else if (q->blk_trace_ext) {
++			what = BLK_TA_UNPLUG_TIMER_EXT;
++		}
 +	}
+ 
+-		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, NULL);
++	if (q->blk_trace) {
++		__blk_add_trace(bt, 0, 0, 0, 0, (u32)what, 0, sizeof(rpdu),
++				&rpdu, NULL);
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, what, 0, sizeof(rpdu),
++				    &rpdu, NULL, 0);
+ 	}
  }
  
- /**
 -- 
 2.17.0
