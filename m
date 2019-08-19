@@ -1,47 +1,52 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 21 Aug 2019 06:14:18 +0000
-Subject: [PATCH V5 4/9] blk-zoned: update blkdev_reset_zones() with helper
-Message-Id: <20190821061423.3408-5-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:41:05 +0000
+Subject: [RFC PATCH 34/38] blktrace: add trace print helpers
+Message-Id: <20190819044109.3405-35-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To: linux-btrace@vger.kernel.org
 
-This patch updates the blkdev_reset_zones() with newly introduced
-helper function to read the nr_sects from block device's hd_parts with
-the help of part_nr_sects_read().
-
-Reviewed-by: Minwoo Im <minwoo.im.dev@gmail.com>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/blk-zoned.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ kernel/trace/blktrace.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 7e0c0b54d194..53f9df376cfb 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -267,7 +267,7 @@ int blkdev_reset_zones(struct block_device *bdev,
- 	if (bdev_read_only(bdev))
- 		return -EPERM;
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 5712321d4a53..05498ddb26c4 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -2280,6 +2280,15 @@ blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
+ 	return trace_handle_return(&iter->seq);
+ }
  
--	if (!nr_sectors || end_sector > bdev->bd_part->nr_sects)
-+	if (!nr_sectors || end_sector > bdev_nr_sects(bdev))
- 		/* Out of range */
- 		return -EINVAL;
++static enum print_line_t
++blk_trace_event_print_binary_ext(struct trace_iterator *iter, int flags,
++			     struct trace_event *event)
++{
++	blk_trace_synthesize_old_trace_ext(iter);
++
++	return trace_handle_return(&iter->seq);
++}
++
+ static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
+ {
+ 	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
+@@ -2288,6 +2297,14 @@ static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
+ 	return print_one_line(iter, true);
+ }
  
-@@ -280,7 +280,7 @@ int blkdev_reset_zones(struct block_device *bdev,
- 		return -EINVAL;
- 
- 	if ((nr_sectors & (zone_sectors - 1)) &&
--	    end_sector != bdev->bd_part->nr_sects)
-+	    end_sector != bdev_nr_sects(bdev))
- 		return -EINVAL;
- 
- 	blk_start_plug(&plug);
++static enum print_line_t blk_tracer_print_line_ext(struct trace_iterator *iter)
++{
++	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
++		return TRACE_TYPE_UNHANDLED;
++
++	return print_one_line_ext(iter, true);
++}
++
+ static int
+ blk_tracer_set_flag(struct trace_array *tr, u32 old_flags, u32 bit, int set)
+ {
 -- 
 2.17.0
