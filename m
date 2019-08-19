@@ -1,28 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 21 Aug 2019 06:14:23 +0000
-Subject: [COMPILE TESTED PATCH V5 9/9] xen/blkback: use helper in vbd_sz()
-Message-Id: <20190821061423.3408-10-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:48 +0000
+Subject: [RFC PATCH 17/38] blktrace: update blk_add_trace_bio_backmerge()
+Message-Id: <20190819044109.3405-18-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="macroman"
-Content-Transfer-Encoding: base64
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-btrace@vger.kernel.org
 
-VGhpcyBwYXRjaCB1cGRhdGVzIHRoZSB2YmRfc3ooKSBtYWNybyB3aXRoIG5ld2x5IGludHJvZHVj
-ZWQgaGVscGVyCmZ1bmN0aW9uIHRvIHJlYWQgdGhlIG5yX3NlY3RzIGZyb20gYmxvY2sgZGV2aWNl
-J3MgaGRfcGFydHMgd2l0aCB0aGUKaGVscCBvZiBwYXJ0X25yX3NlY3RzX3JlYWQoKS4KCkFja2Vk
-LWJ5OiBSb2dlciBQYXUgTW9ubsOpIDxyb2dlci5wYXVAeHh4eHh4eHh4eD4KU2lnbmVkLW9mZi1i
-eTogQ2hhaXRhbnlhIEt1bGthcm5pIDxjaGFpdGFueWEua3Vsa2FybmlAd2RjLmNvbT4KLS0tCiBk
-cml2ZXJzL2Jsb2NrL3hlbi1ibGtiYWNrL2NvbW1vbi5oIHwgMiArLQogMSBmaWxlIGNoYW5nZWQs
-IDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9j
-ay94ZW4tYmxrYmFjay9jb21tb24uaCBiL2RyaXZlcnMvYmxvY2sveGVuLWJsa2JhY2svY29tbW9u
-LmgKaW5kZXggMWQzMDAyZDc3M2Y3Li5mOTZjYjhkMWNiOTkgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMv
-YmxvY2sveGVuLWJsa2JhY2svY29tbW9uLmgKKysrIGIvZHJpdmVycy9ibG9jay94ZW4tYmxrYmFj
-ay9jb21tb24uaApAQCAtMzU5LDcgKzM1OSw3IEBAIHN0cnVjdCBwZW5kaW5nX3JlcSB7CiAKIAog
-I2RlZmluZSB2YmRfc3ooX3YpCSgoX3YpLT5iZGV2LT5iZF9wYXJ0ID8gXAotCQkJIChfdiktPmJk
-ZXYtPmJkX3BhcnQtPm5yX3NlY3RzIDogXAorCQkJICBiZGV2X25yX3NlY3RzKChfdiktPmJkZXYp
-IDogXAogCQkJICBnZXRfY2FwYWNpdHkoKF92KS0+YmRldi0+YmRfZGlzaykpCiAKICNkZWZpbmUg
-eGVuX2Jsa2lmX2dldChfYikgKGF0b21pY19pbmMoJihfYiktPnJlZmNudCkpCi0tIAoyLjE3LjAK
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ kernel/trace/blktrace.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 518fbdca6230..342209658b22 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1221,7 +1221,14 @@ static void blk_add_trace_bio_backmerge(void *ignore,
+ 					struct request *rq,
+ 					struct bio *bio)
+ {
+-	blk_add_trace_bio(q, bio, BLK_TA_BACKMERGE, 0);
++	u64 ta = 0;
++
++	if (q->blk_trace) {
++		ta = BLK_TA_BACKMERGE;
++	} else if (q->blk_trace_ext) {
++		ta = BLK_TA_BACKMERGE_EXT;
++	}
++	blk_add_trace_bio(q, bio, ta, 0);
+ }
+ 
+ static void blk_add_trace_bio_frontmerge(void *ignore,
+-- 
+2.17.0
