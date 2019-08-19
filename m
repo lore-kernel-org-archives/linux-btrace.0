@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:53 +0000
-Subject: [RFC PATCH 22/38] blktrace: update blk_add_trace_plug()
-Message-Id: <20190819044109.3405-23-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:41:04 +0000
+Subject: [RFC PATCH 33/38] blktrace: add trace_synthesize helper
+Message-Id: <20190819044109.3405-34-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,36 +10,34 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ kernel/trace/blktrace.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index d9c56e6d34f6..51cb190eddea 100644
+index 747fd8caf10f..5712321d4a53 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1283,7 +1283,6 @@ static void blk_add_trace_getrq(void *ignore,
- 	}
+@@ -2256,6 +2256,21 @@ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
+ 			 sizeof(old) - offset + t->pdu_len);
  }
  
--
- static void blk_add_trace_sleeprq(void *ignore,
- 				  struct request_queue *q,
- 				  struct bio *bio, int rw)
-@@ -1312,9 +1311,14 @@ static void blk_add_trace_sleeprq(void *ignore,
- static void blk_add_trace_plug(void *ignore, struct request_queue *q)
- {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
- 
--	if (bt)
-+	if (q->blk_trace) {
- 		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, NULL);
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, 0, 0, 0, 0, BLK_TA_PLUG_EXT, 0, 0,
-+				    NULL, NULL, 0);
-+	}
- }
- 
- static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
++static void blk_trace_synthesize_old_trace_ext(struct trace_iterator *iter)
++{
++	struct trace_seq *s = &iter->seq;
++	struct blk_io_trace_ext *t = (struct blk_io_trace_ext *)iter->ent;
++	const int offset = offsetof(struct blk_io_trace_ext, sector);
++	struct blk_io_trace_ext old = {
++		.magic	  = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION_EXT,
++		.time     = iter->ts,
++	};
++
++	trace_seq_putmem(s, &old, offset);
++	trace_seq_putmem(s, &t->sector,
++			 sizeof(old) - offset + t->pdu_len);
++}
++
+ static enum print_line_t
+ blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
+ 			     struct trace_event *event)
 -- 
 2.17.0
