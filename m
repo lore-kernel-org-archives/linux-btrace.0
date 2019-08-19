@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:41:02 +0000
-Subject: [RFC PATCH 31/38] blktrace: link blk_log_xxx() to trace action
-Message-Id: <20190819044109.3405-32-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:53 +0000
+Subject: [RFC PATCH 22/38] blktrace: update blk_add_trace_plug()
+Message-Id: <20190819044109.3405-23-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,41 +10,36 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ kernel/trace/blktrace.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 712ecf6dc6db..5e5a05581f63 100644
+index d9c56e6d34f6..51cb190eddea 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2141,6 +2141,28 @@ static const struct {
- 	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap },
- };
+@@ -1283,7 +1283,6 @@ static void blk_add_trace_getrq(void *ignore,
+ 	}
+ }
  
-+static const struct {
-+	const char *act[2];
-+	void	   (*print)(struct trace_seq *s, const struct trace_entry *ent,
-+			    bool has_cg);
-+} what2act_ext[] = {
-+	[__BLK_TA_QUEUE]	= {{  "Q", "queue" },	   blk_log_generic_ext },
-+	[__BLK_TA_BACKMERGE]	= {{  "M", "backmerge" },  blk_log_generic_ext },
-+	[__BLK_TA_FRONTMERGE]	= {{  "F", "frontmerge" }, blk_log_generic_ext },
-+	[__BLK_TA_GETRQ]	= {{  "G", "getrq" },	   blk_log_generic_ext },
-+	[__BLK_TA_SLEEPRQ]	= {{  "S", "sleeprq" },	   blk_log_generic_ext },
-+	[__BLK_TA_REQUEUE]	= {{  "R", "requeue" },	   blk_log_with_error_ext },
-+	[__BLK_TA_ISSUE]	= {{  "D", "issue" },	   blk_log_generic_ext },
-+	[__BLK_TA_COMPLETE]	= {{  "C", "complete" },   blk_log_with_error_ext },
-+	[__BLK_TA_PLUG]		= {{  "P", "plug" },	   blk_log_plug },
-+	[__BLK_TA_UNPLUG_IO]	= {{  "U", "unplug_io" },  blk_log_unplug_ext },
-+	[__BLK_TA_UNPLUG_TIMER]	= {{ "UT", "unplug_timer" }, blk_log_unplug_ext},
-+	[__BLK_TA_INSERT]	= {{  "I", "insert" },	   blk_log_generic_ext},
-+	[__BLK_TA_SPLIT]	= {{  "X", "split" },	   blk_log_split_ext },
-+	[__BLK_TA_BOUNCE]	= {{  "B", "bounce" },	   blk_log_generic_ext },
-+	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap_ext },
-+};
-+
- static enum print_line_t print_one_line(struct trace_iterator *iter,
- 					bool classic)
+-
+ static void blk_add_trace_sleeprq(void *ignore,
+ 				  struct request_queue *q,
+ 				  struct bio *bio, int rw)
+@@ -1312,9 +1311,14 @@ static void blk_add_trace_sleeprq(void *ignore,
+ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
  {
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
+ 
+-	if (bt)
++	if (q->blk_trace) {
+ 		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, NULL);
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, BLK_TA_PLUG_EXT, 0, 0,
++				    NULL, NULL, 0);
++	}
+ }
+ 
+ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
 -- 
 2.17.0
