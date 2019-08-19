@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:42 +0000
-Subject: [RFC PATCH 11/38] blktrace: update blk_add_trace_rq_issue()
-Message-Id: <20190819044109.3405-12-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:44 +0000
+Subject: [RFC PATCH 13/38] blktrace: update blk_add_trace_rq_complete()
+Message-Id: <20190819044109.3405-14-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,23 +14,23 @@ Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 4f3241522232..be39b99531ff 100644
+index ff4eee1d33d8..19a71a495f86 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1118,7 +1118,14 @@ static void blk_add_trace_rq_insert(void *ignore,
- static void blk_add_trace_rq_issue(void *ignore,
- 				   struct request_queue *q, struct request *rq)
+@@ -1147,7 +1147,14 @@ static void blk_add_trace_rq_requeue(void *ignore,
+ static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
+ 			int error, unsigned int nr_bytes)
  {
--	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_ISSUE,
+-	blk_add_trace_rq(rq, error, nr_bytes, BLK_TA_COMPLETE,
 +	u64 ta = 0;
 +
 +	if (rq->q->blk_trace) {
-+		ta = BLK_TA_ISSUE;
++		ta = BLK_TA_COMPLETE;
 +	} else if (rq->q->blk_trace_ext) {
-+		ta = BLK_TA_ISSUE_EXT;
++		ta = BLK_TA_COMPLETE_EXT;
 +	}
-+	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), ta,
- 			 blk_trace_request_get_cgid(q, rq));
++	blk_add_trace_rq(rq, error, nr_bytes, ta,
+ 			 blk_trace_request_get_cgid(rq->q, rq));
  }
  
 -- 
