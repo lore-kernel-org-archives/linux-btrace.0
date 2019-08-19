@@ -1,37 +1,52 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 21 Aug 2019 06:14:20 +0000
-Subject: [PATCH V5 6/9] f2fs: use helper in init_blkz_info()
-Message-Id: <20190821061423.3408-7-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:45 +0000
+Subject: [RFC PATCH 14/38] blktrace: update blk_add_trace_bio()
+Message-Id: <20190819044109.3405-15-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-
-This patch updates the init_blkz_info() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help of part_nr_sects_read().
+To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- fs/f2fs/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 78a1b873e48a..78f8f834aa44 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -2775,7 +2775,7 @@ static int init_percpu_info(struct f2fs_sb_info *sbi)
- static int init_blkz_info(struct f2fs_sb_info *sbi, int devi)
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 19a71a495f86..046ca19e8b7f 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1170,16 +1170,23 @@ static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
+  *
+  **/
+ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+-			      u32 what, int error)
++			      u64 what, int error)
  {
- 	struct block_device *bdev = FDEV(devi).bdev;
--	sector_t nr_sectors = bdev->bd_part->nr_sects;
-+	sector_t nr_sectors = bdev_nr_sects(bdev);
- 	sector_t sector = 0;
- 	struct blk_zone *zones;
- 	unsigned int i, nr_zones;
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
+ 
+-	if (likely(!bt))
+-		return;
+-
+-	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio_op(bio), bio->bi_opf, what, error, 0, NULL,
+-			blk_trace_bio_get_cgid(q, bio));
++	if (q->blk_trace) {
++		__blk_add_trace(bt, bio->bi_iter.bi_sector,
++				bio->bi_iter.bi_size, bio_op(bio),
++				bio->bi_opf,(u32)what, error, 0, NULL,
++				blk_trace_bio_get_cgid(q, bio));
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
++				    bio->bi_iter.bi_size, bio_op(bio),
++				    bio->bi_opf,what, error, 0, NULL,
++				    blk_trace_bio_get_cgid(q, bio),
++				    bio_prio(bio));
++	}
+ }
+ 
+ static void blk_add_trace_bio_bounce(void *ignore,
 -- 
 2.17.0
