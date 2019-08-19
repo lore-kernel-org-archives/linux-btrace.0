@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:51 +0000
-Subject: [RFC PATCH 20/38] blktrace: update blk_add_trace_getrq()
-Message-Id: <20190819044109.3405-21-chaitanya.kulkarni@wdc.com>
+Date: Mon, 19 Aug 2019 04:40:38 +0000
+Subject: [RFC PATCH 07/38] blktrace: add act and prio check helpers
+Message-Id: <20190819044109.3405-8-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,40 +10,56 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ kernel/trace/blktrace.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 8f89b0ca0053..31b4fc636e04 100644
+index 04e272ce3659..3ea7a8c3813d 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1263,14 +1263,23 @@ static void blk_add_trace_getrq(void *ignore,
- 				struct request_queue *q,
- 				struct bio *bio, int rw)
- {
--	if (bio)
--		blk_add_trace_bio(q, bio, BLK_TA_GETRQ, 0);
--	else {
-+	if (bio) {
-+		if (q->blk_trace) {
-+			blk_add_trace_bio(q, bio, BLK_TA_GETRQ, 0);
-+		} else if (q->blk_trace_ext) {
-+			blk_add_trace_bio(q, bio, BLK_TA_GETRQ_EXT, 0);
-+		}
-+	} else {
- 		struct blk_trace *bt = q->blk_trace;
-+		struct blk_trace_ext *bte = q->blk_trace_ext;
- 
--		if (bt)
-+		if (q->blk_trace) {
- 			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_GETRQ, 0, 0,
- 					NULL, NULL);
-+		} else if (q->blk_trace_ext) {
-+			__blk_add_trace_ext(bte, 0, 0, rw, 0, BLK_TA_GETRQ_EXT,
-+					    0, 0, NULL, NULL, 0);
-+		}
- 	}
+@@ -310,6 +310,43 @@ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
+ 	return 0;
  }
  
++static inline bool prio_log_check(struct blk_trace_ext *bt, u32 ioprio)
++{
++	bool ret;
++
++	switch (IOPRIO_PRIO_CLASS(ioprio)) {
++	case IOPRIO_CLASS_NONE:
++		ret = (bt->prio_mask & 0x01) ? true : false;
++		break;
++	case IOPRIO_CLASS_RT:
++		ret = (bt->prio_mask & 0x02) ? true : false;
++		break;
++	case IOPRIO_CLASS_BE:
++		ret = (bt->prio_mask & 0x04) ? true : false;
++		break;
++	case IOPRIO_CLASS_IDLE:
++		ret = (bt->prio_mask & 0x08) ? true : false;
++		break;
++	default:
++		/*XXX: print rate limit warn here */
++		ret = false;
++	}
++	return ret;
++}
++
++static inline int act_log_check_ext(struct blk_trace_ext *bt, u64 what,
++			     sector_t sector, pid_t pid)
++{
++	if (((bt->act_mask << BLK_TC_SHIFT_EXT) & what) = 0)
++		return 1;
++	if (sector && (sector < bt->start_lba || sector > bt->end_lba))
++		return 1;
++	if (bt->pid && pid != bt->pid)
++		return 1;
++
++	return 0;
++}
++
+ /*
+  * Data direction bit lookup
+  */
 -- 
 2.17.0
