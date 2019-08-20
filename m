@@ -1,59 +1,40 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:54 +0000
-Subject: [RFC PATCH 23/38] blktrace: update blk_add_trace_unplug()
-Message-Id: <20190819044109.3405-24-chaitanya.kulkarni@wdc.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Tue, 20 Aug 2019 16:20:03 +0000
+Subject: [PATCH] iowatcher: gracefully skip zero-length trace files
+Message-Id: <07b08af7-e6ee-a022-14c3-80229f806312@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- kernel/trace/blktrace.c | 27 ++++++++++++++++++++-------
- 1 file changed, 20 insertions(+), 7 deletions(-)
+I received a bug report where this result confused the reporter:
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 51cb190eddea..1813f039f6ec 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1325,17 +1325,30 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
- 				    unsigned int depth, bool explicit)
- {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
-+	__be64 rpdu = cpu_to_be64(depth);
-+	u64 what;
- 
--	if (bt) {
--		__be64 rpdu = cpu_to_be64(depth);
--		u32 what;
--
--		if (explicit)
-+	if (explicit) {
-+		if (q->blk_trace) {
- 			what = BLK_TA_UNPLUG_IO;
--		else
-+		} else if (q->blk_trace_ext) {
-+			what = BLK_TA_UNPLUG_IO_EXT;
-+		}
-+	} else {
-+		if (q->blk_trace) {
- 			what = BLK_TA_UNPLUG_TIMER;
-+		} else if (q->blk_trace_ext) {
-+			what = BLK_TA_UNPLUG_TIMER_EXT;
-+		}
-+	}
- 
--		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, NULL);
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, 0, 0, 0, 0, (u32)what, 0, sizeof(rpdu),
-+				&rpdu, NULL);
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, 0, 0, 0, 0, what, 0, sizeof(rpdu),
-+				    &rpdu, NULL, 0);
+# iowatcher -t dump.blktrace.1 -o movie.ogg  --movie=rect
+Using movie style: rect
+Unable to mmap trace file dump.blktrace.1, err Invalid argument
+#
+
+mmap() failed because the specified trace file was zero length.
+Since mmap will fail, and we can't use a zero-length file anyway,
+make the error more clear and don't even try the mmap.
+
+Reported-by: Karel Srot <ksrot@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/iowatcher/blkparse.c b/iowatcher/blkparse.c
+index 41e20f0..c56e017 100644
+--- a/iowatcher/blkparse.c
++++ b/iowatcher/blkparse.c
+@@ -930,6 +930,10 @@ struct trace *open_trace(char *filename)
+ 		fprintf(stderr, "stat failed on %s err %s\n", filename, strerror(errno));
+ 		goto fail_fd;
  	}
- }
- 
--- 
-2.17.0
++	if (!st.st_size) {
++		fprintf(stderr, "skipping zero-length file %s\n", filename);
++		goto fail_fd;
++	}
+ 	p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+ 	if (p = MAP_FAILED) {
+ 		fprintf(stderr, "Unable to mmap trace file %s, err %s\n", filename, strerror(errno));
