@@ -1,37 +1,37 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:50 +0000
-Subject: [RFC PATCH 19/38] blktrace: update blk_add_trace_bio_queue()
-Message-Id: <20190819044109.3405-20-chaitanya.kulkarni@wdc.com>
+Date: Wed, 21 Aug 2019 06:14:22 +0000
+Subject: [COMPILE TESTED PATCH V5 8/9] target/pscsi: use helper in pscsi_get_blocks()
+Message-Id: <20190821061423.3408-9-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+
+This patch updates the pscsi_get_blocks() with newly introduced helper
+function to read the nr_sects from block device's hd_parts with the
+help of part_nr_sects_read().
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/target/target_core_pscsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 96d4452d922d..8f89b0ca0053 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1249,7 +1249,14 @@ static void blk_add_trace_bio_frontmerge(void *ignore,
- static void blk_add_trace_bio_queue(void *ignore,
- 				    struct request_queue *q, struct bio *bio)
- {
--	blk_add_trace_bio(q, bio, BLK_TA_QUEUE, 0);
-+	u64 ta = 0;
-+
-+	if (q->blk_trace) {
-+		ta = BLK_TA_QUEUE;
-+	} else if (q->blk_trace_ext) {
-+		ta = BLK_TA_QUEUE_EXT;
-+	}
-+	blk_add_trace_bio(q, bio, ta, 0);
- }
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index c9d92b3e777d..da481edab2de 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1030,7 +1030,7 @@ static sector_t pscsi_get_blocks(struct se_device *dev)
+ 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
  
- static void blk_add_trace_getrq(void *ignore,
+ 	if (pdv->pdv_bd && pdv->pdv_bd->bd_part)
+-		return pdv->pdv_bd->bd_part->nr_sects;
++		return bdev_nr_sects(pdv->pdv_bd);
+ 
+ 	return 0;
+ }
 -- 
 2.17.0
