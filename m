@@ -1,40 +1,28 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Date: Tue, 20 Aug 2019 16:20:03 +0000
-Subject: [PATCH] iowatcher: gracefully skip zero-length trace files
-Message-Id: <07b08af7-e6ee-a022-14c3-80229f806312@redhat.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Wed, 21 Aug 2019 06:14:23 +0000
+Subject: [COMPILE TESTED PATCH V5 9/9] xen/blkback: use helper in vbd_sz()
+Message-Id: <20190821061423.3408-10-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+Content-Type: text/plain; charset="macroman"
+Content-Transfer-Encoding: base64
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
-I received a bug report where this result confused the reporter:
-
-# iowatcher -t dump.blktrace.1 -o movie.ogg  --movie=rect
-Using movie style: rect
-Unable to mmap trace file dump.blktrace.1, err Invalid argument
-#
-
-mmap() failed because the specified trace file was zero length.
-Since mmap will fail, and we can't use a zero-length file anyway,
-make the error more clear and don't even try the mmap.
-
-Reported-by: Karel Srot <ksrot@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/iowatcher/blkparse.c b/iowatcher/blkparse.c
-index 41e20f0..c56e017 100644
---- a/iowatcher/blkparse.c
-+++ b/iowatcher/blkparse.c
-@@ -930,6 +930,10 @@ struct trace *open_trace(char *filename)
- 		fprintf(stderr, "stat failed on %s err %s\n", filename, strerror(errno));
- 		goto fail_fd;
- 	}
-+	if (!st.st_size) {
-+		fprintf(stderr, "skipping zero-length file %s\n", filename);
-+		goto fail_fd;
-+	}
- 	p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
- 	if (p = MAP_FAILED) {
- 		fprintf(stderr, "Unable to mmap trace file %s, err %s\n", filename, strerror(errno));
+VGhpcyBwYXRjaCB1cGRhdGVzIHRoZSB2YmRfc3ooKSBtYWNybyB3aXRoIG5ld2x5IGludHJvZHVj
+ZWQgaGVscGVyCmZ1bmN0aW9uIHRvIHJlYWQgdGhlIG5yX3NlY3RzIGZyb20gYmxvY2sgZGV2aWNl
+J3MgaGRfcGFydHMgd2l0aCB0aGUKaGVscCBvZiBwYXJ0X25yX3NlY3RzX3JlYWQoKS4KCkFja2Vk
+LWJ5OiBSb2dlciBQYXUgTW9ubsOpIDxyb2dlci5wYXVAeHh4eHh4eHh4eD4KU2lnbmVkLW9mZi1i
+eTogQ2hhaXRhbnlhIEt1bGthcm5pIDxjaGFpdGFueWEua3Vsa2FybmlAd2RjLmNvbT4KLS0tCiBk
+cml2ZXJzL2Jsb2NrL3hlbi1ibGtiYWNrL2NvbW1vbi5oIHwgMiArLQogMSBmaWxlIGNoYW5nZWQs
+IDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9j
+ay94ZW4tYmxrYmFjay9jb21tb24uaCBiL2RyaXZlcnMvYmxvY2sveGVuLWJsa2JhY2svY29tbW9u
+LmgKaW5kZXggMWQzMDAyZDc3M2Y3Li5mOTZjYjhkMWNiOTkgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMv
+YmxvY2sveGVuLWJsa2JhY2svY29tbW9uLmgKKysrIGIvZHJpdmVycy9ibG9jay94ZW4tYmxrYmFj
+ay9jb21tb24uaApAQCAtMzU5LDcgKzM1OSw3IEBAIHN0cnVjdCBwZW5kaW5nX3JlcSB7CiAKIAog
+I2RlZmluZSB2YmRfc3ooX3YpCSgoX3YpLT5iZGV2LT5iZF9wYXJ0ID8gXAotCQkJIChfdiktPmJk
+ZXYtPmJkX3BhcnQtPm5yX3NlY3RzIDogXAorCQkJICBiZGV2X25yX3NlY3RzKChfdiktPmJkZXYp
+IDogXAogCQkJICBnZXRfY2FwYWNpdHkoKF92KS0+YmRldi0+YmRfZGlzaykpCiAKICNkZWZpbmUg
+eGVuX2Jsa2lmX2dldChfYikgKGF0b21pY19pbmMoJihfYiktPnJlZmNudCkpCi0tIAoyLjE3LjAK
