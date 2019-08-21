@@ -1,68 +1,40 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:59 +0000
-Subject: [RFC PATCH 28/38] blktrace: add a new formatting routine
-Message-Id: <20190819044109.3405-29-chaitanya.kulkarni@wdc.com>
+Date: Wed, 21 Aug 2019 06:14:19 +0000
+Subject: [PATCH V5 5/9] bcache: update cached_dev_init() with helper
+Message-Id: <20190821061423.3408-6-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
+In the bcache when initializing the cached device we don't actually
+use any sort of locking when reading the number of sectors from the
+part. This patch updates the cached_dev_init() with newly introduced
+helper function to read the nr_sects from block device's hd_parts with
+the help of part_nr_sects_read().
+
+Acked-by: Coly Li <colyli@suse.de>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/md/bcache/super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index c0ebb78e200b..31ab1f4fc32b 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1579,6 +1579,46 @@ static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
- 	rwbs[i] = '\0';
- }
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 20ed838e9413..79c848fa5912 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1305,7 +1305,7 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
+ 			q->limits.raid_partial_stripes_expensive;
  
-+static void fill_rwbs_ext(char *rwbs, const struct blk_io_trace_ext *t)
-+{
-+	int i = 0;
-+	int tc = t->action >> BLK_TC_SHIFT_EXT;
-+
-+	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
-+		rwbs[i++] = 'N';
-+		goto out;
-+	}
-+
-+	if (tc & BLK_TC_FLUSH)
-+		rwbs[i++] = 'F';
-+
-+	if (tc & BLK_TC_DISCARD)
-+		rwbs[i++] = 'D';
-+	else if ((tc & BLK_TC_WRITE_ZEROES)) {
-+		rwbs[i++] = 'W';
-+		rwbs[i++] = 'Z';
-+	} else if ((tc & BLK_TC_ZONE_RESET)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'R';
-+	} else if (tc & BLK_TC_WRITE)
-+		rwbs[i++] = 'W';
-+	else if (t->bytes)
-+		rwbs[i++] = 'R';
-+	else
-+		rwbs[i++] = 'N';
-+
-+	if (tc & BLK_TC_FUA)
-+		rwbs[i++] = 'F';
-+	if (tc & BLK_TC_AHEAD)
-+		rwbs[i++] = 'A';
-+	if (tc & BLK_TC_SYNC)
-+		rwbs[i++] = 'S';
-+	if (tc & BLK_TC_META)
-+		rwbs[i++] = 'M';
-+out:
-+	rwbs[i] = '\0';
-+}
-+
- static inline
- const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
- {
+ 	ret = bcache_device_init(&dc->disk, block_size,
+-			 dc->bdev->bd_part->nr_sects - dc->sb.data_offset);
++			 bdev_nr_sects(dc->bdev) - dc->sb.data_offset);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
 2.17.0
