@@ -1,45 +1,54 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 19 Aug 2019 04:40:55 +0000
-Subject: [RFC PATCH 24/38] blktrace: update blk_add_trace_split()
-Message-Id: <20190819044109.3405-25-chaitanya.kulkarni@wdc.com>
+Date: Wed, 21 Aug 2019 06:14:17 +0000
+Subject: [PATCH V5 3/9] blk-zoned: update blkdev_report_zone() with helper
+Message-Id: <20190821061423.3408-4-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 
+This patch updates the blkdev_report_zone(s)() with newly introduced
+helper function to read the nr_sects from block device's hd_parts with
+the help of part_nr_sects_read().
+
+Reviewed-by: Minwoo Im <minwoo.im.dev@gmail.com>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ block/blk-zoned.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 1813f039f6ec..13c70d5cff65 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1357,14 +1357,20 @@ static void blk_add_trace_split(void *ignore,
- 				unsigned int pdu)
- {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
-+	__be64 rpdu = cpu_to_be64(pdu);
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 3f5e9bf03486..7e0c0b54d194 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -109,7 +109,7 @@ static bool blkdev_report_zone(struct block_device *bdev, struct blk_zone *rep)
+ 		return false;
  
--	if (bt) {
--		__be64 rpdu = cpu_to_be64(pdu);
--
-+	if (q->blk_trace) {
- 		__blk_add_trace(bt, bio->bi_iter.bi_sector,
- 				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
- 				BLK_TA_SPLIT, bio->bi_status, sizeof(rpdu),
- 				&rpdu, blk_trace_bio_get_cgid(q, bio));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_SPLIT_EXT, bio->bi_status, sizeof(rpdu),
-+				&rpdu, blk_trace_bio_get_cgid(q, bio),
-+				bio_prio(bio));
+ 	rep->start -= offset;
+-	if (rep->start + rep->len > bdev->bd_part->nr_sects)
++	if (rep->start + rep->len > bdev_nr_sects(bdev))
+ 		return false;
+ 
+ 	if (rep->type = BLK_ZONE_TYPE_CONVENTIONAL)
+@@ -178,13 +178,13 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 	if (WARN_ON_ONCE(!bdev->bd_disk->fops->report_zones))
+ 		return -EOPNOTSUPP;
+ 
+-	if (!*nr_zones || sector >= bdev->bd_part->nr_sects) {
++	if (!*nr_zones || sector >= bdev_nr_sects(bdev)) {
+ 		*nr_zones = 0;
+ 		return 0;
  	}
- }
  
+ 	nrz = min(*nr_zones,
+-		  __blkdev_nr_zones(q, bdev->bd_part->nr_sects - sector));
++		  __blkdev_nr_zones(q, bdev_nr_sects(bdev) - sector));
+ 	ret = blk_report_zones(bdev->bd_disk, get_start_sect(bdev) + sector,
+ 			       zones, &nrz);
+ 	if (ret)
 -- 
 2.17.0
