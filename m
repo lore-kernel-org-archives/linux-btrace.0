@@ -1,38 +1,57 @@
 From: Jens Axboe <axboe@kernel.dk>
-Date: Tue, 24 Sep 2019 21:29:22 +0000
-Subject: Re: [PATCH] blkparse: man: add absolute timestamp printing option
-Message-Id: <e93a8981-b440-8613-919a-3ad7a91dbfec@kernel.dk>
+Date: Tue, 17 Sep 2019 12:00:01 +0000
+Subject: Recent changes (master)
+Message-Id: <20190917120001.7A8562C0099@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190920050336.16191-1-hmihara@redhat.com>
-In-Reply-To: <20190920050336.16191-1-hmihara@redhat.com>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 9/19/19 11:03 PM, Hiroaki Mihara wrote:
-> The functionality of printing out absolute timestamps has been
-> implemented in code but not documented in man pages.
-> 
-> When comparing the timings of related events with block I/O traces,
-> the absolute timestams play a key role.  I think that the
-> documentation of this might be beneficial to blktrace users.
-> 
-> The related commit was done in 2006 as follows,
-> 
->> commit 7bd4fd0a4fca645bb50a641afac1e460a4e32dfd
->> Author: Olaf Kirch <okir@lst.de>
->> Date:   Fri Dec 1 10:34:11 2006 +0100
->>
->>      [PATCH] Add timestamp support
->>
->>      Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
->>
-> 
-> URL of the above patch,
-> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/blktrace.git/commit/?id{d4fd0a4fca645bb50a641afac1e460a4e32dfd
+The following changes since commit a7263b8fb22f07f4f1a3ec54f0c37193c5908b22:
 
-I guess after 13 years it's about time to document it! Thanks, applied.
+  blkparse: add support sort program by io event (2019-05-21 08:06:08 -0600)
 
--- 
-Jens Axboe
+are available in the Git repository at:
+
+  git://git.kernel.dk/blktrace.git master
+
+for you to fetch changes up to 667ac92a1a72b6038f0fae4acfc6a280fd69697b:
+
+  btreplay: fix device IO remap functionality (2019-09-16 10:30:23 -0600)
+
+----------------------------------------------------------------
+Ignat Korchagin (1):
+      btreplay: fix device IO remap functionality
+
+ btreplay/btreplay.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+---
+
+Diff of recent changes:
+
+diff --git a/btreplay/btreplay.c b/btreplay/btreplay.c
+index edaf81f..23cc2a9 100644
+--- a/btreplay/btreplay.c
++++ b/btreplay/btreplay.c
+@@ -645,7 +645,7 @@ static void find_input_devs(char *idir)
+ static void read_map_devs(char *file_name)
+ {
+ 	FILE *fp;
+-	char from_dev[256], to_dev[256];
++	char *from_dev, *to_dev;
+ 
+ 	fp = fopen(file_name, "r");
+ 	if (!fp) {
+@@ -653,7 +653,7 @@ static void read_map_devs(char *file_name)
+ 		/*NOTREACHED*/
+ 	}
+ 
+-	while (fscanf(fp, "%s %s", from_dev, to_dev) = 2) {
++	while (fscanf(fp, "%ms %ms", &from_dev, &to_dev) = 2) {
+ 		struct map_dev *mdp = malloc(sizeof(*mdp));
+ 
+ 		mdp->from_dev = from_dev;
