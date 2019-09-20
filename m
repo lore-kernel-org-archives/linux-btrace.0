@@ -1,37 +1,52 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 21 Aug 2019 06:14:22 +0000
-Subject: [COMPILE TESTED PATCH V5 8/9] target/pscsi: use helper in pscsi_get_blocks()
-Message-Id: <20190821061423.3408-9-chaitanya.kulkarni@wdc.com>
+From: Hiroaki Mihara <hmihara@redhat.com>
+Date: Fri, 20 Sep 2019 05:03:36 +0000
+Subject: [PATCH] blkparse: man: add absolute timestamp printing option
+Message-Id: <20190920050336.16191-1-hmihara@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
-In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org
-Cc: colyli@suse.de, linux-bcache@vger.kernel.org, linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org, damien.lemoal@wdc.com, konrad.wilk@oracle.com, roger.pau@citrix.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To: linux-btrace@vger.kernel.org
 
-This patch updates the pscsi_get_blocks() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help of part_nr_sects_read().
+The functionality of printing out absolute timestamps has been
+implemented in code but not documented in man pages.
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+When comparing the timings of related events with block I/O traces,
+the absolute timestams play a key role.  I think that the
+documentation of this might be beneficial to blktrace users.
+
+The related commit was done in 2006 as follows,
+
+> commit 7bd4fd0a4fca645bb50a641afac1e460a4e32dfd
+> Author: Olaf Kirch <okir@lst.de>
+> Date:   Fri Dec 1 10:34:11 2006 +0100
+> 
+>     [PATCH] Add timestamp support
+> 
+>     Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> 
+
+URL of the above patch,
+https://git.kernel.org/pub/scm/linux/kernel/git/axboe/blktrace.git/commit/?id{d4fd0a4fca645bb50a641afac1e460a4e32dfd
+
+Signed-off-by: Hiroaki Mihara <hmihara@redhat.com>
 ---
- drivers/target/target_core_pscsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ doc/blkparse.1 | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index c9d92b3e777d..da481edab2de 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -1030,7 +1030,7 @@ static sector_t pscsi_get_blocks(struct se_device *dev)
- 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
+diff --git a/doc/blkparse.1 b/doc/blkparse.1
+index 627b7b1..e494b6e 100644
+--- a/doc/blkparse.1
++++ b/doc/blkparse.1
+@@ -368,6 +368,9 @@ Elapsed value in microseconds (\fI\-t\fR command line option)
+ .IP \fBU\fR 4
+ Payload unsigned integer
  
- 	if (pdv->pdv_bd && pdv->pdv_bd->bd_part)
--		return pdv->pdv_bd->bd_part->nr_sects;
-+		return bdev_nr_sects(pdv->pdv_bd);
- 
- 	return 0;
- }
++.IP \fBz\fR 4
++The absolute time, as local time in your time zone, with no date displayed
++
+ .PP
+ Note that the user can optionally specify field display width, and optionally a
+ left-aligned specifier. These precede field specifiers, with a '%' character,
 -- 
-2.17.0
+2.21.0
