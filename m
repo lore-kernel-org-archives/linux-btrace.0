@@ -1,24 +1,32 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Wed, 25 Sep 2019 06:22:52 +0000
-Subject: Re: [PATCH 1/3] blkparse: split off the timestamp correction code in to a separate function
-Message-Id: <4dd933fe-ea16-64c9-8d8d-a8166ea68387@kernel.dk>
+From: Hiroaki Mihara <hmihara@redhat.com>
+Date: Tue, 24 Sep 2019 22:33:11 +0000
+Subject: [PATCH 3/3] doc: tex: add absolute timestamp printing option
+Message-Id: <20190924223311.20238-1-hmihara@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20190924223206.20125-1-hmihara@redhat.com>
-In-Reply-To: <20190924223206.20125-1-hmihara@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On 9/25/19 12:32 AM, Hiroaki Mihara wrote:
-> find_genesis() function has code to correct abs_start_time, which is
-> later used to calculate the absolute timestamps of each traced
-> records.
-> 
-> Put this code in a separate function, so that it can be used later by
-> the blkparse code. No functional change.
+The functionality of printing out absolute timestamps has been
+implemented in code but not documented in doc/blktrace.tex.
 
-Applied this, and the other 2. Thanks.
+Signed-off-by: Hiroaki Mihara <hmihara@redhat.com>
+---
+ doc/blktrace.tex | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/doc/blktrace.tex b/doc/blktrace.tex
+index 4d8278e..3647c75 100644
+--- a/doc/blktrace.tex
++++ b/doc/blktrace.tex
+@@ -613,6 +613,7 @@ the event's device \\
+ \emph{T} & Time stamp (seconds) \\ \hline
+ \emph{u} & Elapsed value in microseconds (\emph{-t} command line option) \\ \hline
+ \emph{U} & Payload unsigned integer \\ \hline
++\emph{z} & Absolute time stamp \\ \hline
+ \end{tabular}
+ 
+ Note that the user can optionally specify field display width, and
 -- 
-Jens Axboe
+2.21.0
