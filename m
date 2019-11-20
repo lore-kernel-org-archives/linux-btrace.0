@@ -1,65 +1,49 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 20 Nov 2019 04:24:37 +0000
-Subject: [RFC PATCH 07/39] blktrace: add act and prio check helpers
-Message-Id: <20191120042509.12835-8-chaitanya.kulkarni@wdc.com>
+Date: Wed, 20 Nov 2019 04:24:32 +0000
+Subject: [RFC PATCH 02/39] blktrace_api: add new trace definition
+Message-Id: <20191120042509.12835-3-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+This patch adds new structure similar to struct blk_trace to support
+block trace extensions.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ include/linux/blktrace_api.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 04e272ce3659..3ea7a8c3813d 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -310,6 +310,43 @@ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
- 	return 0;
- }
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index 7bb2d8de9f30..83103c1194fb 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -29,6 +29,24 @@ struct blk_trace {
+ 	atomic_t dropped;
+ };
  
-+static inline bool prio_log_check(struct blk_trace_ext *bt, u32 ioprio)
-+{
-+	bool ret;
++struct blk_trace_ext {
++	int trace_state;
++	struct rchan *rchan;
++	unsigned long __percpu *sequence;
++	unsigned char __percpu *msg_data;
++	u64 act_mask;
++	u32 prio_mask;
++	u64 start_lba;
++	u64 end_lba;
++	u32 pid;
++	u32 dev;
++	struct dentry *dir;
++	struct dentry *dropped_file;
++	struct dentry *msg_file;
++	struct list_head running_ext_list;
++	atomic_t dropped;
++};
 +
-+	switch (IOPRIO_PRIO_CLASS(ioprio)) {
-+	case IOPRIO_CLASS_NONE:
-+		ret = (bt->prio_mask & 0x01) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_RT:
-+		ret = (bt->prio_mask & 0x02) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_BE:
-+		ret = (bt->prio_mask & 0x04) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_IDLE:
-+		ret = (bt->prio_mask & 0x08) ? true : false;
-+		break;
-+	default:
-+		/*XXX: print rate limit warn here */
-+		ret = false;
-+	}
-+	return ret;
-+}
-+
-+static inline int act_log_check_ext(struct blk_trace_ext *bt, u64 what,
-+			     sector_t sector, pid_t pid)
-+{
-+	if (((bt->act_mask << BLK_TC_SHIFT_EXT) & what) = 0)
-+		return 1;
-+	if (sector && (sector < bt->start_lba || sector > bt->end_lba))
-+		return 1;
-+	if (bt->pid && pid != bt->pid)
-+		return 1;
-+
-+	return 0;
-+}
-+
- /*
-  * Data direction bit lookup
-  */
+ struct blkcg;
+ 
+ extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
 -- 
 2.22.1
