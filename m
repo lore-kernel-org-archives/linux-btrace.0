@@ -1,40 +1,49 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 20 Nov 2019 04:24:33 +0000
-Subject: [RFC PATCH 03/39] blkdev.h: add new trace ext as a queue member
-Message-Id: <20191120042509.12835-4-chaitanya.kulkarni@wdc.com>
+Date: Wed, 20 Nov 2019 04:25:09 +0000
+Subject: [RFC PATCH 39/39] blktrace: add support for zone-mgmt ops
+Message-Id: <20191120042509.12835-40-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Update a struct queue with block trace extension.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- include/linux/blkdev.h | 3 +++
- 1 file changed, 3 insertions(+)
+ include/uapi/linux/blktrace_api.h | 3 +++
+ kernel/trace/blktrace.c           | 6 ++++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 397bb9bc230b..3b2945c50a83 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -34,6 +34,7 @@ struct scsi_ioctl_command;
- struct request_queue;
- struct elevator_queue;
- struct blk_trace;
-+struct blk_trace_ext;
- struct request;
- struct sg_io_hdr;
- struct bsg_job;
-@@ -532,6 +533,8 @@ struct request_queue {
- #ifdef CONFIG_BLK_DEV_IO_TRACE
- 	struct blk_trace	*blk_trace;
- 	struct mutex		blk_trace_mutex;
-+	struct blk_trace_ext	*blk_trace_ext;
-+	struct mutex		blk_trace_ext_mutex;
- #endif
- 	/*
- 	 * for flush operations
+diff --git a/include/uapi/linux/blktrace_api.h b/include/uapi/linux/blktrace_api.h
+index 3e85f7acd73c..8e91fabd8ac1 100644
+--- a/include/uapi/linux/blktrace_api.h
++++ b/include/uapi/linux/blktrace_api.h
+@@ -28,6 +28,9 @@ enum blktrace_cat {
+ 	BLK_TC_WRITE_ZEROES	= 1 << 16,	/* write-zeores */
+ 	BLK_TC_ZONE_RESET	= 1 << 17,	/* zone-reset */
+ 	BLK_TC_ZONE_RESET_ALL	= 1 << 18,	/* zone-reset-all */
++	BLK_TC_ZONE_OPEN	= 1 << 19,	/* zone-open */
++	BLK_TC_ZONE_CLOSE	= 1 << 20,	/* zone-close */
++	BLK_TC_ZONE_FINISH	= 1 << 21,	/* zone-finish */
+ 
+ 	BLK_TC_END		= 1 << 15,	/* we've run out of bits! */
+ 	BLK_TC_END_EXT		= 1 << 31,	/* we've run out of bits! */
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 8644e58ba1c9..e24df679cdc6 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -533,6 +533,12 @@ static void __blk_add_trace_ext(struct blk_trace_ext *bt, sector_t sector, int b
+ 		what |= BLK_TC_ACT_EXT(BLK_TC_ZONE_RESET);
+ 	if (unlikely(op = REQ_OP_ZONE_RESET_ALL))
+ 		what |= BLK_TC_ACT_EXT(BLK_TC_ZONE_RESET_ALL);
++	if (unlikely(op = REQ_OP_ZONE_OPEN))
++		what |= BLK_TC_ACT_EXT(BLK_TC_ZONE_OPEN);
++	if (unlikely(op = REQ_OP_ZONE_CLOSE))
++		what |= BLK_TC_ACT_EXT(BLK_TC_ZONE_CLOSE);
++	if (unlikely(op = REQ_OP_ZONE_FINISH))
++		what |= BLK_TC_ACT_EXT(BLK_TC_ZONE_FINISH);
+ 
+ 	if (cgid)
+ 		what |= __BLK_TA_CGROUP;
 -- 
 2.22.1
