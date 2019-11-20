@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 20 Nov 2019 04:24:55 +0000
-Subject: [RFC PATCH 25/39] blktrace: update blk_add_trace_bio_remap()
-Message-Id: <20191120042509.12835-26-chaitanya.kulkarni@wdc.com>
+Date: Wed, 20 Nov 2019 04:24:39 +0000
+Subject: [RFC PATCH 09/39] blktrace: update blk_add_trace_rq()
+Message-Id: <20191120042509.12835-10-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,43 +10,53 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ kernel/trace/blktrace.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 13c70d5cff65..d9418335ec26 100644
+index 75e9303f1342..3a76fb4ae5e9 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1392,18 +1392,24 @@ static void blk_add_trace_bio_remap(void *ignore,
- 				    dev_t dev, sector_t from)
+@@ -1073,21 +1073,32 @@ blk_trace_request_get_cgid(struct request_queue *q, struct request *rq)
+  *
+  **/
+ static void blk_add_trace_rq(struct request *rq, int error,
+-			     unsigned int nr_bytes, u32 what,
++			     unsigned int nr_bytes, u64 what,
+ 			     union kernfs_node_id *cgid)
  {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
- 	struct blk_io_trace_remap r;
+ 	struct blk_trace *bt = rq->q->blk_trace;
++	struct blk_trace_ext *bte = rq->q->blk_trace_ext;
  
--	if (likely(!bt))
--		return;
+ 	if (likely(!bt))
+ 		return;
+ 
+-	if (blk_rq_is_passthrough(rq))
+-		what |= BLK_TC_ACT(BLK_TC_PC);
+-	else
+-		what |= BLK_TC_ACT(BLK_TC_FS);
 -
- 	r.device_from = cpu_to_be32(dev);
- 	r.device_to   = cpu_to_be32(bio_dev(bio));
- 	r.sector_from = cpu_to_be64(from);
- 
--	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
--			bio_op(bio), bio->bi_opf, BLK_TA_REMAP, bio->bi_status,
--			sizeof(r), &r, blk_trace_bio_get_cgid(q, bio));
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_REMAP, bio->bi_status, sizeof(r), &r,
-+				blk_trace_bio_get_cgid(q, bio));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_REMAP_EXT, bio->bi_status, sizeof(r), &r,
-+				blk_trace_bio_get_cgid(q, bio), bio_prio(bio));
+-	__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes, req_op(rq),
+-			rq->cmd_flags, what, error, 0, NULL, cgid);
++	if (rq->q->blk_trace) {
++		if (blk_rq_is_passthrough(rq))
++			what |= BLK_TC_ACT(BLK_TC_PC);
++		else
++			what |= BLK_TC_ACT(BLK_TC_FS);
++		__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes,
++				req_op(rq), rq->cmd_flags, (u32)what, error, 0,
++				NULL, cgid);
++	} else if (rq->q->blk_trace_ext) {
++		if (blk_rq_is_passthrough(rq))
++			what |= BLK_TC_ACT_EXT(BLK_TC_PC);
++		else
++			what |= BLK_TC_ACT_EXT(BLK_TC_FS);
++		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq), nr_bytes,
++				    req_op(rq), rq->cmd_flags, what, error, 0,
++				    NULL, cgid, req_get_ioprio(rq));
 +	}
  }
  
- /**
+ static void blk_add_trace_rq_insert(void *ignore,
 -- 
 2.22.1
