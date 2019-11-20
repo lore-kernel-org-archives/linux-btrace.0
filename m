@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 20 Nov 2019 04:25:02 +0000
-Subject: [RFC PATCH 32/39] blktrace: add trace event print helper
-Message-Id: <20191120042509.12835-33-chaitanya.kulkarni@wdc.com>
+Date: Wed, 20 Nov 2019 04:24:57 +0000
+Subject: [RFC PATCH 27/39] blktrace: update blk_add_driver_data()
+Message-Id: <20191120042509.12835-28-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,64 +10,36 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ kernel/trace/blktrace.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 5e5a05581f63..747fd8caf10f 100644
+index 1659bab715ae..c0ebb78e200b 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2196,12 +2196,51 @@ static enum print_line_t print_one_line(struct trace_iterator *iter,
- 	return trace_handle_return(s);
- }
- 
-+static enum print_line_t print_one_line_ext(struct trace_iterator *iter,
-+					bool classic)
-+{
-+	struct trace_array *tr = iter->tr;
-+	struct trace_seq *s = &iter->seq;
-+	const struct blk_io_trace_ext *t;
-+	u32 what;
-+	bool long_act;
-+	blk_log_action_t *log_action;
-+	bool has_cg;
-+
-+	t	   = te_blk_io_trace_ext(iter->ent);
-+	what	   = (t->action & ((1ULL << BLK_TC_SHIFT_EXT) - 1)) & ~__BLK_TA_CGROUP;
-+	long_act   = !!(tr->trace_flags & TRACE_ITER_VERBOSE);
-+	log_action = classic ? &blk_log_action_classic_ext : &blk_log_action_ext;
-+	has_cg	   = t->action & __BLK_TA_CGROUP;
-+
-+	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
-+		log_action(iter, long_act ? "message" : "m", has_cg);
-+		blk_log_msg_ext(s, iter->ent, has_cg);
-+		return trace_handle_return(s);
-+	}
-+
-+	if (unlikely(what = 0 || what >= ARRAY_SIZE(what2act_ext)))
-+		trace_seq_printf(s, "Unknown action %x\n", what);
-+	else {
-+		log_action(iter, what2act_ext[what].act[long_act], has_cg);
-+		what2act_ext[what].print(s, iter->ent, has_cg);
-+	}
-+
-+	return trace_handle_return(s);
-+}
-+
- static enum print_line_t blk_trace_event_print(struct trace_iterator *iter,
- 					       int flags, struct trace_event *event)
+@@ -1466,13 +1466,18 @@ void blk_add_driver_data(struct request_queue *q,
+ 			 void *data, size_t len)
  {
- 	return print_one_line(iter, false);
- }
+ 	struct blk_trace *bt = q->blk_trace;
++	struct blk_trace_ext *bte = q->blk_trace_ext;
  
-+static enum print_line_t blk_trace_event_print_ext(struct trace_iterator *iter,
-+					       int flags, struct trace_event *event)
-+{
-+	return print_one_line_ext(iter, false);
-+}
-+
- static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
- {
- 	struct trace_seq *s = &iter->seq;
+-	if (likely(!bt))
+-		return;
+-
+-	__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0, 0,
+-				BLK_TA_DRV_DATA, 0, len, data,
++	if (q->blk_trace) {
++		__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq),
++				0, 0, BLK_TA_DRV_DATA, 0, len, data,
+ 				blk_trace_request_get_cgid(q, rq));
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq), blk_rq_bytes(rq),
++				0, 0, BLK_TA_DRV_DATA_EXT, 0, len, data,
++				blk_trace_request_get_cgid(q, rq),
++				req_get_ioprio(rq));
++	}
+ }
+ EXPORT_SYMBOL_GPL(blk_add_driver_data);
+ 
 -- 
 2.22.1
