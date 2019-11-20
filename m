@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 20 Nov 2019 04:25:05 +0000
-Subject: [RFC PATCH 35/39] blktrace: add blkext tracer
-Message-Id: <20191120042509.12835-36-chaitanya.kulkarni@wdc.com>
+Date: Wed, 20 Nov 2019 04:24:51 +0000
+Subject: [RFC PATCH 21/39] blktrace: update blk_add_trace_sleeprq()
+Message-Id: <20191120042509.12835-22-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,100 +10,41 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 47 ++++++++++++++++++++++++++++++++++++++---
- kernel/trace/trace.h    |  1 +
- 2 files changed, 45 insertions(+), 3 deletions(-)
+ kernel/trace/blktrace.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 05498ddb26c4..4d909871b058 100644
+index 31b4fc636e04..d9c56e6d34f6 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2330,18 +2330,42 @@ static struct tracer blk_tracer __read_mostly = {
- 	.set_flag	= blk_tracer_set_flag,
- };
- 
-+static struct tracer blk_tracer_ext __read_mostly = {
-+	.name		= "blkext",
-+	.init		= blk_tracer_init,
-+	.reset		= blk_tracer_reset,
-+	.start		= blk_tracer_start,
-+	.stop		= blk_tracer_stop,
-+	.print_header	= blk_tracer_print_header,
-+	.print_line	= blk_tracer_print_line_ext,
-+	.flags		= &blk_tracer_flags,
-+	.set_flag	= blk_tracer_set_flag,
-+};
-+
- static struct trace_event_functions trace_blk_event_funcs = {
- 	.trace		= blk_trace_event_print,
- 	.binary		= blk_trace_event_print_binary,
- };
- 
-+static struct trace_event_functions trace_blk_event_funcs_ext = {
-+	.trace		= blk_trace_event_print_ext,
-+	.binary		= blk_trace_event_print_binary_ext,
-+};
-+
- static struct trace_event trace_blk_event = {
- 	.type		= TRACE_BLK,
- 	.funcs		= &trace_blk_event_funcs,
- };
- 
-+static struct trace_event trace_blk_event_ext = {
-+	.type		= TRACE_BLK_EXT,
-+	.funcs		= &trace_blk_event_funcs_ext,
-+};
-+
- static int __init init_blk_tracer(void)
+@@ -1288,14 +1288,24 @@ static void blk_add_trace_sleeprq(void *ignore,
+ 				  struct request_queue *q,
+ 				  struct bio *bio, int rw)
  {
-+	int ret = 0;
-+
- 	if (!register_trace_event(&trace_blk_event)) {
- 		pr_warn("Warning: could not register block events\n");
- 		return 1;
-@@ -2349,11 +2373,28 @@ static int __init init_blk_tracer(void)
+-	if (bio)
+-		blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
+-	else {
++	if (bio) {
++		if (q->blk_trace) {
++			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
++		} else if (q->blk_trace_ext) {
++			blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ_EXT, 0);
++		}
++	} else {
+ 		struct blk_trace *bt = q->blk_trace;
++		struct blk_trace_ext *bte = q->blk_trace_ext;
  
- 	if (register_tracer(&blk_tracer) != 0) {
- 		pr_warn("Warning: could not register the block tracer\n");
--		unregister_trace_event(&trace_blk_event);
--		return 1;
-+		goto unregister_trace_event;
+-		if (bt)
++		if (q->blk_trace) {
+ 			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
+ 					0, 0, NULL, NULL);
++		} else if (q->blk_trace_ext) {
++			__blk_add_trace_ext(bte, 0, 0, rw, 0,
++					    BLK_TA_SLEEPRQ_EXT,
++					    0, 0, NULL, NULL, 0);
++		}
  	}
- 
--	return 0;
-+	if (!register_trace_event(&trace_blk_event_ext)) {
-+		pr_warn("Warning: could not register block events\n");
-+		/* unregister blk_tracer */
-+		goto unregister_trace_event;
-+	}
-+
-+	if (register_tracer(&blk_tracer_ext) != 0) {
-+		pr_warn("Warning: could not register the block tracer\n");
-+		goto unregister_trace_event_ext;
-+	}
-+out:
-+	return ret;
-+
-+unregister_trace_event_ext:
-+	unregister_trace_event(&trace_blk_event_ext);
-+unregister_trace_event:
-+	unregister_trace_event(&trace_blk_event);
-+	ret = 1;
-+	goto out;
  }
  
- device_initcall(init_blk_tracer);
-diff --git a/kernel/trace/trace.h b/kernel/trace/trace.h
-index d685c61085c0..c6cb3dfe2ac7 100644
---- a/kernel/trace/trace.h
-+++ b/kernel/trace/trace.h
-@@ -38,6 +38,7 @@ enum trace_type {
- 	TRACE_GRAPH_ENT,
- 	TRACE_USER_STACK,
- 	TRACE_BLK,
-+	TRACE_BLK_EXT,
- 	TRACE_BPUTS,
- 	TRACE_HWLAT,
- 	TRACE_RAW_DATA,
 -- 
 2.22.1
