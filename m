@@ -1,167 +1,201 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 20 Nov 2019 04:24:31 +0000
-Subject: [RFC PATCH 01/39] blktrace_api: add new trace definitions
-Message-Id: <20191120042509.12835-2-chaitanya.kulkarni@wdc.com>
+Date: Wed, 20 Nov 2019 04:24:30 +0000
+Subject: [RFC PATCH 00/39] blktrace: add block trace extension support
+Message-Id: <20191120042509.12835-1-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This patch adds a new trace categories, trace actions adds a new
-version number for the trace extentions, adds new trace extension
-structure to hold actual trace along with structure nedded to
-execute various IOCTLs to configure trace from user space.
+Hi,
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- include/uapi/linux/blktrace_api.h | 106 ++++++++++++++++++++++++------
- 1 file changed, 85 insertions(+), 21 deletions(-)
+This is an updated RFC which adds support for newly introduced
+request operations REQ_OP_ZONE_[OPEN/CLOSE/FINISH]. Please find the
+test log at the end of this patch.
 
-diff --git a/include/uapi/linux/blktrace_api.h b/include/uapi/linux/blktrace_api.h
-index 690621b610e5..cf2ad90fd399 100644
---- a/include/uapi/linux/blktrace_api.h
-+++ b/include/uapi/linux/blktrace_api.h
-@@ -8,30 +8,37 @@
-  * Trace categories
-  */
- enum blktrace_cat {
--	BLK_TC_READ	= 1 << 0,	/* reads */
--	BLK_TC_WRITE	= 1 << 1,	/* writes */
--	BLK_TC_FLUSH	= 1 << 2,	/* flush */
--	BLK_TC_SYNC	= 1 << 3,	/* sync IO */
--	BLK_TC_SYNCIO	= BLK_TC_SYNC,
--	BLK_TC_QUEUE	= 1 << 4,	/* queueing/merging */
--	BLK_TC_REQUEUE	= 1 << 5,	/* requeueing */
--	BLK_TC_ISSUE	= 1 << 6,	/* issue */
--	BLK_TC_COMPLETE	= 1 << 7,	/* completions */
--	BLK_TC_FS	= 1 << 8,	/* fs requests */
--	BLK_TC_PC	= 1 << 9,	/* pc requests */
--	BLK_TC_NOTIFY	= 1 << 10,	/* special message */
--	BLK_TC_AHEAD	= 1 << 11,	/* readahead */
--	BLK_TC_META	= 1 << 12,	/* metadata */
--	BLK_TC_DISCARD	= 1 << 13,	/* discard requests */
--	BLK_TC_DRV_DATA	= 1 << 14,	/* binary per-driver data */
--	BLK_TC_FUA	= 1 << 15,	/* fua requests */
--
--	BLK_TC_END	= 1 << 15,	/* we've run out of bits! */
-+	BLK_TC_READ		= 1 << 0,	/* reads */
-+	BLK_TC_WRITE		= 1 << 1,	/* writes */
-+	BLK_TC_FLUSH		= 1 << 2,	/* flush */
-+	BLK_TC_SYNC		= 1 << 3,	/* sync IO */
-+	BLK_TC_SYNCIO		= BLK_TC_SYNC,
-+	BLK_TC_QUEUE		= 1 << 4,	/* queueing/merging */
-+	BLK_TC_REQUEUE		= 1 << 5,	/* requeueing */
-+	BLK_TC_ISSUE		= 1 << 6,	/* issue */
-+	BLK_TC_COMPLETE		= 1 << 7,	/* completions */
-+	BLK_TC_FS		= 1 << 8,	/* fs requests */
-+	BLK_TC_PC		= 1 << 9,	/* pc requests */
-+	BLK_TC_NOTIFY		= 1 << 10,	/* special message */
-+	BLK_TC_AHEAD		= 1 << 11,	/* readahead */
-+	BLK_TC_META		= 1 << 12,	/* metadata */
-+	BLK_TC_DISCARD		= 1 << 13,	/* discard requests */
-+	BLK_TC_DRV_DATA		= 1 << 14,	/* binary per-driver data */
-+	BLK_TC_FUA		= 1 << 15,	/* fua requests */
-+	BLK_TC_WRITE_ZEROES	= 1 << 16,	/* write-zeores */
-+	BLK_TC_ZONE_RESET	= 1 << 17,	/* zone-reset */
-+	BLK_TC_ZONE_RESET_ALL	= 1 << 18,	/* zone-reset-all */
-+
-+	BLK_TC_END		= 1 << 15,	/* we've run out of bits! */
-+	BLK_TC_END_EXT		= 1 << 31,	/* we've run out of bits! */
- };
- 
- #define BLK_TC_SHIFT		(16)
- #define BLK_TC_ACT(act)		((act) << BLK_TC_SHIFT)
- 
-+#define BLK_TC_SHIFT_EXT   	(32)
-+#define BLK_TC_ACT_EXT(act)		(((u64)act) << BLK_TC_SHIFT_EXT)
-+
- /*
-  * Basic trace actions
-  */
-@@ -88,12 +95,38 @@ enum blktrace_notify {
- #define BLK_TA_ABORT		(__BLK_TA_ABORT | BLK_TC_ACT(BLK_TC_QUEUE))
- #define BLK_TA_DRV_DATA	(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
- 
-+#define BLK_TA_QUEUE_EXT       (__BLK_TA_QUEUE | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_BACKMERGE_EXT   (__BLK_TA_BACKMERGE | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_FRONTMERGE_EXT  (__BLK_TA_FRONTMERGE | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_GETRQ_EXT       (__BLK_TA_GETRQ | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_SLEEPRQ_EXT     (__BLK_TA_SLEEPRQ | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_REQUEUE_EXT     (__BLK_TA_REQUEUE | BLK_TC_ACT_EXT(BLK_TC_REQUEUE))
-+#define BLK_TA_ISSUE_EXT       (__BLK_TA_ISSUE | BLK_TC_ACT_EXT(BLK_TC_ISSUE))
-+#define BLK_TA_COMPLETE_EXT    (__BLK_TA_COMPLETE| BLK_TC_ACT_EXT(BLK_TC_COMPLETE))
-+#define BLK_TA_PLUG_EXT                (__BLK_TA_PLUG | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_UNPLUG_IO_EXT   (__BLK_TA_UNPLUG_IO | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_UNPLUG_TIMER_EXT        \
-+       (__BLK_TA_UNPLUG_TIMER | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_INSERT_EXT      (__BLK_TA_INSERT | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_SPLIT_EXT       (__BLK_TA_SPLIT)
-+#define BLK_TA_BOUNCE_EXT      (__BLK_TA_BOUNCE)
-+#define BLK_TA_REMAP_EXT       (__BLK_TA_REMAP | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_ABORT_EXT       (__BLK_TA_ABORT | BLK_TC_ACT_EXT(BLK_TC_QUEUE))
-+#define BLK_TA_DRV_DATA_EXT    \
-+       (__BLK_TA_DRV_DATA | BLK_TC_ACT_EXT(BLK_TC_DRV_DATA))
-+
- #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_TIMESTAMP	(__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_MESSAGE		(__BLK_TN_MESSAGE | BLK_TC_ACT(BLK_TC_NOTIFY))
- 
--#define BLK_IO_TRACE_MAGIC	0x65617400
--#define BLK_IO_TRACE_VERSION	0x07
-+#define BLK_TN_PROCESS_EXT     (__BLK_TN_PROCESS | BLK_TC_ACT_EXT(BLK_TC_NOTIFY))
-+#define BLK_TN_TIMESTAMP_EXT   (__BLK_TN_TIMESTAMP | BLK_TC_ACT_EXT(BLK_TC_NOTIFY))
-+#define BLK_TN_MESSAGE_EXT     (__BLK_TN_MESSAGE | BLK_TC_ACT_EXT(BLK_TC_NOTIFY))
-+
-+#define BLK_IO_TRACE_MAGIC             0x65617400
-+#define BLK_IO_TRACE_VERSION           0x07
-+#define BLK_IO_TRACE_VERSION_EXT       0x08
-+
- 
- /*
-  * The trace itself
-@@ -113,6 +146,23 @@ struct blk_io_trace {
- 	/* cgroup id will be stored here if exists */
- };
- 
-+struct blk_io_trace_ext {
-+	__u32 magic;            /* MAGIC << 8 | version */
-+	__u32 sequence;         /* event number */
-+	__u64 time;             /* in nanoseconds */
-+	__u64 sector;           /* disk offset */
-+	__u32 bytes;            /* transfer length */
-+	__u64 action;           /* what happened */
-+	__u32 ioprio;           /* I/O priority */
-+	__u32 pid;              /* who did it */
-+	__u32 device;           /* device number */
-+	__u32 cpu;              /* on what cpu did it happen */
-+	__u16 error;            /* completion error */
-+	__u16 pdu_len;          /* length of data after this trace */
-+	/* cgroup id will be stored here if exists */
-+};
-+
-+
- /*
-  * The remap event
-  */
-@@ -143,4 +193,18 @@ struct blk_user_trace_setup {
- 	__u32 pid;
- };
- 
-+/*
-+ * User setup structure passed with BLKTRACESETUP_EXT
-+ */
-+struct blk_user_trace_setup_ext {
-+	char name[BLKTRACE_BDEV_SIZE];  /* output */
-+	__u64 act_mask;                 /* input */
-+	__u32 prio_mask;                /* input */
-+	__u32 buf_size;                 /* input */
-+	__u32 buf_nr;                   /* input */
-+	__u64 start_lba;
-+	__u64 end_lba;
-+	__u32 pid;
-+};
-+
- #endif /* _UAPIBLKTRACE_H */
+The new strings "ZO" -> Zone Open, "ZC" -> Zone Close,
+"ZF" -> Zone Finish.
+
+I do have userspace code changes for this if anyone is interested I'll
+post them.
+
+Following is the link to the kernel and userspace RFC and cover-letter:-
+
+1. Original Kernel RFC :-
+        https://marc.info/?l=linux-btrace&m5949445123407&w=2
+
+2. Original Userspace RFC :-
+        https://marc.info/?l=linux-btrace&m5950039424783&w=2
+
+3. Original Cover letter :-
+
+This patch series adds support to track more request based flags and
+different request fields to the blktrace infrastructure.
+
+In this series, we increase the action, action mask field and add 
+priority and priority mask field to existing infrastructure.
+
+We add new structures to hold the trace where we increase the size of
+the action field and add a new member to track the priority of the I/O.
+For the trace management side we add new IOCTLs so that user can 
+configure trace extensions from the blktrace user-space tools.
+
+The RFC is still light on the details but with new IOCTLs I was able to
+get the code running with user-space tools. There is still some more
+scope to optimize the code and reduce the duplicate code, but I kept
+it simple for now so that it is easy to review. I'm aware of some
+checkpatch.pl warnings mostly about 80 col, I'll fix that in the
+next version.
+
+It will be great if someone can review this code and provide some
+feedback.
+
+Regards,
+Chaitanya
+
+Please have a look at the following blktrace test log for reference.
+For this test we configure null_blk device with 8 zones:-
+# blkzone report /dev/nullb0 | awk '{print $11" "$12}'
+zcond: 1(em)
+zcond: 1(em)
+zcond: 1(em)
+zcond: 1(em)
+zcond: 1(em)
+zcond: 1(em)
+zcond: 1(em)
+zcond: 1(em)
+# blkzone open   /dev/nullb0
+# blkzone report /dev/nullb0 | awk '{print $11" "$12}'
+zcond: 3(oe)
+zcond: 3(oe)
+zcond: 3(oe)
+zcond: 3(oe)
+zcond: 3(oe)
+zcond: 3(oe)
+zcond: 3(oe)
+zcond: 3(oe)
+# blkzone close  /dev/nullb0
+# blkzone report /dev/nullb0 | awk '{print $11" "$12}'
+zcond: 4(cl)
+zcond: 4(cl)
+zcond: 4(cl)
+zcond: 4(cl)
+zcond: 4(cl)
+zcond: 4(cl)
+zcond: 4(cl)
+zcond: 4(cl)
+#blkzone finish /dev/nullb0
+#blkzone report /dev/nullb0 | awk '{print $11" "$12}'
+zcond:14(fu) [type:
+zcond:14(fu) [type:
+zcond:14(fu) [type:
+zcond:14(fu) [type:
+zcond:14(fu) [type:
+zcond:14(fu) [type:
+zcond:14(fu) [type:
+zcond:14(fu) [type:
+
+# blktrace -P -E -y zone_open -y zone_reset -y zone_close \
+  -y zone_finish -d /dev/nullb0 -o - | blkparse -P -E -i -
+252,0    8        1     2.189492669  4544  Q  ZO N 0 + 0 [blkzone]
+252,0    8        2     2.189498940  4544  G  ZO N 0 + 0 [blkzone]
+252,0    8        3     2.189527825  4544  Q  ZO N 262144 + 0 [blkzone]
+252,0    8        4     2.189528456  4544  G  ZO N 262144 + 0 [blkzone]
+252,0    8        5     2.189534958  4544  Q  ZO N 524288 + 0 [blkzone]
+252,0    8        6     2.189535369  4544  G  ZO N 524288 + 0 [blkzone]
+252,0    8        7     2.189540759  4544  Q  ZO N 786432 + 0 [blkzone]
+252,0    8        8     2.189541190  4544  G  ZO N 786432 + 0 [blkzone]
+252,0    8        9     2.189546470  4544  Q  ZO N 1048576 + 0 [blkzone]
+252,0    8       10     2.189546880  4544  G  ZO N 1048576 + 0 [blkzone]
+252,0    8       11     2.189551890  4544  Q  ZO N 1310720 + 0 [blkzone]
+252,0    8       12     2.189552331  4544  G  ZO N 1310720 + 0 [blkzone]
+252,0    8       13     2.189557340  4544  Q  ZO N 1572864 + 0 [blkzone]
+252,0    8       14     2.189557751  4544  G  ZO N 1572864 + 0 [blkzone]
+252,0    8       15     2.189563061  4544  Q ZOS N 1835008 + 0 [blkzone]
+252,0    8       16     2.189563632  4544  G ZOS N 1835008 + 0 [blkzone]
+252,0    0        1    18.056920184  4563  Q  ZC N 0 + 0 [blkzone]
+252,0    0        2    18.056924843  4563  G  ZC N 0 + 0 [blkzone]
+252,0    0        3    18.056980006  4563  Q  ZC N 262144 + 0 [blkzone]
+252,0    0        4    18.056980748  4563  G  ZC N 262144 + 0 [blkzone]
+252,0    0        5    18.056988041  4563  Q  ZC N 524288 + 0 [blkzone]
+252,0    0        6    18.056988462  4563  G  ZC N 524288 + 0 [blkzone]
+252,0    0        7    18.056994153  4563  Q  ZC N 786432 + 0 [blkzone]
+252,0    0        8    18.056995035  4563  G  ZC N 786432 + 0 [blkzone]
+252,0    0        9    18.057000835  4563  Q  ZC N 1048576 + 0 [blkzone]
+252,0    0       10    18.057001396  4563  G  ZC N 1048576 + 0 [blkzone]
+252,0    0       11    18.057006736  4563  Q  ZC N 1310720 + 0 [blkzone]
+252,0    0       12    18.057007147  4563  G  ZC N 1310720 + 0 [blkzone]
+252,0    0       13    18.057012217  4563  Q  ZC N 1572864 + 0 [blkzone]
+252,0    0       14    18.057012628  4563  G  ZC N 1572864 + 0 [blkzone]
+252,0    0       15    18.057017717  4563  Q ZCS N 1835008 + 0 [blkzone]
+252,0    0       16    18.057018128  4563  G ZCS N 1835008 + 0 [blkzone]
+252,0    0       17    25.520929840  4573  Q  ZF N 0 + 0 [blkzone]
+252,0    0       18    25.520934359  4573  G  ZF N 0 + 0 [blkzone]
+252,0    0       19    25.520954526  4573  Q  ZF N 262144 + 0 [blkzone]
+252,0    0       20    25.520955027  4573  G  ZF N 262144 + 0 [blkzone]
+252,0    0       21    25.520961029  4573  Q  ZF N 524288 + 0 [blkzone]
+252,0    0       22    25.520961409  4573  G  ZF N 524288 + 0 [blkzone]
+252,0    0       23    25.520966659  4573  Q  ZF N 786432 + 0 [blkzone]
+252,0    0       24    25.520967070  4573  G  ZF N 786432 + 0 [blkzone]
+252,0    0       25    25.520971889  4573  Q  ZF N 1048576 + 0 [blkzone]
+252,0    0       26    25.520972260  4573  G  ZF N 1048576 + 0 [blkzone]
+252,0    0       27    25.520976878  4573  Q  ZF N 1310720 + 0 [blkzone]
+252,0    0       28    25.520977279  4573  G  ZF N 1310720 + 0 [blkzone]
+252,0    0       29    25.520981918  4573  Q  ZF N 1572864 + 0 [blkzone]
+252,0    0       30    25.520982349  4573  G  ZF N 1572864 + 0 [blkzone]
+252,0    0       31    25.520987037  4573  Q ZFS N 1835008 + 0 [blkzone]
+252,0    0       32    25.520987418  4573  G ZFS N 1835008 + 0 [blkzone]
+
+Chaitanya Kulkarni (39):
+  blktrace_api: add new trace definitions
+  blktrace_api: add new trace definition
+  blkdev.h: add new trace ext as a queue member
+  blktrace: introduce new ioctls
+  blktrace: add a new global list
+  blktrace: add trace note APIs
+  blktrace: add act and prio check helpers
+  blktrace: add core trace API
+  blktrace: update blk_add_trace_rq()
+  blktrace: update blk_add_trace_rq_insert()
+  blktrace: update blk_add_trace_rq_issue()
+  blktrace: update blk_add_trace_rq_requeue()
+  blktrace: update blk_add_trace_rq_complete()
+  blktrace: update blk_add_trace_bio()
+  blktrace: update blk_add_trace_bio_bounce()
+  blktrace: update blk_add_trace_bio_complete()
+  blktrace: update blk_add_trace_bio_backmerge()
+  blktrace: update blk_add_trace_bio_frontmerge()
+  blktrace: update blk_add_trace_bio_queue()
+  blktrace: update blk_add_trace_getrq()
+  blktrace: update blk_add_trace_sleeprq()
+  blktrace: update blk_add_trace_plug()
+  blktrace: update blk_add_trace_unplug()
+  blktrace: update blk_add_trace_split()
+  blktrace: update blk_add_trace_bio_remap()
+  blktrace: update blk_add_trace_rq_remap()
+  blktrace: update blk_add_driver_data()
+  blktrace: add a new formatting routine
+  blktrace: add trace entry & pdu helpers
+  blktrace: add blk_log_xxx helpers()
+  blktrace: link blk_log_xxx() to trace action
+  blktrace: add trace event print helper
+  blktrace: add trace_synthesize helper
+  blktrace: add trace print helpers
+  blktrace: add blkext tracer
+  blktrace: implement setup-start-stop ioclts
+  block: update blkdev_ioctl with new trace ioctls
+  blktrace: add integrity tracking support
+  blktrace: add support for zone-mgmt ops
+
+ block/ioctl.c                     |    4 +
+ include/linux/blkdev.h            |    3 +
+ include/linux/blktrace_api.h      |   18 +
+ include/uapi/linux/blktrace_api.h |  111 ++-
+ include/uapi/linux/fs.h           |    4 +
+ kernel/trace/blktrace.c           | 1289 +++++++++++++++++++++++++++--
+ kernel/trace/trace.h              |    1 +
+ 7 files changed, 1339 insertions(+), 91 deletions(-)
+
 -- 
 2.22.1
