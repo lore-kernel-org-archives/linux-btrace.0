@@ -1,45 +1,40 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Wed, 20 Nov 2019 04:24:57 +0000
-Subject: [RFC PATCH 27/39] blktrace: update blk_add_driver_data()
-Message-Id: <20191120042509.12835-28-chaitanya.kulkarni@wdc.com>
+Date: Wed, 20 Nov 2019 04:24:33 +0000
+Subject: [RFC PATCH 03/39] blkdev.h: add new trace ext as a queue member
+Message-Id: <20191120042509.12835-4-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+Update a struct queue with block trace extension.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ include/linux/blkdev.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 1659bab715ae..c0ebb78e200b 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1466,13 +1466,18 @@ void blk_add_driver_data(struct request_queue *q,
- 			 void *data, size_t len)
- {
- 	struct blk_trace *bt = q->blk_trace;
-+	struct blk_trace_ext *bte = q->blk_trace_ext;
- 
--	if (likely(!bt))
--		return;
--
--	__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0, 0,
--				BLK_TA_DRV_DATA, 0, len, data,
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq),
-+				0, 0, BLK_TA_DRV_DATA, 0, len, data,
- 				blk_trace_request_get_cgid(q, rq));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq), blk_rq_bytes(rq),
-+				0, 0, BLK_TA_DRV_DATA_EXT, 0, len, data,
-+				blk_trace_request_get_cgid(q, rq),
-+				req_get_ioprio(rq));
-+	}
- }
- EXPORT_SYMBOL_GPL(blk_add_driver_data);
- 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 397bb9bc230b..3b2945c50a83 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -34,6 +34,7 @@ struct scsi_ioctl_command;
+ struct request_queue;
+ struct elevator_queue;
+ struct blk_trace;
++struct blk_trace_ext;
+ struct request;
+ struct sg_io_hdr;
+ struct bsg_job;
+@@ -532,6 +533,8 @@ struct request_queue {
+ #ifdef CONFIG_BLK_DEV_IO_TRACE
+ 	struct blk_trace	*blk_trace;
+ 	struct mutex		blk_trace_mutex;
++	struct blk_trace_ext	*blk_trace_ext;
++	struct mutex		blk_trace_ext_mutex;
+ #endif
+ 	/*
+ 	 * for flush operations
 -- 
 2.22.1
