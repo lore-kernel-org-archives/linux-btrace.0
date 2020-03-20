@@ -1,48 +1,32 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:29:54 +0000
-Subject: [RFC PATCH 11/39] blktrace: update blk_add_trace_rq_issue()
-Message-Id: <20200323163022.30688-12-chaitanya.kulkarni@wdc.com>
+From: Vincent Legoll <vincent.legoll@gmail.com>
+Date: Fri, 20 Mar 2020 21:44:58 +0000
+Subject: [PATCH 09/10] bno_plot.py: Fix pylint: singleton-comparison
+Message-Id: <20200320214459.7760-10-vincent.legoll@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- kernel/trace/blktrace.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+Comparison to None should be 'expr is None'
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index cae7ecb5cbe6..2b79163384b7 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1135,7 +1135,25 @@ static void blk_add_trace_rq_insert(void *ignore,
- static void blk_add_trace_rq_issue(void *ignore,
- 				   struct request_queue *q, struct request *rq)
- {
--	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_ISSUE,
-+	u64 ta;
-+	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
-+
-+	rcu_read_lock();
-+	bt = rcu_dereference(rq->q->blk_trace);
-+	bte = rcu_dereference(rq->q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte) ) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	if (bt) {
-+		ta = BLK_TA_ISSUE;
-+	} else if (bte) {
-+		ta = BLK_TA_ISSUE_EXT;
-+	}
-+	rcu_read_unlock();
-+	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), ta,
- 			 blk_trace_request_get_cgid(q, rq));
- }
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+---
+ btt/bno_plot.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/btt/bno_plot.py b/btt/bno_plot.py
+index be64da0..3aa4e19 100644
+--- a/btt/bno_plot.py
++++ b/btt/bno_plot.py
+@@ -105,7 +105,7 @@ if __name__ = '__main__':
+ 					print(fld[0], fld[1], int(fld[2])-int(fld[1]), file=fo)
  
+ 		t = t[t.rfind('/')+1:]
+-		if plot_cmd = None: plot_cmd = "splot '%s'" % t
++		if plot_cmd is None: plot_cmd = "splot '%s'" % t
+ 		else:                plot_cmd = "%s,'%s'" % (plot_cmd, t)
+ 
+ 	with open('%s/plot.cmds' % tmpdir, 'w') as fo:
 -- 
-2.22.0
+2.20.1
