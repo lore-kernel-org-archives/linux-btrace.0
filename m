@@ -1,48 +1,36 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:29:58 +0000
-Subject: [RFC PATCH 15/39] blktrace: update blk_add_trace_bio_bounce()
-Message-Id: <20200323163022.30688-16-chaitanya.kulkarni@wdc.com>
+From: Vincent Legoll <vincent.legoll@gmail.com>
+Date: Fri, 20 Mar 2020 21:44:51 +0000
+Subject: [PATCH 02/10] bno_plot.py: Use shutil.rmtree() instead of os.system('/bin/rm')
+Message-Id: <20200320214459.7760-3-vincent.legoll@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
 ---
- kernel/trace/blktrace.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ btt/bno_plot.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index c4416ee7593a..c9f04cfdfa84 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1251,7 +1251,25 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
- static void blk_add_trace_bio_bounce(void *ignore,
- 				     struct request_queue *q, struct bio *bio)
- {
--	blk_add_trace_bio(q, bio, BLK_TA_BOUNCE, 0);
-+	u64 ta = 0;
-+	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
-+
-+	rcu_read_lock();
-+	bt = rcu_dereference(q->blk_trace);
-+	bte = rcu_dereference(q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte) ) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	if (bt) {
-+		ta = BLK_TA_BOUNCE;
-+	} else if (bte) {
-+		ta = BLK_TA_BOUNCE_EXT;
-+	}
-+	rcu_read_unlock();
-+	blk_add_trace_bio(q, bio, ta, 0);
- }
+diff --git a/btt/bno_plot.py b/btt/bno_plot.py
+index f05cfdc..36fc524 100644
+--- a/btt/bno_plot.py
++++ b/btt/bno_plot.py
+@@ -40,7 +40,7 @@ To exit the plotter, enter 'quit' or ^D at the 'gnuplot> ' prompt.
  
- static void blk_add_trace_bio_complete(void *ignore,
+ from __future__ import absolute_import
+ from __future__ import print_function
+-import getopt, glob, os, sys, tempfile
++import getopt, glob, os, sys, tempfile, shutil
+ 
+ verbose	= 0
+ cmds	= """
+@@ -125,4 +125,4 @@ if __name__ = '__main__':
+ 		sys.exit(1)
+ 
+ 	os.waitpid(pid, 0)
+-	os.system('/bin/rm -rf ' + tmpdir)
++	shutil.rmtree(tmpdir)
 -- 
-2.22.0
+2.20.1
