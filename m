@@ -1,63 +1,39 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:30:04 +0000
-Subject: [RFC PATCH 21/39] blktrace: update blk_add_trace_sleeprq()
-Message-Id: <20200323163022.30688-22-chaitanya.kulkarni@wdc.com>
+From: Vincent Legoll <vincent.legoll@gmail.com>
+Date: Fri, 20 Mar 2020 21:44:56 +0000
+Subject: [PATCH 07/10] btt_plot.py: Fix pylint: no-else-return
+Message-Id: <20200320214459.7760-8-vincent.legoll@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- kernel/trace/blktrace.c | 30 +++++++++++++++++++++++++-----
- 1 file changed, 25 insertions(+), 5 deletions(-)
+Unnecessary "elif" after "return"
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 9fd0e5758d3d..a95ed09990e1 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1416,16 +1416,36 @@ static void blk_add_trace_sleeprq(void *ignore,
- 				  struct request_queue *q,
- 				  struct bio *bio, int rw)
- {
--	if (bio)
--		blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
--	else {
-+	u64 ta = 0;
-+	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
-+
-+	rcu_read_lock();
-+	bt = rcu_dereference(q->blk_trace);
-+	bte = rcu_dereference(q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte)) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+	if (bt) {
-+		ta = BLK_TA_SLEEPRQ;
-+	} else if (bte) {
-+		ta = BLK_TA_SLEEPRQ_EXT;
-+	}
-+	rcu_read_unlock();
-+	if (bio) {
-+		blk_add_trace_bio(q, bio, ta, 0);
-+	} else {
- 		struct blk_trace *bt;
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+---
+ btt/btt_plot.py | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/btt/btt_plot.py b/btt/btt_plot.py
+index 653ace7..b67caaa 100755
+--- a/btt/btt_plot.py
++++ b/btt/btt_plot.py
+@@ -396,12 +396,11 @@ def do_live(files):
+ 	def live_sort(a, b):
+ 		if a[0] = 'sys' and b[0] = 'sys':
+ 			return 0
+-		elif a[0] = 'sys' or a[2][0] < b[2][0]:
++		if a[0] = 'sys' or a[2][0] < b[2][0]:
+ 			return -1
+-		elif b[0] = 'sys' or a[2][0] > b[2][0]:
++		if b[0] = 'sys' or a[2][0] > b[2][0]:
+ 			return  1
+-		else:
+-			return  0
++		return  0
  
- 		rcu_read_lock();
- 		bt = rcu_dereference(q->blk_trace);
-+		bte = rcu_dereference(q->blk_trace_ext);
- 		if (bt)
--			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
--					0, 0, NULL, 0);
-+			__blk_add_trace(bt, 0, 0, rw, 0, ta, 0, 0, NULL, 0);
-+		else if (bte)
-+			__blk_add_trace_ext(bte, 0, 0, rw, 0, ta, 0, 0, NULL,
-+					0, 0);
- 		rcu_read_unlock();
- 	}
- }
+ 	#----------------------------------------------------------------------
+ 	def turn_off_ticks(ax):
 -- 
-2.22.0
+2.20.1
