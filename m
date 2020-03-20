@@ -1,58 +1,52 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:29:57 +0000
-Subject: [RFC PATCH 14/39] blktrace: update blk_add_trace_bio()
-Message-Id: <20200323163022.30688-15-chaitanya.kulkarni@wdc.com>
+From: Vincent Legoll <vincent.legoll@gmail.com>
+Date: Fri, 20 Mar 2020 21:44:52 +0000
+Subject: [PATCH 03/10] bno_plot.py: Use `with open() as ...` context manager to automatically handle close()
+Message-Id: <20200320214459.7760-4-vincent.legoll@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
 ---
- kernel/trace/blktrace.c | 21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ btt/bno_plot.py | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 8de5329562de..c4416ee7593a 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1220,20 +1220,31 @@ static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
-  *
-  **/
- static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
--			      u32 what, int error)
-+			      u64 what, int error)
- {
- 	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
+diff --git a/btt/bno_plot.py b/btt/bno_plot.py
+index 36fc524..1a1937c 100644
+--- a/btt/bno_plot.py
++++ b/btt/bno_plot.py
+@@ -98,21 +98,20 @@ if __name__ = '__main__':
+ 	for f in bnos:
+ 		t = '%s/%s' % (tmpdir, f)
  
- 	rcu_read_lock();
- 	bt = rcu_dereference(q->blk_trace);
--	if (likely(!bt)) {
-+	bte = rcu_dereference(q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte) ) {
- 		rcu_read_unlock();
- 		return;
- 	}
+-		fo = open(t, 'w')
+-		for line in open(f, 'r'):
+-			fld = line.split(None)
+-			print(fld[0], fld[1], int(fld[2])-int(fld[1]), file=fo)
+-		fo.close()
++		with open(t, 'w') as fo:
++			with open(f, 'r') as fi:
++				for line in fi:
++					fld = line.split(None)
++					print(fld[0], fld[1], int(fld[2])-int(fld[1]), file=fo)
  
--	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
--			bio_op(bio), bio->bi_opf, what, error, 0, NULL,
--			blk_trace_bio_get_cgid(q, bio));
-+	if (q->blk_trace) {
-+		__blk_add_trace(bt, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio),
-+				bio->bi_opf,(u32)what, error, 0, NULL,
-+				blk_trace_bio_get_cgid(q, bio));
-+	} else if (q->blk_trace_ext) {
-+		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
-+				    bio->bi_iter.bi_size, bio_op(bio),
-+				    bio->bi_opf,what, error, 0, NULL,
-+				    blk_trace_bio_get_cgid(q, bio),
-+				    bio_prio(bio));
-+	}
- 	rcu_read_unlock();
- }
+ 		t = t[t.rfind('/')+1:]
+ 		if plot_cmd = None: plot_cmd = "splot '%s'" % t
+ 		else:                plot_cmd = "%s,'%s'" % (plot_cmd, t)
  
+-	fo = open('%s/plot.cmds' % tmpdir, 'w')
+-	print(cmds, file=fo)
+-	if len(bnos) > 10 or keys_below: print('set key below', file=fo)
+-	print(plot_cmd, file=fo)
+-	fo.close()
++	with open('%s/plot.cmds' % tmpdir, 'w') as fo:
++		print(cmds, file=fo)
++		if len(bnos) > 10 or keys_below: print('set key below', file=fo)
++		print(plot_cmd, file=fo)
+ 
+ 	pid = os.fork()
+ 	if pid = 0:
 -- 
-2.22.0
+2.20.1
