@@ -1,40 +1,50 @@
 From: Vincent Legoll <vincent.legoll@gmail.com>
-Date: Fri, 20 Mar 2020 21:44:53 +0000
-Subject: [PATCH 04/10] btt_plot.py: Fix pylint: wrong-import-order
-Message-Id: <20200320214459.7760-5-vincent.legoll@gmail.com>
+Date: Fri, 20 Mar 2020 21:44:54 +0000
+Subject: [PATCH 05/10] btt_plot.py: Fix pylint: len-as-condition
+Message-Id: <20200320214459.7760-6-vincent.legoll@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-C0411: standard import "import getopt, glob, os, sys" should be placed
-before "import six"
+Do not use `len(SEQUENCE)` to determine if a sequence is empty
 
 Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
 ---
- btt/btt_plot.py | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ btt/btt_plot.py | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/btt/btt_plot.py b/btt/btt_plot.py
-index 9c6f207..b135206 100755
+index b135206..d6d27aa 100755
 --- a/btt/btt_plot.py
 +++ b/btt/btt_plot.py
-@@ -57,6 +57,7 @@ Arguments:
+@@ -349,7 +349,7 @@ def generate_output(type, db):
+ 			legends.append(get_base(file))
+ 		idx += 1
  
- from __future__ import absolute_import
- from __future__ import print_function
-+import getopt, glob, os, sys
- import six
- from six.moves import range
- __author__ = 'Alan D. Brunelle <alan.brunelle@hp.com>'
-@@ -65,7 +66,6 @@ __author__ = 'Alan D. Brunelle <alan.brunelle@hp.com>'
+-	if add_legend and len(legends) > 0:
++	if add_legend and legends:
+ 		gen_legends(ax, legends)
+ 	plt.savefig(ofile)
  
- import matplotlib
- matplotlib.use('Agg')
--import getopt, glob, os, sys
- import matplotlib.pyplot as plt
+@@ -450,7 +450,7 @@ if __name__ = '__main__':
+ 		output_file = title_str = type = None
+ 		for t in types:
+ 			files = get_files(t)
+-			if len(files) = 0:
++			if files = 0:
+ 				continue
+ 			elif t = 'bnos':
+ 				do_bnos(files)
+@@ -460,7 +460,7 @@ if __name__ = '__main__':
+ 				generate_output(t, get_data(files))
+ 				continue
  
- plot_size	= [10.9, 8.4]	# inches...
+-	elif len(files) < 1:
++	elif not files:
+ 		fatal('Need data files to process')
+ 	else:
+ 		generate_output(type, get_data(files))
 -- 
 2.20.1
