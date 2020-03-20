@@ -1,48 +1,70 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:29:59 +0000
-Subject: [RFC PATCH 16/39] blktrace: update blk_add_trace_bio_complete()
-Message-Id: <20200323163022.30688-17-chaitanya.kulkarni@wdc.com>
+From: Vincent Legoll <vincent.legoll@gmail.com>
+Date: Fri, 20 Mar 2020 21:44:55 +0000
+Subject: [PATCH 06/10] btt_plot.py: Fix pylint: singleton-comparison
+Message-Id: <20200320214459.7760-7-vincent.legoll@gmail.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- kernel/trace/blktrace.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+Comparison to None should be 'expr is None'
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index c9f04cfdfa84..2edd7aa53e35 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1276,7 +1276,25 @@ static void blk_add_trace_bio_complete(void *ignore,
- 				       struct request_queue *q, struct bio *bio,
- 				       int error)
- {
--	blk_add_trace_bio(q, bio, BLK_TA_COMPLETE, error);
-+	u64 ta = 0;
-+	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
-+
-+	rcu_read_lock();
-+	bt = rcu_dereference(q->blk_trace);
-+	bte = rcu_dereference(q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte) ) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	if (bt) {
-+		ta = BLK_TA_COMPLETE;
-+	} else if (bte) {
-+		ta = BLK_TA_COMPLETE_EXT;
-+	}
-+	rcu_read_unlock();
-+	blk_add_trace_bio(q, bio, ta, error);
- }
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+---
+ btt/btt_plot.py | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/btt/btt_plot.py b/btt/btt_plot.py
+index d6d27aa..653ace7 100755
+--- a/btt/btt_plot.py
++++ b/btt/btt_plot.py
+@@ -113,8 +113,8 @@ def get_data(files):
+ 		"""Returns new min, max, and float value for those passed in"""
  
- static void blk_add_trace_bio_backmerge(void *ignore,
+ 		v = float(v)
+-		if mn = None or v < mn: mn = v
+-		if mx = None or v > mx: mx = v
++		if mn is None or v < mn: mn = v
++		if mx is None or v > mx: mx = v
+ 		return mn, mx, v
+ 
+ 	#--------------------------------------------------------------
+@@ -235,7 +235,7 @@ def parse_args(args):
+ 		elif o in ('-v', '--verbose'):
+ 			verbose = True
+ 
+-	if type = None and not generate_all:
++	if type is None and not generate_all:
+ 		fatal('Need type of data files to process - (-t <type>)')
+ 
+ 	return args
+@@ -244,7 +244,7 @@ def parse_args(args):
+ def gen_title(fig, type, title_str):
+ 	"""Sets the title for the figure based upon the type /or/ user title"""
+ 
+-	if title_str != None:
++	if title_str is not None:
+ 		pass
+ 	elif type = 'aqd':
+ 		title_str = 'Average Queue Depth'
+@@ -309,7 +309,7 @@ def generate_output(type, db):
+ 	#----------------------------------------------------------------------
+ 	global add_legend, output_file, title_str, verbose
+ 
+-	if output_file != None:
++	if output_file is not None:
+ 		ofile = output_file
+ 	else:
+ 		ofile = '%s.png' % type
+@@ -340,7 +340,7 @@ def generate_output(type, db):
+ 		if type = 'bnos':
+ 			ax.plot(dat['x'], dat['y'], color(idx, 'marker'),
+ 				markersize=1)
+-		elif dat['ax'] = None:
++		elif dat['ax'] is None:
+ 			continue	# Don't add legend
+ 		else:
+ 			ax.plot(dat['ax'], dat['ay'], color(idx, 'line'),
 -- 
-2.22.0
+2.20.1
