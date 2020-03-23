@@ -1,33 +1,109 @@
-From: Vincent Legoll <vincent.legoll@gmail.com>
-Date: Fri, 20 Mar 2020 21:44:50 +0000
-Subject: [PATCH 01/10] btt_plot.py: Use sum() instead of open-coding it to compute list average
-Message-Id: <20200320214459.7760-2-vincent.legoll@gmail.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:30:18 +0000
+Subject: [RFC PATCH 35/39] blktrace: add blkext tracer
+Message-Id: <20200323163022.30688-36-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- btt/btt_plot.py | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ kernel/trace/blktrace.c | 47 ++++++++++++++++++++++++++++++++++++++---
+ kernel/trace/trace.h    |  1 +
+ 2 files changed, 45 insertions(+), 3 deletions(-)
 
-diff --git a/btt/btt_plot.py b/btt/btt_plot.py
-index 76fcca8..9c6f207 100755
---- a/btt/btt_plot.py
-+++ b/btt/btt_plot.py
-@@ -125,10 +125,7 @@ def get_data(files):
- 		def _avg(vals):
- 			"""Computes average for array of values passed"""
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 26f11c0c66cb..bc9e85985469 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -2544,18 +2544,42 @@ static struct tracer blk_tracer __read_mostly = {
+ 	.set_flag	= blk_tracer_set_flag,
+ };
  
--			total = 0.0
--			for val in vals:
--				total += val
--			return total / len(vals)
-+			return sum(vals) / len(vals)
++static struct tracer blk_tracer_ext __read_mostly = {
++	.name		= "blkext",
++	.init		= blk_tracer_init,
++	.reset		= blk_tracer_reset,
++	.start		= blk_tracer_start,
++	.stop		= blk_tracer_stop,
++	.print_header	= blk_tracer_print_header,
++	.print_line	= blk_tracer_print_line_ext,
++	.flags		= &blk_tracer_flags,
++	.set_flag	= blk_tracer_set_flag,
++};
++
+ static struct trace_event_functions trace_blk_event_funcs = {
+ 	.trace		= blk_trace_event_print,
+ 	.binary		= blk_trace_event_print_binary,
+ };
  
- 		#------------------------------------------------------
- 		if len(xs) < 1000:
++static struct trace_event_functions trace_blk_event_funcs_ext = {
++	.trace		= blk_trace_event_print_ext,
++	.binary		= blk_trace_event_print_binary_ext,
++};
++
+ static struct trace_event trace_blk_event = {
+ 	.type		= TRACE_BLK,
+ 	.funcs		= &trace_blk_event_funcs,
+ };
+ 
++static struct trace_event trace_blk_event_ext = {
++	.type		= TRACE_BLK_EXT,
++	.funcs		= &trace_blk_event_funcs_ext,
++};
++
+ static int __init init_blk_tracer(void)
+ {
++	int ret = 0;
++
+ 	if (!register_trace_event(&trace_blk_event)) {
+ 		pr_warn("Warning: could not register block events\n");
+ 		return 1;
+@@ -2563,11 +2587,28 @@ static int __init init_blk_tracer(void)
+ 
+ 	if (register_tracer(&blk_tracer) != 0) {
+ 		pr_warn("Warning: could not register the block tracer\n");
+-		unregister_trace_event(&trace_blk_event);
+-		return 1;
++		goto unregister_trace_event;
+ 	}
+ 
+-	return 0;
++	if (!register_trace_event(&trace_blk_event_ext)) {
++		pr_warn("Warning: could not register block events\n");
++		/* unregister blk_tracer */
++		goto unregister_trace_event;
++	}
++
++	if (register_tracer(&blk_tracer_ext) != 0) {
++		pr_warn("Warning: could not register the block tracer\n");
++		goto unregister_trace_event_ext;
++	}
++out:
++	return ret;
++
++unregister_trace_event_ext:
++	unregister_trace_event(&trace_blk_event_ext);
++unregister_trace_event:
++	unregister_trace_event(&trace_blk_event);
++	ret = 1;
++	goto out;
+ }
+ 
+ device_initcall(init_blk_tracer);
+diff --git a/kernel/trace/trace.h b/kernel/trace/trace.h
+index 99372dd7d168..fd2021f2f13a 100644
+--- a/kernel/trace/trace.h
++++ b/kernel/trace/trace.h
+@@ -41,6 +41,7 @@ enum trace_type {
+ 	TRACE_GRAPH_ENT,
+ 	TRACE_USER_STACK,
+ 	TRACE_BLK,
++	TRACE_BLK_EXT,
+ 	TRACE_BPUTS,
+ 	TRACE_HWLAT,
+ 	TRACE_RAW_DATA,
 -- 
-2.20.1
+2.22.0
