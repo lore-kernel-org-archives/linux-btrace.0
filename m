@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:30:17 +0000
-Subject: [RFC PATCH 34/39] blktrace: add trace print helpers
-Message-Id: <20200323163022.30688-35-chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:30:04 +0000
+Subject: [RFC PATCH 21/39] blktrace: update blk_add_trace_sleeprq()
+Message-Id: <20200323163022.30688-22-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,43 +10,54 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ kernel/trace/blktrace.c | 30 +++++++++++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 9458f5b76426..26f11c0c66cb 100644
+index 9fd0e5758d3d..a95ed09990e1 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2494,6 +2494,15 @@ blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
- 	return trace_handle_return(&iter->seq);
- }
- 
-+static enum print_line_t
-+blk_trace_event_print_binary_ext(struct trace_iterator *iter, int flags,
-+			     struct trace_event *event)
-+{
-+	blk_trace_synthesize_old_trace_ext(iter);
-+
-+	return trace_handle_return(&iter->seq);
-+}
-+
- static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
+@@ -1416,16 +1416,36 @@ static void blk_add_trace_sleeprq(void *ignore,
+ 				  struct request_queue *q,
+ 				  struct bio *bio, int rw)
  {
- 	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
-@@ -2502,6 +2511,14 @@ static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
- 	return print_one_line(iter, true);
- }
+-	if (bio)
+-		blk_add_trace_bio(q, bio, BLK_TA_SLEEPRQ, 0);
+-	else {
++	u64 ta = 0;
++	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
++
++	rcu_read_lock();
++	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte)) {
++		rcu_read_unlock();
++		return;
++	}
++	if (bt) {
++		ta = BLK_TA_SLEEPRQ;
++	} else if (bte) {
++		ta = BLK_TA_SLEEPRQ_EXT;
++	}
++	rcu_read_unlock();
++	if (bio) {
++		blk_add_trace_bio(q, bio, ta, 0);
++	} else {
+ 		struct blk_trace *bt;
  
-+static enum print_line_t blk_tracer_print_line_ext(struct trace_iterator *iter)
-+{
-+	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
-+		return TRACE_TYPE_UNHANDLED;
-+
-+	return print_one_line_ext(iter, true);
-+}
-+
- static int
- blk_tracer_set_flag(struct trace_array *tr, u32 old_flags, u32 bit, int set)
- {
+ 		rcu_read_lock();
+ 		bt = rcu_dereference(q->blk_trace);
++		bte = rcu_dereference(q->blk_trace_ext);
+ 		if (bt)
+-			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
+-					0, 0, NULL, 0);
++			__blk_add_trace(bt, 0, 0, rw, 0, ta, 0, 0, NULL, 0);
++		else if (bte)
++			__blk_add_trace_ext(bte, 0, 0, rw, 0, ta, 0, 0, NULL,
++					0, 0);
+ 		rcu_read_unlock();
+ 	}
+ }
 -- 
 2.22.0
