@@ -1,58 +1,49 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:30:09 +0000
-Subject: [RFC PATCH 26/39] blktrace: update blk_add_trace_rq_remap()
-Message-Id: <20200323163022.30688-27-chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:29:45 +0000
+Subject: [RFC PATCH 02/39] blktrace_api: add new trace definition
+Message-Id: <20200323163022.30688-3-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+This patch adds new structure similar to struct blk_trace to support
+block trace extensions.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+ include/linux/blktrace_api.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 687f8e1025a0..940783885dab 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1601,11 +1601,13 @@ static void blk_add_trace_rq_remap(void *ignore,
- 				   sector_t from)
- {
- 	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
- 	struct blk_io_trace_remap r;
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index 3b6ff5902edc..bc154ff2522a 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -29,6 +29,24 @@ struct blk_trace {
+ 	atomic_t dropped;
+ };
  
- 	rcu_read_lock();
- 	bt = rcu_dereference(q->blk_trace);
--	if (likely(!bt)) {
-+	bte = rcu_dereference(q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte)) {
- 		rcu_read_unlock();
- 		return;
- 	}
-@@ -1614,9 +1616,18 @@ static void blk_add_trace_rq_remap(void *ignore,
- 	r.device_to   = cpu_to_be32(disk_devt(rq->rq_disk));
- 	r.sector_from = cpu_to_be64(from);
++struct blk_trace_ext {
++	int trace_state;
++	struct rchan *rchan;
++	unsigned long __percpu *sequence;
++	unsigned char __percpu *msg_data;
++	u64 act_mask;
++	u32 prio_mask;
++	u64 start_lba;
++	u64 end_lba;
++	u32 pid;
++	u32 dev;
++	struct dentry *dir;
++	struct dentry *dropped_file;
++	struct dentry *msg_file;
++	struct list_head running_ext_list;
++	atomic_t dropped;
++};
++
+ struct blkcg;
  
--	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
--			rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
--			sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
-+	if (bt) {
-+		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
-+				rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
-+				sizeof(r), &r,
-+				blk_trace_request_get_cgid(q, rq));
-+	} else if (bte) {
-+		__blk_add_trace_ext(bte, blk_rq_pos(rq), blk_rq_bytes(rq),
-+				    rq_data_dir(rq), 0, BLK_TA_REMAP_EXT, 0,
-+				    sizeof(r), &r,
-+				    blk_trace_request_get_cgid(q, rq) , 0);
-+	
-+	}
- 	rcu_read_unlock();
- }
- 
+ extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
 -- 
 2.22.0
