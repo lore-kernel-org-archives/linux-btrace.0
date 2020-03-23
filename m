@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:30:18 +0000
-Subject: [RFC PATCH 35/39] blktrace: add blkext tracer
-Message-Id: <20200323163022.30688-36-chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:30:12 +0000
+Subject: [RFC PATCH 29/39] blktrace: add a new formatting routine
+Message-Id: <20200323163022.30688-30-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,100 +10,59 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 47 ++++++++++++++++++++++++++++++++++++++---
- kernel/trace/trace.h    |  1 +
- 2 files changed, 45 insertions(+), 3 deletions(-)
+ kernel/trace/blktrace.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 26f11c0c66cb..bc9e85985469 100644
+index 26f832bb2d6d..dc48a359533c 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2544,18 +2544,42 @@ static struct tracer blk_tracer __read_mostly = {
- 	.set_flag	= blk_tracer_set_flag,
- };
- 
-+static struct tracer blk_tracer_ext __read_mostly = {
-+	.name		= "blkext",
-+	.init		= blk_tracer_init,
-+	.reset		= blk_tracer_reset,
-+	.start		= blk_tracer_start,
-+	.stop		= blk_tracer_stop,
-+	.print_header	= blk_tracer_print_header,
-+	.print_line	= blk_tracer_print_line_ext,
-+	.flags		= &blk_tracer_flags,
-+	.set_flag	= blk_tracer_set_flag,
-+};
-+
- static struct trace_event_functions trace_blk_event_funcs = {
- 	.trace		= blk_trace_event_print,
- 	.binary		= blk_trace_event_print_binary,
- };
- 
-+static struct trace_event_functions trace_blk_event_funcs_ext = {
-+	.trace		= blk_trace_event_print_ext,
-+	.binary		= blk_trace_event_print_binary_ext,
-+};
-+
- static struct trace_event trace_blk_event = {
- 	.type		= TRACE_BLK,
- 	.funcs		= &trace_blk_event_funcs,
- };
- 
-+static struct trace_event trace_blk_event_ext = {
-+	.type		= TRACE_BLK_EXT,
-+	.funcs		= &trace_blk_event_funcs_ext,
-+};
-+
- static int __init init_blk_tracer(void)
- {
-+	int ret = 0;
-+
- 	if (!register_trace_event(&trace_blk_event)) {
- 		pr_warn("Warning: could not register block events\n");
- 		return 1;
-@@ -2563,11 +2587,28 @@ static int __init init_blk_tracer(void)
- 
- 	if (register_tracer(&blk_tracer) != 0) {
- 		pr_warn("Warning: could not register the block tracer\n");
--		unregister_trace_event(&trace_blk_event);
--		return 1;
-+		goto unregister_trace_event;
- 	}
- 
--	return 0;
-+	if (!register_trace_event(&trace_blk_event_ext)) {
-+		pr_warn("Warning: could not register block events\n");
-+		/* unregister blk_tracer */
-+		goto unregister_trace_event;
-+	}
-+
-+	if (register_tracer(&blk_tracer_ext) != 0) {
-+		pr_warn("Warning: could not register the block tracer\n");
-+		goto unregister_trace_event_ext;
-+	}
-+out:
-+	return ret;
-+
-+unregister_trace_event_ext:
-+	unregister_trace_event(&trace_blk_event_ext);
-+unregister_trace_event:
-+	unregister_trace_event(&trace_blk_event);
-+	ret = 1;
-+	goto out;
+@@ -1769,6 +1769,46 @@ static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
+ 	rwbs[i] = '\0';
  }
  
- device_initcall(init_blk_tracer);
-diff --git a/kernel/trace/trace.h b/kernel/trace/trace.h
-index 99372dd7d168..fd2021f2f13a 100644
---- a/kernel/trace/trace.h
-+++ b/kernel/trace/trace.h
-@@ -41,6 +41,7 @@ enum trace_type {
- 	TRACE_GRAPH_ENT,
- 	TRACE_USER_STACK,
- 	TRACE_BLK,
-+	TRACE_BLK_EXT,
- 	TRACE_BPUTS,
- 	TRACE_HWLAT,
- 	TRACE_RAW_DATA,
++static void fill_rwbs_ext(char *rwbs, const struct blk_io_trace_ext *t)
++{
++	int i = 0;
++	int tc = t->action >> BLK_TC_SHIFT_EXT;
++
++	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
++		rwbs[i++] = 'N';
++		goto out;
++	}
++
++	if (tc & BLK_TC_FLUSH)
++		rwbs[i++] = 'F';
++
++	if (tc & BLK_TC_DISCARD)
++		rwbs[i++] = 'D';
++	else if ((tc & BLK_TC_WRITE_ZEROES)) {
++		rwbs[i++] = 'W';
++		rwbs[i++] = 'Z';
++	} else if ((tc & BLK_TC_ZONE_RESET)) {
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'R';
++	} else if (tc & BLK_TC_WRITE)
++		rwbs[i++] = 'W';
++	else if (t->bytes)
++		rwbs[i++] = 'R';
++	else
++		rwbs[i++] = 'N';
++
++	if (tc & BLK_TC_FUA)
++		rwbs[i++] = 'F';
++	if (tc & BLK_TC_AHEAD)
++		rwbs[i++] = 'A';
++	if (tc & BLK_TC_SYNC)
++		rwbs[i++] = 'S';
++	if (tc & BLK_TC_META)
++		rwbs[i++] = 'M';
++out:
++	rwbs[i] = '\0';
++}
++
+ static inline
+ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
+ {
 -- 
 2.22.0
