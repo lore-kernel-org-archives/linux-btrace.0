@@ -1,39 +1,48 @@
-From: Vincent Legoll <vincent.legoll@gmail.com>
-Date: Fri, 20 Mar 2020 21:44:56 +0000
-Subject: [PATCH 07/10] btt_plot.py: Fix pylint: no-else-return
-Message-Id: <20200320214459.7760-8-vincent.legoll@gmail.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:29:58 +0000
+Subject: [RFC PATCH 15/39] blktrace: update blk_add_trace_bio_bounce()
+Message-Id: <20200323163022.30688-16-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Unnecessary "elif" after "return"
-
-Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- btt/btt_plot.py | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ kernel/trace/blktrace.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/btt/btt_plot.py b/btt/btt_plot.py
-index 653ace7..b67caaa 100755
---- a/btt/btt_plot.py
-+++ b/btt/btt_plot.py
-@@ -396,12 +396,11 @@ def do_live(files):
- 	def live_sort(a, b):
- 		if a[0] = 'sys' and b[0] = 'sys':
- 			return 0
--		elif a[0] = 'sys' or a[2][0] < b[2][0]:
-+		if a[0] = 'sys' or a[2][0] < b[2][0]:
- 			return -1
--		elif b[0] = 'sys' or a[2][0] > b[2][0]:
-+		if b[0] = 'sys' or a[2][0] > b[2][0]:
- 			return  1
--		else:
--			return  0
-+		return  0
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index c4416ee7593a..c9f04cfdfa84 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1251,7 +1251,25 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+ static void blk_add_trace_bio_bounce(void *ignore,
+ 				     struct request_queue *q, struct bio *bio)
+ {
+-	blk_add_trace_bio(q, bio, BLK_TA_BOUNCE, 0);
++	u64 ta = 0;
++	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
++
++	rcu_read_lock();
++	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte) ) {
++		rcu_read_unlock();
++		return;
++	}
++
++	if (bt) {
++		ta = BLK_TA_BOUNCE;
++	} else if (bte) {
++		ta = BLK_TA_BOUNCE_EXT;
++	}
++	rcu_read_unlock();
++	blk_add_trace_bio(q, bio, ta, 0);
+ }
  
- 	#----------------------------------------------------------------------
- 	def turn_off_ticks(ax):
+ static void blk_add_trace_bio_complete(void *ignore,
 -- 
-2.20.1
+2.22.0
