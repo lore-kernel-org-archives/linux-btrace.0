@@ -1,49 +1,42 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:29:45 +0000
-Subject: [RFC PATCH 02/39] blktrace_api: add new trace definition
-Message-Id: <20200323163022.30688-3-chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:30:05 +0000
+Subject: [RFC PATCH 22/39] blktrace: update blk_add_trace_plug()
+Message-Id: <20200323163022.30688-23-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This patch adds new structure similar to struct blk_trace to support
-block trace extensions.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- include/linux/blktrace_api.h | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ kernel/trace/blktrace.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
-index 3b6ff5902edc..bc154ff2522a 100644
---- a/include/linux/blktrace_api.h
-+++ b/include/linux/blktrace_api.h
-@@ -29,6 +29,24 @@ struct blk_trace {
- 	atomic_t dropped;
- };
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index a95ed09990e1..1007082d28f2 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1453,11 +1453,20 @@ static void blk_add_trace_sleeprq(void *ignore,
+ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
+ {
+ 	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
  
-+struct blk_trace_ext {
-+	int trace_state;
-+	struct rchan *rchan;
-+	unsigned long __percpu *sequence;
-+	unsigned char __percpu *msg_data;
-+	u64 act_mask;
-+	u32 prio_mask;
-+	u64 start_lba;
-+	u64 end_lba;
-+	u32 pid;
-+	u32 dev;
-+	struct dentry *dir;
-+	struct dentry *dropped_file;
-+	struct dentry *msg_file;
-+	struct list_head running_ext_list;
-+	atomic_t dropped;
-+};
-+
- struct blkcg;
+ 	rcu_read_lock();
+ 	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte)) {
++		rcu_read_unlock();
++		return;
++	}
+ 	if (bt)
+ 		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, 0);
++	else if (bte)
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, BLK_TA_PLUG_EXT, 0, 0,
++				    NULL, 0, 0);
+ 	rcu_read_unlock();
+ }
  
- extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
 -- 
 2.22.0
