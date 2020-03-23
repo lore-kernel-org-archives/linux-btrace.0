@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:30:15 +0000
-Subject: [RFC PATCH 32/39] blktrace: add trace event print helper
-Message-Id: <20200323163022.30688-33-chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:30:11 +0000
+Subject: [RFC PATCH 28/39] blktrace: add trace entry & pdu helpers
+Message-Id: <20200323163022.30688-29-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,64 +10,138 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ kernel/trace/blktrace.c | 66 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 05894c23f781..92d7a6e46f86 100644
+index d5d3f859d448..26f832bb2d6d 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2410,12 +2410,51 @@ static enum print_line_t print_one_line(struct trace_iterator *iter,
- 	return trace_handle_return(s);
+@@ -1775,52 +1775,107 @@ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
+ 	return (const struct blk_io_trace *)ent;
  }
  
-+static enum print_line_t print_one_line_ext(struct trace_iterator *iter,
-+					bool classic)
++static inline
++const struct blk_io_trace_ext *te_blk_io_trace_ext(const struct trace_entry *ent)
 +{
-+	struct trace_array *tr = iter->tr;
-+	struct trace_seq *s = &iter->seq;
-+	const struct blk_io_trace_ext *t;
-+	u32 what;
-+	bool long_act;
-+	blk_log_action_t *log_action;
-+	bool has_cg;
-+
-+	t	   = te_blk_io_trace_ext(iter->ent);
-+	what	   = (t->action & ((1ULL << BLK_TC_SHIFT_EXT) - 1)) & ~__BLK_TA_CGROUP;
-+	long_act   = !!(tr->trace_flags & TRACE_ITER_VERBOSE);
-+	log_action = classic ? &blk_log_action_classic_ext : &blk_log_action_ext;
-+	has_cg	   = t->action & __BLK_TA_CGROUP;
-+
-+	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
-+		log_action(iter, long_act ? "message" : "m", has_cg);
-+		blk_log_msg_ext(s, iter->ent, has_cg);
-+		return trace_handle_return(s);
-+	}
-+
-+	if (unlikely(what = 0 || what >= ARRAY_SIZE(what2act_ext)))
-+		trace_seq_printf(s, "Unknown action %x\n", what);
-+	else {
-+		log_action(iter, what2act_ext[what].act[long_act], has_cg);
-+		what2act_ext[what].print(s, iter->ent, has_cg);
-+	}
-+
-+	return trace_handle_return(s);
++	return (const struct blk_io_trace_ext *)ent;
 +}
 +
- static enum print_line_t blk_trace_event_print(struct trace_iterator *iter,
- 					       int flags, struct trace_event *event)
+ static inline const void *pdu_start(const struct trace_entry *ent, bool has_cg)
  {
- 	return print_one_line(iter, false);
+ 	return (void *)(te_blk_io_trace(ent) + 1) + (has_cg ? sizeof(u64) : 0);
  }
  
-+static enum print_line_t blk_trace_event_print_ext(struct trace_iterator *iter,
-+					       int flags, struct trace_event *event)
++static inline const void *pdu_start_ext(const struct trace_entry *ent, bool has_cg)
 +{
-+	return print_one_line_ext(iter, false);
++	return (void *)(te_blk_io_trace_ext(ent) + 1) +
++		(has_cg ? sizeof(u64) : 0);
++
 +}
 +
- static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
+ static inline u64 t_cgid(const struct trace_entry *ent)
  {
- 	struct trace_seq *s = &iter->seq;
+ 	return *(u64 *)(te_blk_io_trace(ent) + 1);
+ }
+ 
++static inline const void *cgid_start_ext(const struct trace_entry *ent)
++{
++	return (void *)(te_blk_io_trace_ext(ent) + 1);
++}
++
+ static inline int pdu_real_len(const struct trace_entry *ent, bool has_cg)
+ {
+ 	return te_blk_io_trace(ent)->pdu_len - (has_cg ? sizeof(u64) : 0);
+ }
+ 
++static inline int pdu_real_len_ext(const struct trace_entry *ent, bool has_cg)
++{
++	return te_blk_io_trace_ext(ent)->pdu_len -
++			(has_cg ? sizeof(u64) : 0);
++}
++
+ static inline u32 t_action(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->action;
+ }
+ 
++static inline u64 t_action_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->action;
++}
++
+ static inline u32 t_bytes(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->bytes;
+ }
+ 
++static inline u32 t_bytes_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->bytes;
++}
++
+ static inline u32 t_sec(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->bytes >> 9;
+ }
+ 
++static inline u32 t_sec_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->bytes >> 9;
++}
++
+ static inline unsigned long long t_sector(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->sector;
+ }
+ 
++static inline unsigned long long t_sector_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->sector;
++}
++
+ static inline __u16 t_error(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->error;
+ }
+ 
++static inline __u16 t_error_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->error;
++}
++
+ static __u64 get_pdu_int(const struct trace_entry *ent, bool has_cg)
+ {
+ 	const __u64 *val = pdu_start(ent, has_cg);
+ 	return be64_to_cpu(*val);
+ }
+ 
++static __u64 get_pdu_int_ext(const struct trace_entry *ent, bool has_cg)
++{
++	const __u64 *val = pdu_start_ext(ent, has_cg);
++	return be64_to_cpu(*val);
++}
++
+ static void get_pdu_remap(const struct trace_entry *ent,
+ 			  struct blk_io_trace_remap *r, bool has_cg)
+ {
+@@ -1832,6 +1887,17 @@ static void get_pdu_remap(const struct trace_entry *ent,
+ 	r->sector_from = be64_to_cpu(sector_from);
+ }
+ 
++static void get_pdu_remap_ext(const struct trace_entry *ent,
++			  struct blk_io_trace_remap *r, bool has_cg)
++{
++	const struct blk_io_trace_remap *__r = pdu_start_ext(ent, has_cg);
++	__u64 sector_from = __r->sector_from;
++
++	r->device_from = be32_to_cpu(__r->device_from);
++	r->device_to   = be32_to_cpu(__r->device_to);
++	r->sector_from = be64_to_cpu(sector_from);
++}
++
+ typedef void (blk_log_action_t) (struct trace_iterator *iter, const char *act,
+ 	bool has_cg);
+ 
 -- 
 2.22.0
