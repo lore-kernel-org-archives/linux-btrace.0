@@ -1,32 +1,58 @@
-From: Vincent Legoll <vincent.legoll@gmail.com>
-Date: Fri, 20 Mar 2020 21:44:58 +0000
-Subject: [PATCH 09/10] bno_plot.py: Fix pylint: singleton-comparison
-Message-Id: <20200320214459.7760-10-vincent.legoll@gmail.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:29:57 +0000
+Subject: [RFC PATCH 14/39] blktrace: update blk_add_trace_bio()
+Message-Id: <20200323163022.30688-15-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Comparison to None should be 'expr is None'
-
-Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- btt/bno_plot.py | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/btt/bno_plot.py b/btt/bno_plot.py
-index be64da0..3aa4e19 100644
---- a/btt/bno_plot.py
-+++ b/btt/bno_plot.py
-@@ -105,7 +105,7 @@ if __name__ = '__main__':
- 					print(fld[0], fld[1], int(fld[2])-int(fld[1]), file=fo)
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 8de5329562de..c4416ee7593a 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1220,20 +1220,31 @@ static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
+  *
+  **/
+ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+-			      u32 what, int error)
++			      u64 what, int error)
+ {
+ 	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
  
- 		t = t[t.rfind('/')+1:]
--		if plot_cmd = None: plot_cmd = "splot '%s'" % t
-+		if plot_cmd is None: plot_cmd = "splot '%s'" % t
- 		else:                plot_cmd = "%s,'%s'" % (plot_cmd, t)
+ 	rcu_read_lock();
+ 	bt = rcu_dereference(q->blk_trace);
+-	if (likely(!bt)) {
++	bte = rcu_dereference(q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte) ) {
+ 		rcu_read_unlock();
+ 		return;
+ 	}
  
- 	with open('%s/plot.cmds' % tmpdir, 'w') as fo:
+-	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio_op(bio), bio->bi_opf, what, error, 0, NULL,
+-			blk_trace_bio_get_cgid(q, bio));
++	if (q->blk_trace) {
++		__blk_add_trace(bt, bio->bi_iter.bi_sector,
++				bio->bi_iter.bi_size, bio_op(bio),
++				bio->bi_opf,(u32)what, error, 0, NULL,
++				blk_trace_bio_get_cgid(q, bio));
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
++				    bio->bi_iter.bi_size, bio_op(bio),
++				    bio->bi_opf,what, error, 0, NULL,
++				    blk_trace_bio_get_cgid(q, bio),
++				    bio_prio(bio));
++	}
+ 	rcu_read_unlock();
+ }
+ 
 -- 
-2.20.1
+2.22.0
