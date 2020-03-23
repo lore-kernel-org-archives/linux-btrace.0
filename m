@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Mon, 23 Mar 2020 16:30:14 +0000
-Subject: [RFC PATCH 31/39] blktrace: link blk_log_xxx() to trace action
-Message-Id: <20200323163022.30688-32-chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:29:50 +0000
+Subject: [RFC PATCH 07/39] blktrace: add act and prio check helpers
+Message-Id: <20200323163022.30688-8-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,41 +10,56 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ kernel/trace/blktrace.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 07a12582d17d..05894c23f781 100644
+index 2b2e37303926..6029fbd02fb3 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2355,6 +2355,28 @@ static const struct {
- 	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap },
- };
+@@ -308,6 +308,43 @@ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
+ 	return 0;
+ }
  
-+static const struct {
-+	const char *act[2];
-+	void	   (*print)(struct trace_seq *s, const struct trace_entry *ent,
-+			    bool has_cg);
-+} what2act_ext[] = {
-+	[__BLK_TA_QUEUE]	= {{  "Q", "queue" },	   blk_log_generic_ext },
-+	[__BLK_TA_BACKMERGE]	= {{  "M", "backmerge" },  blk_log_generic_ext },
-+	[__BLK_TA_FRONTMERGE]	= {{  "F", "frontmerge" }, blk_log_generic_ext },
-+	[__BLK_TA_GETRQ]	= {{  "G", "getrq" },	   blk_log_generic_ext },
-+	[__BLK_TA_SLEEPRQ]	= {{  "S", "sleeprq" },	   blk_log_generic_ext },
-+	[__BLK_TA_REQUEUE]	= {{  "R", "requeue" },	   blk_log_with_error_ext },
-+	[__BLK_TA_ISSUE]	= {{  "D", "issue" },	   blk_log_generic_ext },
-+	[__BLK_TA_COMPLETE]	= {{  "C", "complete" },   blk_log_with_error_ext },
-+	[__BLK_TA_PLUG]		= {{  "P", "plug" },	   blk_log_plug },
-+	[__BLK_TA_UNPLUG_IO]	= {{  "U", "unplug_io" },  blk_log_unplug_ext },
-+	[__BLK_TA_UNPLUG_TIMER]	= {{ "UT", "unplug_timer" }, blk_log_unplug_ext},
-+	[__BLK_TA_INSERT]	= {{  "I", "insert" },	   blk_log_generic_ext},
-+	[__BLK_TA_SPLIT]	= {{  "X", "split" },	   blk_log_split_ext },
-+	[__BLK_TA_BOUNCE]	= {{  "B", "bounce" },	   blk_log_generic_ext },
-+	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap_ext },
-+};
++static inline bool prio_log_check(struct blk_trace_ext *bt, u32 ioprio)
++{
++	bool ret;
 +
- static enum print_line_t print_one_line(struct trace_iterator *iter,
- 					bool classic)
- {
++	switch (IOPRIO_PRIO_CLASS(ioprio)) {
++	case IOPRIO_CLASS_NONE:
++		ret = (bt->prio_mask & 0x01) ? true : false;
++		break;
++	case IOPRIO_CLASS_RT:
++		ret = (bt->prio_mask & 0x02) ? true : false;
++		break;
++	case IOPRIO_CLASS_BE:
++		ret = (bt->prio_mask & 0x04) ? true : false;
++		break;
++	case IOPRIO_CLASS_IDLE:
++		ret = (bt->prio_mask & 0x08) ? true : false;
++		break;
++	default:
++		/*XXX: print rate limit warn here */
++		ret = false;
++	}
++	return ret;
++}
++
++static inline int act_log_check_ext(struct blk_trace_ext *bt, u64 what,
++			     sector_t sector, pid_t pid)
++{
++	if (((bt->act_mask << BLK_TC_SHIFT_EXT) & what) = 0)
++		return 1;
++	if (sector && (sector < bt->start_lba || sector > bt->end_lba))
++		return 1;
++	if (bt->pid && pid != bt->pid)
++		return 1;
++
++	return 0;
++}
++
+ /*
+  * Data direction bit lookup
+  */
 -- 
 2.22.0
