@@ -1,50 +1,73 @@
-From: Vincent Legoll <vincent.legoll@gmail.com>
-Date: Fri, 20 Mar 2020 21:44:54 +0000
-Subject: [PATCH 05/10] btt_plot.py: Fix pylint: len-as-condition
-Message-Id: <20200320214459.7760-6-vincent.legoll@gmail.com>
+From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Date: Mon, 23 Mar 2020 16:30:15 +0000
+Subject: [RFC PATCH 32/39] blktrace: add trace event print helper
+Message-Id: <20200323163022.30688-33-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Do not use `len(SEQUENCE)` to determine if a sequence is empty
-
-Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- btt/btt_plot.py | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ kernel/trace/blktrace.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-diff --git a/btt/btt_plot.py b/btt/btt_plot.py
-index b135206..d6d27aa 100755
---- a/btt/btt_plot.py
-+++ b/btt/btt_plot.py
-@@ -349,7 +349,7 @@ def generate_output(type, db):
- 			legends.append(get_base(file))
- 		idx += 1
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 05894c23f781..92d7a6e46f86 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -2410,12 +2410,51 @@ static enum print_line_t print_one_line(struct trace_iterator *iter,
+ 	return trace_handle_return(s);
+ }
  
--	if add_legend and len(legends) > 0:
-+	if add_legend and legends:
- 		gen_legends(ax, legends)
- 	plt.savefig(ofile)
++static enum print_line_t print_one_line_ext(struct trace_iterator *iter,
++					bool classic)
++{
++	struct trace_array *tr = iter->tr;
++	struct trace_seq *s = &iter->seq;
++	const struct blk_io_trace_ext *t;
++	u32 what;
++	bool long_act;
++	blk_log_action_t *log_action;
++	bool has_cg;
++
++	t	   = te_blk_io_trace_ext(iter->ent);
++	what	   = (t->action & ((1ULL << BLK_TC_SHIFT_EXT) - 1)) & ~__BLK_TA_CGROUP;
++	long_act   = !!(tr->trace_flags & TRACE_ITER_VERBOSE);
++	log_action = classic ? &blk_log_action_classic_ext : &blk_log_action_ext;
++	has_cg	   = t->action & __BLK_TA_CGROUP;
++
++	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
++		log_action(iter, long_act ? "message" : "m", has_cg);
++		blk_log_msg_ext(s, iter->ent, has_cg);
++		return trace_handle_return(s);
++	}
++
++	if (unlikely(what = 0 || what >= ARRAY_SIZE(what2act_ext)))
++		trace_seq_printf(s, "Unknown action %x\n", what);
++	else {
++		log_action(iter, what2act_ext[what].act[long_act], has_cg);
++		what2act_ext[what].print(s, iter->ent, has_cg);
++	}
++
++	return trace_handle_return(s);
++}
++
+ static enum print_line_t blk_trace_event_print(struct trace_iterator *iter,
+ 					       int flags, struct trace_event *event)
+ {
+ 	return print_one_line(iter, false);
+ }
  
-@@ -450,7 +450,7 @@ if __name__ = '__main__':
- 		output_file = title_str = type = None
- 		for t in types:
- 			files = get_files(t)
--			if len(files) = 0:
-+			if files = 0:
- 				continue
- 			elif t = 'bnos':
- 				do_bnos(files)
-@@ -460,7 +460,7 @@ if __name__ = '__main__':
- 				generate_output(t, get_data(files))
- 				continue
- 
--	elif len(files) < 1:
-+	elif not files:
- 		fatal('Need data files to process')
- 	else:
- 		generate_output(type, get_data(files))
++static enum print_line_t blk_trace_event_print_ext(struct trace_iterator *iter,
++					       int flags, struct trace_event *event)
++{
++	return print_one_line_ext(iter, false);
++}
++
+ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
+ {
+ 	struct trace_seq *s = &iter->seq;
 -- 
-2.20.1
+2.22.0
