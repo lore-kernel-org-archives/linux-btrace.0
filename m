@@ -1,30 +1,48 @@
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Tue, 07 Apr 2020 18:39:45 +0000
-Subject: Re: [PATCH 3/3] blkparse: Fix up the sector and length of split completions
-Message-Id: <CAHc6FU5SNrfyV_WCz3Hr1MwwbhN6KL8XzjGYibXtyynTcmJ4yA@mail.gmail.com>
+Date: Mon, 13 Apr 2020 19:01:50 +0000
+Subject: [PATCH v2 2/4] blkparse: Allow request tracking on non md/dm devices
+Message-Id: <20200413190153.86357-3-agruenba@redhat.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20200406140915.109022-4-agruenba@redhat.com>
-In-Reply-To: <20200406140915.109022-4-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-On Mon, Apr 6, 2020 at 4:09 PM Andreas Gruenbacher <agruenba@redhat.com> wrote:
-> When a split io completes, the sector and length of the completion refer to the
-> last split of the original request.  This makes reading the blkparse output
-> difficult, so fix up the sector and length to match the original request when
-> we can (that is, when --track-ios is enabled).
+Fix queue to completion tracking on devices other than md/dm: without this fix,
+enabling tracking with the -t option on a non-md/dm device leads to "complete
+not found" errors.
 
-I've noticed that split requests also cause the queued vs. completed
-statistics at the end of a trace to be completely off, so the same
-fix-up logic is needed there as well.
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ blkparse.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-Also, the code currently assumes that after request splitting, the
-only event that will follow is the completion of the request. I hope
-that assumption holds.
-
-Any thoughts?
-
-Thanks,
-Andreas
+diff --git a/blkparse.c b/blkparse.c
+index 0054d4f..c31a5c2 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -1027,13 +1027,6 @@ static void log_track_getrq(struct per_dev_info *pdi, struct blk_io_trace *t)
+ 	iot->allocation_time = t->time;
+ }
+ 
+-static inline int is_remapper(struct per_dev_info *pdi)
+-{
+-	int major = MAJOR(pdi->dev);
+-
+-	return (major == 253 || major == 9);
+-}
+-
+ /*
+  * for md/dm setups, the interesting cycle is Q -> C. So track queueing
+  * time here, as dispatch time
+@@ -1044,8 +1037,6 @@ static void log_track_queue(struct per_dev_info *pdi, struct blk_io_trace *t)
+ 
+ 	if (!track_ios)
+ 		return;
+-	if (!is_remapper(pdi))
+-		return;
+ 
+ 	iot = find_track(pdi, t->pid, t->sector);
+ 	iot->dispatch_time = t->time;
+-- 
+2.25.2
