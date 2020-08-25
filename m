@@ -1,33 +1,48 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 25 Aug 2020 22:09:34 +0000
-Subject: [RFC PATCH 04/39] blktrace: add a new global list
-Message-Id: <20200825221009.6457-5-chaitanya.kulkarni@wdc.com>
+Date: Tue, 25 Aug 2020 22:09:40 +0000
+Subject: [RFC PATCH 10/39] blktrace: update blk_add_trace_rq_issue()
+Message-Id: <20200825221009.6457-11-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Add a separate list to hold running extension traces.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 3 +++
- 1 file changed, 3 insertions(+)
+ kernel/trace/blktrace.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 7ba62d68885a..7857ac2b37c9 100644
+index 01db6f8a80b0..19f4c0d22e97 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -36,6 +36,9 @@ static bool blk_tracer_enabled __read_mostly;
- static LIST_HEAD(running_trace_list);
- static __cacheline_aligned_in_smp DEFINE_SPINLOCK(running_trace_lock);
- 
-+static LIST_HEAD(running_trace_ext_list);
-+static __cacheline_aligned_in_smp DEFINE_SPINLOCK(running_trace_ext_lock);
+@@ -1169,7 +1169,25 @@ static void blk_add_trace_rq_insert(void *ignore,
+ static void blk_add_trace_rq_issue(void *ignore,
+ 				   struct request_queue *q, struct request *rq)
+ {
+-	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_ISSUE,
++	u64 ta;
++	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
 +
- /* Select an alternative, minimalistic output than the original one */
- #define TRACE_BLK_OPT_CLASSIC	0x1
- #define TRACE_BLK_OPT_CGROUP	0x2
++	rcu_read_lock();
++	bt = rcu_dereference(rq->q->blk_trace);
++	bte = rcu_dereference(rq->q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte)) {
++		rcu_read_unlock();
++		return;
++	}
++
++	if (bt) {
++		ta = BLK_TA_ISSUE;
++	} else if (bte) {
++		ta = BLK_TA_ISSUE_EXT;
++	}
++	rcu_read_unlock();
++	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), ta,
+ 			 blk_trace_request_get_cgid(q, rq));
+ }
+ 
 -- 
 2.22.1
