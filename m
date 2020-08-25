@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 25 Aug 2020 22:09:41 +0000
-Subject: [RFC PATCH 11/39] blktrace: update blk_add_trace_rq_requeue()
-Message-Id: <20200825221009.6457-12-chaitanya.kulkarni@wdc.com>
+Date: Tue, 25 Aug 2020 22:09:44 +0000
+Subject: [RFC PATCH 14/39] blktrace: update blk_add_trace_bio_bounce()
+Message-Id: <20200825221009.6457-15-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,35 +14,35 @@ Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  1 file changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 19f4c0d22e97..fbbdc4d284ec 100644
+index c2e72cbcef4a..81d2a3ee5a92 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1202,7 +1202,25 @@ static void blk_add_trace_rq_requeue(void *ignore,
- 				     struct request_queue *q,
- 				     struct request *rq)
+@@ -1292,7 +1292,25 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+ static void blk_add_trace_bio_bounce(void *ignore,
+ 				     struct request_queue *q, struct bio *bio)
  {
--	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_REQUEUE,
-+	u64 ta;
+-	blk_add_trace_bio(q, bio, BLK_TA_BOUNCE, 0);
++	u64 ta = 0;
 +	struct blk_trace *bt;
 +	struct blk_trace_ext *bte;
 +
 +	rcu_read_lock();
-+	bt = rcu_dereference(rq->q->blk_trace);
-+	bte = rcu_dereference(rq->q->blk_trace_ext);
++	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
 +	if (likely(!bt) && likely(!bte)) {
 +		rcu_read_unlock();
 +		return;
 +	}
 +
 +	if (bt) {
-+		ta = BLK_TA_REQUEUE;
++		ta = BLK_TA_BOUNCE;
 +	} else if (bte) {
-+		ta = BLK_TA_REQUEUE_EXT;
++		ta = BLK_TA_BOUNCE_EXT;
 +	}
 +	rcu_read_unlock();
-+	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), ta,
- 			 blk_trace_request_get_cgid(q, rq));
++	blk_add_trace_bio(q, bio, ta, 0);
  }
  
+ static void blk_add_trace_bio_complete(void *ignore,
 -- 
 2.22.1
