@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 25 Aug 2020 22:10:00 +0000
-Subject: [RFC PATCH 30/39] blktrace: link blk_log_xxx() to trace action
-Message-Id: <20200825221009.6457-31-chaitanya.kulkarni@wdc.com>
+Date: Tue, 25 Aug 2020 22:10:04 +0000
+Subject: [RFC PATCH 34/39] blktrace: add blkext tracer
+Message-Id: <20200825221009.6457-35-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,41 +10,100 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ kernel/trace/blktrace.c | 47 ++++++++++++++++++++++++++++++++++++++---
+ kernel/trace/trace.h    |  1 +
+ 2 files changed, 45 insertions(+), 3 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index ad2722640ec9..cbaf4e816959 100644
+index feca0a245a14..7ee8f9f280a1 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2392,6 +2392,28 @@ static const struct {
- 	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap },
+@@ -2581,18 +2581,42 @@ static struct tracer blk_tracer __read_mostly = {
+ 	.set_flag	= blk_tracer_set_flag,
  };
  
-+static const struct {
-+	const char *act[2];
-+	void	   (*print)(struct trace_seq *s, const struct trace_entry *ent,
-+			    bool has_cg);
-+} what2act_ext[] = {
-+	[__BLK_TA_QUEUE]	= {{  "Q", "queue" },	   blk_log_generic_ext },
-+	[__BLK_TA_BACKMERGE]	= {{  "M", "backmerge" },  blk_log_generic_ext },
-+	[__BLK_TA_FRONTMERGE]	= {{  "F", "frontmerge" }, blk_log_generic_ext },
-+	[__BLK_TA_GETRQ]	= {{  "G", "getrq" },	   blk_log_generic_ext },
-+	[__BLK_TA_SLEEPRQ]	= {{  "S", "sleeprq" },	   blk_log_generic_ext },
-+	[__BLK_TA_REQUEUE]	= {{  "R", "requeue" },	   blk_log_with_error_ext },
-+	[__BLK_TA_ISSUE]	= {{  "D", "issue" },	   blk_log_generic_ext },
-+	[__BLK_TA_COMPLETE]	= {{  "C", "complete" },   blk_log_with_error_ext },
-+	[__BLK_TA_PLUG]		= {{  "P", "plug" },	   blk_log_plug },
-+	[__BLK_TA_UNPLUG_IO]	= {{  "U", "unplug_io" },  blk_log_unplug_ext },
-+	[__BLK_TA_UNPLUG_TIMER]	= {{ "UT", "unplug_timer" }, blk_log_unplug_ext},
-+	[__BLK_TA_INSERT]	= {{  "I", "insert" },	   blk_log_generic_ext},
-+	[__BLK_TA_SPLIT]	= {{  "X", "split" },	   blk_log_split_ext },
-+	[__BLK_TA_BOUNCE]	= {{  "B", "bounce" },	   blk_log_generic_ext },
-+	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap_ext },
++static struct tracer blk_tracer_ext __read_mostly = {
++	.name		= "blkext",
++	.init		= blk_tracer_init,
++	.reset		= blk_tracer_reset,
++	.start		= blk_tracer_start,
++	.stop		= blk_tracer_stop,
++	.print_header	= blk_tracer_print_header,
++	.print_line	= blk_tracer_print_line_ext,
++	.flags		= &blk_tracer_flags,
++	.set_flag	= blk_tracer_set_flag,
 +};
 +
- static enum print_line_t print_one_line(struct trace_iterator *iter,
- 					bool classic)
+ static struct trace_event_functions trace_blk_event_funcs = {
+ 	.trace		= blk_trace_event_print,
+ 	.binary		= blk_trace_event_print_binary,
+ };
+ 
++static struct trace_event_functions trace_blk_event_funcs_ext = {
++	.trace		= blk_trace_event_print_ext,
++	.binary		= blk_trace_event_print_binary_ext,
++};
++
+ static struct trace_event trace_blk_event = {
+ 	.type		= TRACE_BLK,
+ 	.funcs		= &trace_blk_event_funcs,
+ };
+ 
++static struct trace_event trace_blk_event_ext = {
++	.type		= TRACE_BLK_EXT,
++	.funcs		= &trace_blk_event_funcs_ext,
++};
++
+ static int __init init_blk_tracer(void)
  {
++	int ret = 0;
++
+ 	if (!register_trace_event(&trace_blk_event)) {
+ 		pr_warn("Warning: could not register block events\n");
+ 		return 1;
+@@ -2600,11 +2624,28 @@ static int __init init_blk_tracer(void)
+ 
+ 	if (register_tracer(&blk_tracer) != 0) {
+ 		pr_warn("Warning: could not register the block tracer\n");
+-		unregister_trace_event(&trace_blk_event);
+-		return 1;
++		goto unregister_trace_event;
+ 	}
+ 
+-	return 0;
++	if (!register_trace_event(&trace_blk_event_ext)) {
++		pr_warn("Warning: could not register block events\n");
++		/* unregister blk_tracer */
++		goto unregister_trace_event;
++	}
++
++	if (register_tracer(&blk_tracer_ext) != 0) {
++		pr_warn("Warning: could not register the block tracer\n");
++		goto unregister_trace_event_ext;
++	}
++out:
++	return ret;
++
++unregister_trace_event_ext:
++	unregister_trace_event(&trace_blk_event_ext);
++unregister_trace_event:
++	unregister_trace_event(&trace_blk_event);
++	ret = 1;
++	goto out;
+ }
+ 
+ device_initcall(init_blk_tracer);
+diff --git a/kernel/trace/trace.h b/kernel/trace/trace.h
+index 13db4000af3f..e6c500ba5acb 100644
+--- a/kernel/trace/trace.h
++++ b/kernel/trace/trace.h
+@@ -41,6 +41,7 @@ enum trace_type {
+ 	TRACE_GRAPH_ENT,
+ 	TRACE_USER_STACK,
+ 	TRACE_BLK,
++	TRACE_BLK_EXT,
+ 	TRACE_BPUTS,
+ 	TRACE_HWLAT,
+ 	TRACE_RAW_DATA,
 -- 
 2.22.1
