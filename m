@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 25 Aug 2020 22:09:35 +0000
-Subject: [RFC PATCH 05/39] blktrace: add trace note APIs
-Message-Id: <20200825221009.6457-6-chaitanya.kulkarni@wdc.com>
+Date: Tue, 25 Aug 2020 22:09:51 +0000
+Subject: [RFC PATCH 21/39] blktrace: update blk_add_trace_plug()
+Message-Id: <20200825221009.6457-22-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,153 +10,33 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 113 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 113 insertions(+)
+ kernel/trace/blktrace.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 7857ac2b37c9..f739a1b73a47 100644
+index 3cd11e1c46d5..dd80f25ebdaf 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -114,6 +114,52 @@ static void trace_note(struct blk_trace *bt, pid_t pid, int action,
- 	}
- }
- 
-+static void trace_note_ext(struct blk_trace_ext *bt, pid_t pid, u64 action,
-+			   const void *data, size_t len, u64 cgid, u32 ioprio)
-+{
-+	struct blk_io_trace_ext *t;
-+	struct ring_buffer_event *event = NULL;
-+	struct trace_buffer *buffer = NULL;
-+	int pc = 0;
-+	int cpu = smp_processor_id();
-+	bool blk_tracer = blk_tracer_enabled;
-+	ssize_t cgid_len = cgid ? sizeof(cgid) : 0;
-+
-+	if (blk_tracer) {
-+		buffer = blk_tr->array_buffer.buffer;
-+		pc = preempt_count();
-+		event = trace_buffer_lock_reserve(buffer, TRACE_BLK,
-+						  sizeof(*t) + len + cgid_len,
-+						  0, pc);
-+		if (!event)
-+			return;
-+		t = ring_buffer_event_data(event);
-+		goto record_it;
-+	}
-+
-+	if (!bt->rchan)
-+		return;
-+
-+	t = relay_reserve(bt->rchan, sizeof(*t) + len + cgid_len);
-+	if (t) {
-+		t->magic = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION_EXT;
-+		t->time = ktime_to_ns(ktime_get());
-+record_it:
-+		t->device = bt->dev;
-+		t->action = action | (cgid ? __BLK_TN_CGROUP : 0);
-+		t->ioprio = ioprio;
-+		t->pid = pid;
-+		t->cpu = cpu;
-+		t->pdu_len = len + cgid_len;
-+		if (cgid_len)
-+			memcpy((void *)t + sizeof(*t), &cgid, cgid_len);
-+		memcpy((void *) t + sizeof(*t) + cgid_len, data, len);
-+
-+		if (blk_tracer)
-+			trace_buffer_unlock_commit(blk_tr, buffer, event, 0, pc);
-+	}
-+}
-+
- /*
-  * Send out a notify for this process, if we haven't done so since a trace
-  * started
-@@ -132,6 +178,20 @@ static void trace_note_tsk(struct task_struct *tsk)
- 	spin_unlock_irqrestore(&running_trace_lock, flags);
- }
- 
-+static void trace_note_tsk_ext(struct task_struct *tsk, u32 ioprio)
-+{
-+	unsigned long flags;
-+	struct blk_trace_ext *bt;
-+
-+	tsk->btrace_seq = blktrace_seq;
-+	spin_lock_irqsave(&running_trace_ext_lock, flags);
-+	list_for_each_entry(bt, &running_trace_ext_list, running_ext_list) {
-+		trace_note_ext(bt, tsk->pid, BLK_TN_PROCESS_EXT, tsk->comm,
-+			   sizeof(tsk->comm), 0, ioprio);
-+	}
-+	spin_unlock_irqrestore(&running_trace_ext_lock, flags);
-+}
-+
- static void trace_note_time(struct blk_trace *bt)
+@@ -1493,11 +1493,20 @@ static void blk_add_trace_sleeprq(void *ignore,
+ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
  {
- 	struct timespec64 now;
-@@ -148,6 +208,22 @@ static void trace_note_time(struct blk_trace *bt)
- 	local_irq_restore(flags);
+ 	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
+ 
+ 	rcu_read_lock();
+ 	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte)) {
++		rcu_read_unlock();
++		return;
++	}
+ 	if (bt)
+ 		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, 0);
++	else if (bte)
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, BLK_TA_PLUG_EXT, 0, 0,
++				    NULL, 0, 0);
+ 	rcu_read_unlock();
  }
  
-+static void trace_note_time_ext(struct blk_trace_ext *bt)
-+{
-+	struct timespec64 now;
-+	unsigned long flags;
-+	u32 words[2];
-+
-+	/* need to check user space to see if this breaks in y2038 or y2106 */
-+	ktime_get_real_ts64(&now);
-+	words[0] = (u32)now.tv_sec;
-+	words[1] = now.tv_nsec;
-+
-+	local_irq_save(flags);
-+	trace_note_ext(bt, 0, BLK_TN_TIMESTAMP, words, sizeof(words), 0, 0);
-+	local_irq_restore(flags);
-+}
-+
- void __trace_note_message(struct blk_trace *bt, struct blkcg *blkcg,
- 	const char *fmt, ...)
- {
-@@ -185,6 +261,43 @@ void __trace_note_message(struct blk_trace *bt, struct blkcg *blkcg,
- }
- EXPORT_SYMBOL_GPL(__trace_note_message);
- 
-+void __trace_note_message_ext(struct blk_trace_ext *bt, struct blkcg *blkcg,
-+	const char *fmt, ...)
-+{
-+	int n;
-+	va_list args;
-+	unsigned long flags;
-+	char *buf;
-+
-+	if (unlikely(bt->trace_state != Blktrace_running &&
-+		     !blk_tracer_enabled))
-+		return;
-+
-+	/*
-+	 * If the BLK_TC_NOTIFY action mask isn't set, don't send any note
-+	 * message to the trace.
-+	 */
-+	if (!(bt->act_mask & BLK_TC_NOTIFY))
-+		return;
-+
-+	local_irq_save(flags);
-+	buf = this_cpu_ptr(bt->msg_data);
-+	va_start(args, fmt);
-+	n = vscnprintf(buf, BLK_TN_MAX_MSG, fmt, args);
-+	va_end(args);
-+
-+	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CGROUP))
-+		blkcg = NULL;
-+#ifdef CONFIG_BLK_CGROUP
-+	trace_note_ext(bt, 0, BLK_TN_MESSAGE_EXT, buf, n,
-+		blkcg ? cgroup_id(blkcg->css.cgroup) : 1, 0);
-+#else
-+	trace_note_ext(bt, 0, BLK_TN_MESSAGE_EXT, buf, n, 0, 0);
-+#endif
-+	local_irq_restore(flags);
-+}
-+EXPORT_SYMBOL_GPL(__trace_note_message_ext);
-+
- static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
- 			 pid_t pid)
- {
 -- 
 2.22.1
