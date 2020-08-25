@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 25 Aug 2020 22:09:46 +0000
-Subject: [RFC PATCH 16/39] blktrace: update blk_add_trace_bio_backmerge()
-Message-Id: <20200825221009.6457-17-chaitanya.kulkarni@wdc.com>
+Date: Tue, 25 Aug 2020 22:10:01 +0000
+Subject: [RFC PATCH 31/39] blktrace: add trace event print helper
+Message-Id: <20200825221009.6457-32-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,39 +10,64 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index a46688289987..bcd3ce0baf09 100644
+index cbaf4e816959..6bd158d5454b 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1342,7 +1342,25 @@ static void blk_add_trace_bio_backmerge(void *ignore,
- 					struct request *rq,
- 					struct bio *bio)
- {
--	blk_add_trace_bio(q, bio, BLK_TA_BACKMERGE, 0);
-+	u64 ta = 0;
-+	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
-+
-+	rcu_read_lock();
-+	bt = rcu_dereference(q->blk_trace);
-+	bte = rcu_dereference(q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte)) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	if (bt) {
-+		ta = BLK_TA_BACKMERGE;
-+	} else if (bte) {
-+		ta = BLK_TA_BACKMERGE_EXT;
-+	}
-+	rcu_read_unlock();
-+	blk_add_trace_bio(q, bio, ta, 0);
+@@ -2447,12 +2447,51 @@ static enum print_line_t print_one_line(struct trace_iterator *iter,
+ 	return trace_handle_return(s);
  }
  
- static void blk_add_trace_bio_frontmerge(void *ignore,
++static enum print_line_t print_one_line_ext(struct trace_iterator *iter,
++					bool classic)
++{
++	struct trace_array *tr = iter->tr;
++	struct trace_seq *s = &iter->seq;
++	const struct blk_io_trace_ext *t;
++	u32 what;
++	bool long_act;
++	blk_log_action_t *log_action;
++	bool has_cg;
++
++	t	   = te_blk_io_trace_ext(iter->ent);
++	what	   = (t->action & ((1ULL << BLK_TC_SHIFT_EXT) - 1)) & ~__BLK_TA_CGROUP;
++	long_act   = !!(tr->trace_flags & TRACE_ITER_VERBOSE);
++	log_action = classic ? &blk_log_action_classic_ext : &blk_log_action_ext;
++	has_cg	   = t->action & __BLK_TA_CGROUP;
++
++	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
++		log_action(iter, long_act ? "message" : "m", has_cg);
++		blk_log_msg_ext(s, iter->ent, has_cg);
++		return trace_handle_return(s);
++	}
++
++	if (unlikely(what = 0 || what >= ARRAY_SIZE(what2act_ext)))
++		trace_seq_printf(s, "Unknown action %x\n", what);
++	else {
++		log_action(iter, what2act_ext[what].act[long_act], has_cg);
++		what2act_ext[what].print(s, iter->ent, has_cg);
++	}
++
++	return trace_handle_return(s);
++}
++
+ static enum print_line_t blk_trace_event_print(struct trace_iterator *iter,
+ 					       int flags, struct trace_event *event)
+ {
+ 	return print_one_line(iter, false);
+ }
+ 
++static enum print_line_t blk_trace_event_print_ext(struct trace_iterator *iter,
++					       int flags, struct trace_event *event)
++{
++	return print_one_line_ext(iter, false);
++}
++
+ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
+ {
+ 	struct trace_seq *s = &iter->seq;
 -- 
 2.22.1
