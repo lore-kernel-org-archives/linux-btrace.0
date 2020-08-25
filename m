@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 25 Aug 2020 22:09:56 +0000
-Subject: [RFC PATCH 26/39] blktrace: update blk_add_driver_data()
-Message-Id: <20200825221009.6457-27-chaitanya.kulkarni@wdc.com>
+Date: Tue, 25 Aug 2020 22:09:43 +0000
+Subject: [RFC PATCH 13/39] blktrace: update blk_add_trace_bio()
+Message-Id: <20200825221009.6457-14-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,15 +10,19 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+ kernel/trace/blktrace.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 0c2d119abd9a..9ddc48667105 100644
+index 19519852ce89..c2e72cbcef4a 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1688,17 +1688,26 @@ void blk_add_driver_data(struct request_queue *q,
- 			 void *data, size_t len)
+@@ -1261,20 +1261,31 @@ static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
+  *
+  **/
+ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+-			      u32 what, int error)
++			      u64 what, int error)
  {
  	struct blk_trace *bt;
 +	struct blk_trace_ext *bte;
@@ -32,20 +36,23 @@ index 0c2d119abd9a..9ddc48667105 100644
  		return;
  	}
  
--	__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0, 0,
--				BLK_TA_DRV_DATA, 0, len, data,
-+	if (bt) {
-+		__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0,
-+				0, BLK_TA_DRV_DATA, 0, len, data,
- 				blk_trace_request_get_cgid(q, rq));
-+	} else if (bte) {
-+		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq),
-+				blk_rq_bytes(rq), 0, 0, BLK_TA_DRV_DATA_EXT, 0,
-+				len, data, blk_trace_request_get_cgid(q, rq),
-+				req_get_ioprio(rq));
+-	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
+-			bio_op(bio), bio->bi_opf, what, error, 0, NULL,
+-			blk_trace_bio_get_cgid(q, bio));
++	if (q->blk_trace) {
++		__blk_add_trace(bt, bio->bi_iter.bi_sector,
++				bio->bi_iter.bi_size, bio_op(bio),
++				bio->bi_opf, (u32)what, error, 0, NULL,
++				blk_trace_bio_get_cgid(q, bio));
++	} else if (q->blk_trace_ext) {
++		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
++				    bio->bi_iter.bi_size, bio_op(bio),
++				    bio->bi_opf, what, error, 0, NULL,
++				    blk_trace_bio_get_cgid(q, bio),
++				    bio_prio(bio));
 +	}
  	rcu_read_unlock();
  }
- EXPORT_SYMBOL_GPL(blk_add_driver_data);
+ 
 -- 
 2.22.1
