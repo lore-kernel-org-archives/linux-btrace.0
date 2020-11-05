@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:05 +0000
-Subject: [RFC PATCH 06/39] blktrace: add act and prio check helpers
-Message-Id: <20201105024038.5831-7-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:21 +0000
+Subject: [RFC PATCH 22/39] blktrace: update blk_add_trace_unplug()
+Message-Id: <20201105024038.5831-23-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,56 +10,41 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ kernel/trace/blktrace.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 96c11bda8eef..12ba2b170f02 100644
+index 6da8d1c185ee..ffae6abfa606 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -311,6 +311,43 @@ static int act_log_check(struct blk_trace *bt, u32 what, sector_t sector,
- 	return 0;
- }
+@@ -1514,9 +1514,11 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 				    unsigned int depth, bool explicit)
+ {
+ 	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
  
-+static inline bool prio_log_check(struct blk_trace_ext *bt, u32 ioprio)
-+{
-+	bool ret;
+ 	rcu_read_lock();
+ 	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
+ 	if (bt) {
+ 		__be64 rpdu = cpu_to_be64(depth);
+ 		u32 what;
+@@ -1527,6 +1529,16 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
+ 			what = BLK_TA_UNPLUG_TIMER;
+ 
+ 		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, 0);
++	} else if (bte) {
++		__be64 rpdu = cpu_to_be64(depth);
++		u64 what;
 +
-+	switch (IOPRIO_PRIO_CLASS(ioprio)) {
-+	case IOPRIO_CLASS_NONE:
-+		ret = (bt->prio_mask & 0x01) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_RT:
-+		ret = (bt->prio_mask & 0x02) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_BE:
-+		ret = (bt->prio_mask & 0x04) ? true : false;
-+		break;
-+	case IOPRIO_CLASS_IDLE:
-+		ret = (bt->prio_mask & 0x08) ? true : false;
-+		break;
-+	default:
-+		/*XXX: print rate limit warn here */
-+		ret = false;
-+	}
-+	return ret;
-+}
-+
-+static inline int act_log_check_ext(struct blk_trace_ext *bt, u64 what,
-+			     sector_t sector, pid_t pid)
-+{
-+	if (((bt->act_mask << BLK_TC_SHIFT_EXT) & what) = 0)
-+		return 1;
-+	if (sector && (sector < bt->start_lba || sector > bt->end_lba))
-+		return 1;
-+	if (bt->pid && pid != bt->pid)
-+		return 1;
-+
-+	return 0;
-+}
-+
- /*
-  * Data direction bit lookup
-  */
++		if (explicit)
++			what = BLK_TA_UNPLUG_IO_EXT;
++		else
++			what = BLK_TA_UNPLUG_TIMER_EXT;
++		__blk_add_trace_ext(bte, 0, 0, 0, 0, what, 0, sizeof(rpdu),
++				&rpdu, 0, 0);
+ 	}
+ 	rcu_read_unlock();
+ }
 -- 
 2.22.1
