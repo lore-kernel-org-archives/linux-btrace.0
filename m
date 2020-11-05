@@ -1,33 +1,91 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:03 +0000
-Subject: [RFC PATCH 04/39] blktrace: add a new global list
-Message-Id: <20201105024038.5831-5-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:27 +0000
+Subject: [RFC PATCH 28/39] blktrace: add a new formatting routine
+Message-Id: <20201105024038.5831-29-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Add a separate list to hold running extension traces.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 3 +++
- 1 file changed, 3 insertions(+)
+ kernel/trace/blktrace.c | 57 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index f1022945e346..e7fc8330b7bb 100644
+index f34f75666059..5cf2f60f898d 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -36,6 +36,9 @@ static bool blk_tracer_enabled __read_mostly;
- static LIST_HEAD(running_trace_list);
- static __cacheline_aligned_in_smp DEFINE_SPINLOCK(running_trace_lock);
+@@ -1813,6 +1813,62 @@ static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
+ 	rwbs[i] = '\0';
+ }
  
-+static LIST_HEAD(running_trace_ext_list);
-+static __cacheline_aligned_in_smp DEFINE_SPINLOCK(running_trace_ext_lock);
++static void fill_rwbs_ext(char *rwbs, const struct blk_io_trace_ext *t)
++{
++	int i = 0;
++	int tc = t->action >> BLK_TC_SHIFT_EXT;
 +
- /* Select an alternative, minimalistic output than the original one */
- #define TRACE_BLK_OPT_CLASSIC	0x1
- #define TRACE_BLK_OPT_CGROUP	0x2
++	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
++		rwbs[i++] = 'N';
++		goto out;
++	}
++
++	if (tc & BLK_TC_FLUSH)
++		rwbs[i++] = 'F';
++
++	if (tc & BLK_TC_DISCARD)
++		rwbs[i++] = 'D';
++	else if ((tc & BLK_TC_WRITE_ZEROES)) {
++		rwbs[i++] = 'W';
++		rwbs[i++] = 'Z';
++	} else if ((tc & BLK_TC_ZONE_RESET)) {
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'R';
++	} else if ((tc & BLK_TC_ZONE_RESET_ALL)) {
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'R';
++		rwbs[i++] = 'A';
++	} else if ((tc & BLK_TC_ZONE_APPEND)) {
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'A';
++	} else if ((tc & BLK_TC_ZONE_OPEN)) {
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'O';
++	} else if ((tc & BLK_TC_ZONE_CLOSE)) {
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'C';
++	} else if ((tc & BLK_TC_ZONE_FINISH)) {
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'F';
++	} else if (tc & BLK_TC_WRITE)
++		rwbs[i++] = 'W';
++	else if (t->bytes)
++		rwbs[i++] = 'R';
++	else
++		rwbs[i++] = 'N';
++
++	if (tc & BLK_TC_FUA)
++		rwbs[i++] = 'F';
++	if (tc & BLK_TC_AHEAD)
++		rwbs[i++] = 'A';
++	if (tc & BLK_TC_SYNC)
++		rwbs[i++] = 'S';
++	if (tc & BLK_TC_META)
++		rwbs[i++] = 'M';
++out:
++	rwbs[i] = '\0';
++}
++
+ static inline
+ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
+ {
+@@ -2622,5 +2678,6 @@ void blk_fill_rwbs(char *rwbs, unsigned int op, int bytes)
+ }
+ EXPORT_SYMBOL_GPL(blk_fill_rwbs);
+ 
++
+ #endif /* CONFIG_EVENT_TRACING */
+ 
 -- 
 2.22.1
