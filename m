@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:07 +0000
-Subject: [RFC PATCH 08/39] blktrace: update blk_add_trace_rq()
-Message-Id: <20201105024038.5831-9-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:25 +0000
+Subject: [RFC PATCH 26/39] blktrace: update blk_add_driver_data()
+Message-Id: <20201105024038.5831-27-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,58 +10,42 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 30 +++++++++++++++++++++---------
- 1 file changed, 21 insertions(+), 9 deletions(-)
+ kernel/trace/blktrace.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index fbbf5cdf9dfb..9ac46e08979a 100644
+index 468fcae85e04..6570ba216439 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1108,24 +1108,36 @@ blk_trace_request_get_cgid(struct request_queue *q, struct request *rq)
-  *
-  **/
- static void blk_add_trace_rq(struct request *rq, int error,
--			     unsigned int nr_bytes, u32 what, u64 cgid)
-+			     unsigned int nr_bytes, u64 what, u64 cgid)
+@@ -1688,17 +1688,26 @@ void blk_add_driver_data(struct request_queue *q,
+ 			 void *data, size_t len)
  {
  	struct blk_trace *bt;
 +	struct blk_trace_ext *bte;
  
  	rcu_read_lock();
- 	bt = rcu_dereference(rq->q->blk_trace);
+ 	bt = rcu_dereference(q->blk_trace);
 -	if (likely(!bt)) {
-+	bte = rcu_dereference(rq->q->blk_trace_ext);
++	bte = rcu_dereference(q->blk_trace_ext);
 +	if (likely(!bt) && likely(!bte)) {
  		rcu_read_unlock();
  		return;
  	}
  
--	if (blk_rq_is_passthrough(rq))
--		what |= BLK_TC_ACT(BLK_TC_PC);
--	else
--		what |= BLK_TC_ACT(BLK_TC_FS);
--
--	__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes, req_op(rq),
--			rq->cmd_flags, what, error, 0, NULL, cgid);
+-	__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0, 0,
+-				BLK_TA_DRV_DATA, 0, len, data,
 +	if (bt) {
-+		if (blk_rq_is_passthrough(rq))
-+			what |= BLK_TC_ACT(BLK_TC_PC);
-+		else
-+			what |= BLK_TC_ACT(BLK_TC_FS);
-+		__blk_add_trace(bt, blk_rq_trace_sector(rq), nr_bytes,
-+				req_op(rq), rq->cmd_flags, (u32)what, error, 0,
-+				NULL, cgid);
++		__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0,
++				0, BLK_TA_DRV_DATA, 0, len, data,
+ 				blk_trace_request_get_cgid(q, rq));
 +	} else if (bte) {
-+		if (blk_rq_is_passthrough(rq))
-+			what |= BLK_TC_ACT_EXT(BLK_TC_PC);
-+		else
-+			what |= BLK_TC_ACT_EXT(BLK_TC_FS);
-+		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq), nr_bytes,
-+				    req_op(rq), rq->cmd_flags, what, error, 0,
-+				    NULL, cgid, req_get_ioprio(rq));
++		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq),
++				blk_rq_bytes(rq), 0, 0, BLK_TA_DRV_DATA_EXT, 0,
++				len, data, blk_trace_request_get_cgid(q, rq),
++				req_get_ioprio(rq));
 +	}
  	rcu_read_unlock();
  }
- 
+ EXPORT_SYMBOL_GPL(blk_add_driver_data);
 -- 
 2.22.1
