@@ -1,50 +1,49 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:29 +0000
-Subject: [RFC PATCH 30/39] blktrace: link blk_log_xxx() to trace action
-Message-Id: <20201105024038.5831-31-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:01 +0000
+Subject: [RFC PATCH 02/39] blktrace_api: add new trace definition
+Message-Id: <20201105024038.5831-3-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+This patch adds new structure similar to struct blk_trace to support
+block trace extensions.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ include/linux/blktrace_api.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 055e0ed602fb..7199bb5d0ea2 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -2392,6 +2392,28 @@ static const struct {
- 	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap },
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index 3b6ff5902edc..bc154ff2522a 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -29,6 +29,24 @@ struct blk_trace {
+ 	atomic_t dropped;
  };
  
-+static const struct {
-+	const char *act[2];
-+	void	   (*print)(struct trace_seq *s, const struct trace_entry *ent,
-+			    bool has_cg);
-+} what2act_ext[] = {
-+	[__BLK_TA_QUEUE]	= {{  "Q", "queue" },	   blk_log_generic_ext },
-+	[__BLK_TA_BACKMERGE]	= {{  "M", "backmerge" },  blk_log_generic_ext },
-+	[__BLK_TA_FRONTMERGE]	= {{  "F", "frontmerge" }, blk_log_generic_ext },
-+	[__BLK_TA_GETRQ]	= {{  "G", "getrq" },	   blk_log_generic_ext },
-+	[__BLK_TA_SLEEPRQ]	= {{  "S", "sleeprq" },	   blk_log_generic_ext },
-+	[__BLK_TA_REQUEUE]	= {{  "R", "requeue" },	   blk_log_with_error_ext },
-+	[__BLK_TA_ISSUE]	= {{  "D", "issue" },	   blk_log_generic_ext },
-+	[__BLK_TA_COMPLETE]	= {{  "C", "complete" },   blk_log_with_error_ext },
-+	[__BLK_TA_PLUG]		= {{  "P", "plug" },	   blk_log_plug },
-+	[__BLK_TA_UNPLUG_IO]	= {{  "U", "unplug_io" },  blk_log_unplug_ext },
-+	[__BLK_TA_UNPLUG_TIMER]	= {{ "UT", "unplug_timer" }, blk_log_unplug_ext},
-+	[__BLK_TA_INSERT]	= {{  "I", "insert" },	   blk_log_generic_ext},
-+	[__BLK_TA_SPLIT]	= {{  "X", "split" },	   blk_log_split_ext },
-+	[__BLK_TA_BOUNCE]	= {{  "B", "bounce" },	   blk_log_generic_ext },
-+	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap_ext },
++struct blk_trace_ext {
++	int trace_state;
++	struct rchan *rchan;
++	unsigned long __percpu *sequence;
++	unsigned char __percpu *msg_data;
++	u64 act_mask;
++	u32 prio_mask;
++	u64 start_lba;
++	u64 end_lba;
++	u32 pid;
++	u32 dev;
++	struct dentry *dir;
++	struct dentry *dropped_file;
++	struct dentry *msg_file;
++	struct list_head running_ext_list;
++	atomic_t dropped;
 +};
 +
- static enum print_line_t print_one_line(struct trace_iterator *iter,
- 					bool classic)
- {
+ struct blkcg;
+ 
+ extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
 -- 
 2.22.1
