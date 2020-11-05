@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:27 +0000
-Subject: [RFC PATCH 28/39] blktrace: add a new formatting routine
-Message-Id: <20201105024038.5831-29-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:29 +0000
+Subject: [RFC PATCH 30/39] blktrace: link blk_log_xxx() to trace action
+Message-Id: <20201105024038.5831-31-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,82 +10,41 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 57 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
+ kernel/trace/blktrace.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index f34f75666059..5cf2f60f898d 100644
+index 055e0ed602fb..7199bb5d0ea2 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1813,6 +1813,62 @@ static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
- 	rwbs[i] = '\0';
- }
+@@ -2392,6 +2392,28 @@ static const struct {
+ 	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap },
+ };
  
-+static void fill_rwbs_ext(char *rwbs, const struct blk_io_trace_ext *t)
-+{
-+	int i = 0;
-+	int tc = t->action >> BLK_TC_SHIFT_EXT;
++static const struct {
++	const char *act[2];
++	void	   (*print)(struct trace_seq *s, const struct trace_entry *ent,
++			    bool has_cg);
++} what2act_ext[] = {
++	[__BLK_TA_QUEUE]	= {{  "Q", "queue" },	   blk_log_generic_ext },
++	[__BLK_TA_BACKMERGE]	= {{  "M", "backmerge" },  blk_log_generic_ext },
++	[__BLK_TA_FRONTMERGE]	= {{  "F", "frontmerge" }, blk_log_generic_ext },
++	[__BLK_TA_GETRQ]	= {{  "G", "getrq" },	   blk_log_generic_ext },
++	[__BLK_TA_SLEEPRQ]	= {{  "S", "sleeprq" },	   blk_log_generic_ext },
++	[__BLK_TA_REQUEUE]	= {{  "R", "requeue" },	   blk_log_with_error_ext },
++	[__BLK_TA_ISSUE]	= {{  "D", "issue" },	   blk_log_generic_ext },
++	[__BLK_TA_COMPLETE]	= {{  "C", "complete" },   blk_log_with_error_ext },
++	[__BLK_TA_PLUG]		= {{  "P", "plug" },	   blk_log_plug },
++	[__BLK_TA_UNPLUG_IO]	= {{  "U", "unplug_io" },  blk_log_unplug_ext },
++	[__BLK_TA_UNPLUG_TIMER]	= {{ "UT", "unplug_timer" }, blk_log_unplug_ext},
++	[__BLK_TA_INSERT]	= {{  "I", "insert" },	   blk_log_generic_ext},
++	[__BLK_TA_SPLIT]	= {{  "X", "split" },	   blk_log_split_ext },
++	[__BLK_TA_BOUNCE]	= {{  "B", "bounce" },	   blk_log_generic_ext },
++	[__BLK_TA_REMAP]	= {{  "A", "remap" },	   blk_log_remap_ext },
++};
 +
-+	if ((t->action & ~__BLK_TN_CGROUP) = BLK_TN_MESSAGE_EXT) {
-+		rwbs[i++] = 'N';
-+		goto out;
-+	}
-+
-+	if (tc & BLK_TC_FLUSH)
-+		rwbs[i++] = 'F';
-+
-+	if (tc & BLK_TC_DISCARD)
-+		rwbs[i++] = 'D';
-+	else if ((tc & BLK_TC_WRITE_ZEROES)) {
-+		rwbs[i++] = 'W';
-+		rwbs[i++] = 'Z';
-+	} else if ((tc & BLK_TC_ZONE_RESET)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'R';
-+	} else if ((tc & BLK_TC_ZONE_RESET_ALL)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'R';
-+		rwbs[i++] = 'A';
-+	} else if ((tc & BLK_TC_ZONE_APPEND)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'A';
-+	} else if ((tc & BLK_TC_ZONE_OPEN)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'O';
-+	} else if ((tc & BLK_TC_ZONE_CLOSE)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'C';
-+	} else if ((tc & BLK_TC_ZONE_FINISH)) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'F';
-+	} else if (tc & BLK_TC_WRITE)
-+		rwbs[i++] = 'W';
-+	else if (t->bytes)
-+		rwbs[i++] = 'R';
-+	else
-+		rwbs[i++] = 'N';
-+
-+	if (tc & BLK_TC_FUA)
-+		rwbs[i++] = 'F';
-+	if (tc & BLK_TC_AHEAD)
-+		rwbs[i++] = 'A';
-+	if (tc & BLK_TC_SYNC)
-+		rwbs[i++] = 'S';
-+	if (tc & BLK_TC_META)
-+		rwbs[i++] = 'M';
-+out:
-+	rwbs[i] = '\0';
-+}
-+
- static inline
- const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
+ static enum print_line_t print_one_line(struct trace_iterator *iter,
+ 					bool classic)
  {
-@@ -2622,5 +2678,6 @@ void blk_fill_rwbs(char *rwbs, unsigned int op, int bytes)
- }
- EXPORT_SYMBOL_GPL(blk_fill_rwbs);
- 
-+
- #endif /* CONFIG_EVENT_TRACING */
- 
 -- 
 2.22.1
