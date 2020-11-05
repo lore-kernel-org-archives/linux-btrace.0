@@ -1,34 +1,48 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:35 +0000
-Subject: [RFC PATCH 36/39] block: update blkdev_ioctl with new trace ioctls
-Message-Id: <20201105024038.5831-37-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:13 +0000
+Subject: [RFC PATCH 14/39] blktrace: update blk_add_trace_bio_bounce()
+Message-Id: <20201105024038.5831-15-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Add newly intoduce IOCTLs so that userspace tools can call them.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/ioctl.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ kernel/trace/blktrace.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 3fbc382eb926..94020ffffcc2 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -553,6 +553,10 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
- 	case BLKTRACESTART:
- 	case BLKTRACESTOP:
- 	case BLKTRACETEARDOWN:
-+	case BLKTRACESETUP_EXT:
-+	case BLKTRACESTART_EXT:
-+	case BLKTRACESTOP_EXT:
-+	case BLKTRACETEARDOWN_EXT:
- 		return blk_trace_ioctl(bdev, cmd, argp);
- 	case IOC_PR_REGISTER:
- 		return blkdev_pr_register(bdev, argp);
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 623fcb4fc746..01b89f3bd7f2 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1292,7 +1292,25 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
+ static void blk_add_trace_bio_bounce(void *ignore,
+ 				     struct request_queue *q, struct bio *bio)
+ {
+-	blk_add_trace_bio(q, bio, BLK_TA_BOUNCE, 0);
++	u64 ta = 0;
++	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
++
++	rcu_read_lock();
++	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte)) {
++		rcu_read_unlock();
++		return;
++	}
++
++	if (bt) {
++		ta = BLK_TA_BOUNCE;
++	} else if (bte) {
++		ta = BLK_TA_BOUNCE_EXT;
++	}
++	rcu_read_unlock();
++	blk_add_trace_bio(q, bio, ta, 0);
+ }
+ 
+ static void blk_add_trace_bio_complete(void *ignore,
 -- 
 2.22.1
