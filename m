@@ -1,43 +1,34 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:31 +0000
-Subject: [RFC PATCH 32/39] blktrace: add trace_synthesize helper
-Message-Id: <20201105024038.5831-33-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:35 +0000
+Subject: [RFC PATCH 36/39] block: update blkdev_ioctl with new trace ioctls
+Message-Id: <20201105024038.5831-37-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+Add newly intoduce IOCTLs so that userspace tools can call them.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ block/ioctl.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 106d69d215d0..24d04493508c 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -2507,6 +2507,21 @@ static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
- 			 sizeof(old) - offset + t->pdu_len);
- }
- 
-+static void blk_trace_synthesize_old_trace_ext(struct trace_iterator *iter)
-+{
-+	struct trace_seq *s = &iter->seq;
-+	struct blk_io_trace_ext *t = (struct blk_io_trace_ext *)iter->ent;
-+	const int offset = offsetof(struct blk_io_trace_ext, sector);
-+	struct blk_io_trace_ext old = {
-+		.magic	  = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION_EXT,
-+		.time     = iter->ts,
-+	};
-+
-+	trace_seq_putmem(s, &old, offset);
-+	trace_seq_putmem(s, &t->sector,
-+			 sizeof(old) - offset + t->pdu_len);
-+}
-+
- static enum print_line_t
- blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
- 			     struct trace_event *event)
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 3fbc382eb926..94020ffffcc2 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -553,6 +553,10 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case BLKTRACESTART:
+ 	case BLKTRACESTOP:
+ 	case BLKTRACETEARDOWN:
++	case BLKTRACESETUP_EXT:
++	case BLKTRACESTART_EXT:
++	case BLKTRACESTOP_EXT:
++	case BLKTRACETEARDOWN_EXT:
+ 		return blk_trace_ioctl(bdev, cmd, argp);
+ 	case IOC_PR_REGISTER:
+ 		return blkdev_pr_register(bdev, argp);
 -- 
 2.22.1
