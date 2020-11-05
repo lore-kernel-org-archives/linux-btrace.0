@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:25 +0000
-Subject: [RFC PATCH 26/39] blktrace: update blk_add_driver_data()
-Message-Id: <20201105024038.5831-27-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:24 +0000
+Subject: [RFC PATCH 25/39] blktrace: update blk_add_trace_rq_remap()
+Message-Id: <20201105024038.5831-26-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,18 +10,30 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+ kernel/trace/blktrace.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 468fcae85e04..6570ba216439 100644
+index 350aff32c270..468fcae85e04 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1688,17 +1688,26 @@ void blk_add_driver_data(struct request_queue *q,
- 			 void *data, size_t len)
+@@ -1616,8 +1616,8 @@ static void blk_add_trace_bio_remap(void *ignore,
+ 	} else if (bte) {
+ 		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
+ 				    bio->bi_iter.bi_size, bio_op(bio),
+-				    bio->bi_opf, BLK_TA_REMAP_EXT, bio->bi_status,
+-				    sizeof(r), &r,
++				    bio->bi_opf, BLK_TA_REMAP_EXT,
++				    bio->bi_status, sizeof(r), &r,
+ 				    blk_trace_bio_get_cgid(q, bio), 0);
+ 	}
+ 	rcu_read_unlock();
+@@ -1642,11 +1642,13 @@ static void blk_add_trace_rq_remap(void *ignore,
+ 				   sector_t from)
  {
  	struct blk_trace *bt;
 +	struct blk_trace_ext *bte;
+ 	struct blk_io_trace_remap r;
  
  	rcu_read_lock();
  	bt = rcu_dereference(q->blk_trace);
@@ -31,21 +43,27 @@ index 468fcae85e04..6570ba216439 100644
  		rcu_read_unlock();
  		return;
  	}
+@@ -1655,9 +1657,18 @@ static void blk_add_trace_rq_remap(void *ignore,
+ 	r.device_to   = cpu_to_be32(disk_devt(rq->rq_disk));
+ 	r.sector_from = cpu_to_be64(from);
  
--	__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0, 0,
--				BLK_TA_DRV_DATA, 0, len, data,
+-	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
+-			rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
+-			sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
 +	if (bt) {
-+		__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0,
-+				0, BLK_TA_DRV_DATA, 0, len, data,
- 				blk_trace_request_get_cgid(q, rq));
++		__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
++				rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
++				sizeof(r), &r,
++				blk_trace_request_get_cgid(q, rq));
 +	} else if (bte) {
-+		__blk_add_trace_ext(bte, blk_rq_trace_sector(rq),
-+				blk_rq_bytes(rq), 0, 0, BLK_TA_DRV_DATA_EXT, 0,
-+				len, data, blk_trace_request_get_cgid(q, rq),
-+				req_get_ioprio(rq));
++		__blk_add_trace_ext(bte, blk_rq_pos(rq), blk_rq_bytes(rq),
++				    rq_data_dir(rq), 0, BLK_TA_REMAP_EXT, 0,
++				    sizeof(r), &r,
++				    blk_trace_request_get_cgid(q, rq), 0);
++
 +	}
  	rcu_read_unlock();
  }
- EXPORT_SYMBOL_GPL(blk_add_driver_data);
+ 
 -- 
 2.22.1
