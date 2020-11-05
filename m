@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:13 +0000
-Subject: [RFC PATCH 14/39] blktrace: update blk_add_trace_bio_bounce()
-Message-Id: <20201105024038.5831-15-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:14 +0000
+Subject: [RFC PATCH 15/39] blktrace: update blk_add_trace_bio_complete()
+Message-Id: <20201105024038.5831-16-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,18 +10,19 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 623fcb4fc746..01b89f3bd7f2 100644
+index 01b89f3bd7f2..9f427aa5e942 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1292,7 +1292,25 @@ static void blk_add_trace_bio(struct request_queue *q, struct bio *bio,
- static void blk_add_trace_bio_bounce(void *ignore,
- 				     struct request_queue *q, struct bio *bio)
+@@ -1316,8 +1316,25 @@ static void blk_add_trace_bio_bounce(void *ignore,
+ static void blk_add_trace_bio_complete(void *ignore,
+ 				       struct request_queue *q, struct bio *bio)
  {
--	blk_add_trace_bio(q, bio, BLK_TA_BOUNCE, 0);
+-	blk_add_trace_bio(q, bio, BLK_TA_COMPLETE,
+-			  blk_status_to_errno(bio->bi_status));
 +	u64 ta = 0;
 +	struct blk_trace *bt;
 +	struct blk_trace_ext *bte;
@@ -35,14 +36,14 @@ index 623fcb4fc746..01b89f3bd7f2 100644
 +	}
 +
 +	if (bt) {
-+		ta = BLK_TA_BOUNCE;
++		ta = BLK_TA_COMPLETE;
 +	} else if (bte) {
-+		ta = BLK_TA_BOUNCE_EXT;
++		ta = BLK_TA_COMPLETE_EXT;
 +	}
 +	rcu_read_unlock();
-+	blk_add_trace_bio(q, bio, ta, 0);
++	blk_add_trace_bio(q, bio, ta, blk_status_to_errno(bio->bi_status));
  }
  
- static void blk_add_trace_bio_complete(void *ignore,
+ static void blk_add_trace_bio_backmerge(void *ignore,
 -- 
 2.22.1
