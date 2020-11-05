@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:21 +0000
-Subject: [RFC PATCH 22/39] blktrace: update blk_add_trace_unplug()
-Message-Id: <20201105024038.5831-23-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:37 +0000
+Subject: [RFC PATCH 38/39] blktrace: update blk_fill_rwbs() with new requests
+Message-Id: <20201105024038.5831-39-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,41 +10,48 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ kernel/trace/blktrace.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 6da8d1c185ee..ffae6abfa606 100644
+index efb0a34b46a9..480f40148e49 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1514,9 +1514,11 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
- 				    unsigned int depth, bool explicit)
- {
- 	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
- 
- 	rcu_read_lock();
- 	bt = rcu_dereference(q->blk_trace);
-+	bte = rcu_dereference(q->blk_trace_ext);
- 	if (bt) {
- 		__be64 rpdu = cpu_to_be64(depth);
- 		u32 what;
-@@ -1527,6 +1529,16 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
- 			what = BLK_TA_UNPLUG_TIMER;
- 
- 		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, 0);
-+	} else if (bte) {
-+		__be64 rpdu = cpu_to_be64(depth);
-+		u64 what;
-+
-+		if (explicit)
-+			what = BLK_TA_UNPLUG_IO_EXT;
-+		else
-+			what = BLK_TA_UNPLUG_TIMER_EXT;
-+		__blk_add_trace_ext(bte, 0, 0, 0, 0, what, 0, sizeof(rpdu),
-+				&rpdu, 0, 0);
+@@ -3300,6 +3300,35 @@ void blk_fill_rwbs(char *rwbs, unsigned int op, int bytes)
+ 	case REQ_OP_READ:
+ 		rwbs[i++] = 'R';
+ 		break;
++	case REQ_OP_WRITE_ZEROES:
++		rwbs[i++] = 'W';
++		rwbs[i++] = 'Z';
++		break;
++	case REQ_OP_ZONE_RESET:
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'R';
++		break;
++	case REQ_OP_ZONE_RESET_ALL:
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'R';
++		rwbs[i++] = 'A';
++		break;
++	case REQ_OP_ZONE_APPEND:
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'A';
++		break;
++	case REQ_OP_ZONE_OPEN:
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'O';
++		break;
++	case REQ_OP_ZONE_CLOSE:
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'C';
++		break;
++	case REQ_OP_ZONE_FINISH:
++		rwbs[i++] = 'Z';
++		rwbs[i++] = 'F';
++		break;
+ 	default:
+ 		rwbs[i++] = 'N';
  	}
- 	rcu_read_unlock();
- }
 -- 
 2.22.1
