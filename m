@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Thu, 05 Nov 2020 02:40:26 +0000
-Subject: [RFC PATCH 27/39] blktrace: add trace entry & pdu helpers
-Message-Id: <20201105024038.5831-28-chaitanya.kulkarni@wdc.com>
+Date: Thu, 05 Nov 2020 02:40:15 +0000
+Subject: [RFC PATCH 16/39] blktrace: update blk_add_trace_bio_backmerge()
+Message-Id: <20201105024038.5831-17-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,120 +10,39 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 55 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+ kernel/trace/blktrace.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 6570ba216439..f34f75666059 100644
+index 9f427aa5e942..84d22df8687e 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1819,52 +1819,107 @@ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
- 	return (const struct blk_io_trace *)ent;
- }
- 
-+static inline
-+const struct blk_io_trace_ext *te_blk_io_trace_ext(const struct trace_entry *ent)
-+{
-+	return (const struct blk_io_trace_ext *)ent;
-+}
-+
- static inline const void *pdu_start(const struct trace_entry *ent, bool has_cg)
+@@ -1342,7 +1342,25 @@ static void blk_add_trace_bio_backmerge(void *ignore,
+ 					struct request *rq,
+ 					struct bio *bio)
  {
- 	return (void *)(te_blk_io_trace(ent) + 1) + (has_cg ? sizeof(u64) : 0);
+-	blk_add_trace_bio(q, bio, BLK_TA_BACKMERGE, 0);
++	u64 ta = 0;
++	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
++
++	rcu_read_lock();
++	bt = rcu_dereference(q->blk_trace);
++	bte = rcu_dereference(q->blk_trace_ext);
++	if (likely(!bt) && likely(!bte)) {
++		rcu_read_unlock();
++		return;
++	}
++
++	if (bt) {
++		ta = BLK_TA_BACKMERGE;
++	} else if (bte) {
++		ta = BLK_TA_BACKMERGE_EXT;
++	}
++	rcu_read_unlock();
++	blk_add_trace_bio(q, bio, ta, 0);
  }
  
-+static inline const void *pdu_start_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	return (void *)(te_blk_io_trace_ext(ent) + 1) +
-+		(has_cg ? sizeof(u64) : 0);
-+
-+}
-+
- static inline u64 t_cgid(const struct trace_entry *ent)
- {
- 	return *(u64 *)(te_blk_io_trace(ent) + 1);
- }
- 
-+static inline const void *cgid_start_ext(const struct trace_entry *ent)
-+{
-+	return (void *)(te_blk_io_trace_ext(ent) + 1);
-+}
-+
- static inline int pdu_real_len(const struct trace_entry *ent, bool has_cg)
- {
- 	return te_blk_io_trace(ent)->pdu_len - (has_cg ? sizeof(u64) : 0);
- }
- 
-+static inline int pdu_real_len_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	return te_blk_io_trace_ext(ent)->pdu_len -
-+			(has_cg ? sizeof(u64) : 0);
-+}
-+
- static inline u32 t_action(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->action;
- }
- 
-+static inline u64 t_action_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->action;
-+}
-+
- static inline u32 t_bytes(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->bytes;
- }
- 
-+static inline u32 t_bytes_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->bytes;
-+}
-+
- static inline u32 t_sec(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->bytes >> 9;
- }
- 
-+static inline u32 t_sec_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->bytes >> 9;
-+}
-+
- static inline unsigned long long t_sector(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->sector;
- }
- 
-+static inline unsigned long long t_sector_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->sector;
-+}
-+
- static inline __u16 t_error(const struct trace_entry *ent)
- {
- 	return te_blk_io_trace(ent)->error;
- }
- 
-+static inline __u16 t_error_ext(const struct trace_entry *ent)
-+{
-+	return te_blk_io_trace_ext(ent)->error;
-+}
-+
- static __u64 get_pdu_int(const struct trace_entry *ent, bool has_cg)
- {
- 	const __be64 *val = pdu_start(ent, has_cg);
- 	return be64_to_cpu(*val);
- }
- 
-+static __u64 get_pdu_int_ext(const struct trace_entry *ent, bool has_cg)
-+{
-+	const __u64 *val = pdu_start_ext(ent, has_cg);
-+	return be64_to_cpu(*val);
-+}
-+
- typedef void (blk_log_action_t) (struct trace_iterator *iter, const char *act,
- 	bool has_cg);
- 
+ static void blk_add_trace_bio_frontmerge(void *ignore,
 -- 
 2.22.1
