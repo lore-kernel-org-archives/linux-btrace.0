@@ -1,49 +1,129 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 26 Jan 2021 23:33:24 +0000
-Subject: [RFC PATCH 02/38] blktrace_api: add new trace definition
-Message-Id: <20210126233400.31259-3-chaitanya.kulkarni@wdc.com>
+Date: Tue, 26 Jan 2021 23:33:48 +0000
+Subject: [RFC PATCH 26/38] blktrace: add trace entry & pdu helpers
+Message-Id: <20210126233400.31259-27-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-This patch adds new structure similar to struct blk_trace to support
-block trace extensions.
-
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- include/linux/blktrace_api.h | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ kernel/trace/blktrace.c | 55 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
-diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
-index 05556573b896..b48210b89dbe 100644
---- a/include/linux/blktrace_api.h
-+++ b/include/linux/blktrace_api.h
-@@ -29,6 +29,24 @@ struct blk_trace {
- 	atomic_t dropped;
- };
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index c8b5955163ad..ff776e117793 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -1732,52 +1732,107 @@ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
+ 	return (const struct blk_io_trace *)ent;
+ }
  
-+struct blk_trace_ext {
-+	int trace_state;
-+	struct rchan *rchan;
-+	unsigned long __percpu *sequence;
-+	unsigned char __percpu *msg_data;
-+	u64 act_mask;
-+	u32 prio_mask;
-+	u64 start_lba;
-+	u64 end_lba;
-+	u32 pid;
-+	u32 dev;
-+	struct dentry *dir;
-+	struct dentry *dropped_file;
-+	struct dentry *msg_file;
-+	struct list_head running_ext_list;
-+	atomic_t dropped;
-+};
++static inline
++const struct blk_io_trace_ext *te_blk_io_trace_ext(const struct trace_entry *ent)
++{
++	return (const struct blk_io_trace_ext *)ent;
++}
 +
- struct blkcg;
+ static inline const void *pdu_start(const struct trace_entry *ent, bool has_cg)
+ {
+ 	return (void *)(te_blk_io_trace(ent) + 1) + (has_cg ? sizeof(u64) : 0);
+ }
  
- extern int blk_trace_ioctl(struct block_device *, unsigned, char __user *);
++static inline const void *pdu_start_ext(const struct trace_entry *ent, bool has_cg)
++{
++	return (void *)(te_blk_io_trace_ext(ent) + 1) +
++		(has_cg ? sizeof(u64) : 0);
++
++}
++
+ static inline u64 t_cgid(const struct trace_entry *ent)
+ {
+ 	return *(u64 *)(te_blk_io_trace(ent) + 1);
+ }
+ 
++static inline const void *cgid_start_ext(const struct trace_entry *ent)
++{
++	return (void *)(te_blk_io_trace_ext(ent) + 1);
++}
++
+ static inline int pdu_real_len(const struct trace_entry *ent, bool has_cg)
+ {
+ 	return te_blk_io_trace(ent)->pdu_len - (has_cg ? sizeof(u64) : 0);
+ }
+ 
++static inline int pdu_real_len_ext(const struct trace_entry *ent, bool has_cg)
++{
++	return te_blk_io_trace_ext(ent)->pdu_len -
++			(has_cg ? sizeof(u64) : 0);
++}
++
+ static inline u32 t_action(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->action;
+ }
+ 
++static inline u64 t_action_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->action;
++}
++
+ static inline u32 t_bytes(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->bytes;
+ }
+ 
++static inline u32 t_bytes_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->bytes;
++}
++
+ static inline u32 t_sec(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->bytes >> 9;
+ }
+ 
++static inline u32 t_sec_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->bytes >> 9;
++}
++
+ static inline unsigned long long t_sector(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->sector;
+ }
+ 
++static inline unsigned long long t_sector_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->sector;
++}
++
+ static inline __u16 t_error(const struct trace_entry *ent)
+ {
+ 	return te_blk_io_trace(ent)->error;
+ }
+ 
++static inline __u16 t_error_ext(const struct trace_entry *ent)
++{
++	return te_blk_io_trace_ext(ent)->error;
++}
++
+ static __u64 get_pdu_int(const struct trace_entry *ent, bool has_cg)
+ {
+ 	const __be64 *val = pdu_start(ent, has_cg);
+ 	return be64_to_cpu(*val);
+ }
+ 
++static __u64 get_pdu_int_ext(const struct trace_entry *ent, bool has_cg)
++{
++	const __u64 *val = pdu_start_ext(ent, has_cg);
++	return be64_to_cpu(*val);
++}
++
+ typedef void (blk_log_action_t) (struct trace_iterator *iter, const char *act,
+ 	bool has_cg);
+ 
 -- 
 2.22.1
