@@ -1,7 +1,7 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 26 Jan 2021 23:33:54 +0000
-Subject: [RFC PATCH 32/38] blktrace: add trace print helpers
-Message-Id: <20210126233400.31259-33-chaitanya.kulkarni@wdc.com>
+Date: Tue, 26 Jan 2021 23:33:39 +0000
+Subject: [RFC PATCH 17/38] blktrace: update blk_add_trace_bio_frontmerge()
+Message-Id: <20210126233400.31259-18-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,43 +10,39 @@ To: linux-btrace@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ kernel/trace/blktrace.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index d5045ddc2a07..4776fd03abfe 100644
+index 1eff4afa4019..8dd41a7592b2 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -2444,6 +2444,15 @@ blk_trace_event_print_binary(struct trace_iterator *iter, int flags,
- 	return trace_handle_return(&iter->seq);
+@@ -1352,7 +1352,25 @@ static void blk_add_trace_bio_backmerge(void *ignore, struct bio *bio)
+ 
+ static void blk_add_trace_bio_frontmerge(void *ignore, struct bio *bio)
+ {
+-	blk_add_trace_bio(bio->bi_disk->queue, bio, BLK_TA_FRONTMERGE, 0);
++	u64 ta = 0;
++	struct blk_trace *bt;
++	struct blk_trace_ext *bte;
++
++	rcu_read_lock();
++	bt = rcu_dereference(bio->bi_disk->queue->blk_trace);
++	bte = rcu_dereference(bio->bi_disk->queue->blk_trace_ext);
++	if (likely(!bt) && likely(!bte)) {
++		rcu_read_unlock();
++		return;
++	}
++
++	if (bt) {
++		ta = BLK_TA_FRONTMERGE;
++	} else if (bte) {
++		ta = BLK_TA_FRONTMERGE_EXT;
++	}
++	rcu_read_unlock();
++	blk_add_trace_bio(bio->bi_disk->queue, bio, ta, 0);
  }
  
-+static enum print_line_t
-+blk_trace_event_print_binary_ext(struct trace_iterator *iter, int flags,
-+			     struct trace_event *event)
-+{
-+	blk_trace_synthesize_old_trace_ext(iter);
-+
-+	return trace_handle_return(&iter->seq);
-+}
-+
- static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
- {
- 	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
-@@ -2452,6 +2461,14 @@ static enum print_line_t blk_tracer_print_line(struct trace_iterator *iter)
- 	return print_one_line(iter, true);
- }
- 
-+static enum print_line_t blk_tracer_print_line_ext(struct trace_iterator *iter)
-+{
-+	if (!(blk_tracer_flags.val & TRACE_BLK_OPT_CLASSIC))
-+		return TRACE_TYPE_UNHANDLED;
-+
-+	return print_one_line_ext(iter, true);
-+}
-+
- static int
- blk_tracer_set_flag(struct trace_array *tr, u32 old_flags, u32 bit, int set)
- {
+ static void blk_add_trace_bio_queue(void *ignore, struct bio *bio)
 -- 
 2.22.1
