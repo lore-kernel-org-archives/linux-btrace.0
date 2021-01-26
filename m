@@ -1,48 +1,34 @@
 From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 26 Jan 2021 23:33:40 +0000
-Subject: [RFC PATCH 18/38] blktrace: update blk_add_trace_bio_queue()
-Message-Id: <20210126233400.31259-19-chaitanya.kulkarni@wdc.com>
+Date: Tue, 26 Jan 2021 23:33:57 +0000
+Subject: [RFC PATCH 35/38] block: update blkdev_ioctl with new trace ioctls
+Message-Id: <20210126233400.31259-36-chaitanya.kulkarni@wdc.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
+Add newly intoduce IOCTLs so that userspace tools can call them.
+
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- kernel/trace/blktrace.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ block/ioctl.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 8dd41a7592b2..97abc8e23d7b 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1375,7 +1375,25 @@ static void blk_add_trace_bio_frontmerge(void *ignore, struct bio *bio)
- 
- static void blk_add_trace_bio_queue(void *ignore, struct bio *bio)
- {
--	blk_add_trace_bio(bio->bi_disk->queue, bio, BLK_TA_QUEUE, 0);
-+	u64 ta = 0;
-+	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
-+
-+	rcu_read_lock();
-+	bt = rcu_dereference(bio->bi_disk->queue->blk_trace);
-+	bte = rcu_dereference(bio->bi_disk->queue->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte)) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	if (bt) {
-+		ta = BLK_TA_QUEUE;
-+	} else if (bte) {
-+		ta = BLK_TA_QUEUE_EXT;
-+	}
-+	rcu_read_unlock();
-+	blk_add_trace_bio(bio->bi_disk->queue, bio, ta, 0);
- }
- 
- static void blk_add_trace_getrq(void *ignore, struct bio *bio)
+diff --git a/block/ioctl.c b/block/ioctl.c
+index d61d652078f4..36015404efc7 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -502,6 +502,10 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case BLKTRACESTART:
+ 	case BLKTRACESTOP:
+ 	case BLKTRACETEARDOWN:
++	case BLKTRACESETUP_EXT:
++	case BLKTRACESTART_EXT:
++	case BLKTRACESTOP_EXT:
++	case BLKTRACETEARDOWN_EXT:
+ 		return blk_trace_ioctl(bdev, cmd, argp);
+ 	case IOC_PR_REGISTER:
+ 		return blkdev_pr_register(bdev, argp);
 -- 
 2.22.1
