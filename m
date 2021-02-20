@@ -1,59 +1,68 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Date: Tue, 26 Jan 2021 23:33:45 +0000
-Subject: [RFC PATCH 23/38] blktrace: update blk_add_trace_bio_remap()
-Message-Id: <20210126233400.31259-24-chaitanya.kulkarni@wdc.com>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Sat, 20 Feb 2021 13:00:02 +0000
+Subject: Recent changes (master)
+Message-Id: <20210220130002.092911BC0139@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
----
- kernel/trace/blktrace.c | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+The following changes since commit a021a33b405b5101eec6c389e1dacd7934fdd35e:
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 5aed9b0d0c69..1e1948b6e7b1 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1516,11 +1516,13 @@ static void blk_add_trace_bio_remap(void *ignore, struct bio *bio, dev_t dev,
+  blkparse: Print PID information for TN_MESSAGE events (2020-05-20 07:38:26 -0600)
+
+are available in the Git repository at:
+
+  git://git.kernel.dk/blktrace.git master
+
+for you to fetch changes up to 2ec0bb0b725305025dcc3e3f195894040e2dab90:
+
+  blktrace: inclusive terminology (2021-02-19 09:42:41 -0700)
+
+----------------------------------------------------------------
+Eric Sandeen (1):
+      blktrace: inclusive terminology
+
+ blkparse_fmt.c | 4 ++--
+ blktrace.c     | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+---
+
+Diff of recent changes:
+
+diff --git a/blkparse_fmt.c b/blkparse_fmt.c
+index df2f6ce..9b83d1d 100644
+--- a/blkparse_fmt.c
++++ b/blkparse_fmt.c
+@@ -276,12 +276,12 @@ static void print_field(char *act, struct per_cpu_info *pci,
+ static char *parse_field(char *act, struct per_cpu_info *pci,
+ 			 struct blk_io_trace *t, unsigned long long elapsed,
+ 			 int pdu_len, unsigned char *pdu_buf,
+-			 char *master_format)
++			 char *primary_format)
  {
- 	struct request_queue *q = bio->bi_disk->queue;
- 	struct blk_trace *bt;
-+	struct blk_trace_ext *bte;
- 	struct blk_io_trace_remap r;
+ 	int minus = 0;
+ 	int has_w = 0;
+ 	int width = 0;
+-	char *p = master_format;
++	char *p = primary_format;
  
- 	rcu_read_lock();
- 	bt = rcu_dereference(q->blk_trace);
--	if (likely(!bt)) {
-+	bte = rcu_dereference(q->blk_trace_ext);
-+	if (likely(!bt) && likely(!bte)) {
- 		rcu_read_unlock();
- 		return;
- 	}
-@@ -1529,10 +1531,18 @@ static void blk_add_trace_bio_remap(void *ignore, struct bio *bio, dev_t dev,
- 	r.device_to   = cpu_to_be32(bio_dev(bio));
- 	r.sector_from = cpu_to_be64(from);
+ 	if (*p = '-') {
+ 		minus = 1;
+diff --git a/blktrace.c b/blktrace.c
+index d0d271f..82a6aad 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -307,7 +307,7 @@ static pthread_mutex_t dp_mutex = PTHREAD_MUTEX_INITIALIZER;
+ static volatile int dp_entries;
  
--	__blk_add_trace(bt, bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
--			bio_op(bio), bio->bi_opf, BLK_TA_REMAP,
--			blk_status_to_errno(bio->bi_status),
--			sizeof(r), &r, blk_trace_bio_get_cgid(q, bio));
-+	if (bt) {
-+		__blk_add_trace(bt, bio->bi_iter.bi_sector,
-+				bio->bi_iter.bi_size, bio_op(bio), bio->bi_opf,
-+				BLK_TA_REMAP, bio->bi_status, sizeof(r), &r,
-+				blk_trace_bio_get_cgid(q, bio));
-+	} else if (bte) {
-+		__blk_add_trace_ext(bte, bio->bi_iter.bi_sector,
-+				    bio->bi_iter.bi_size, bio_op(bio),
-+				    bio->bi_opf, BLK_TA_REMAP_EXT, bio->bi_status,
-+				    sizeof(r), &r,
-+				    blk_trace_bio_get_cgid(q, bio), 0);
-+	}
- 	rcu_read_unlock();
- }
- 
--- 
-2.22.1
+ /*
+- * These synchronize master / thread interactions.
++ * These synchronize main / thread interactions.
+  */
+ static pthread_cond_t mt_cond = PTHREAD_COND_INITIALIZER;
+ static pthread_mutex_t mt_mutex = PTHREAD_MUTEX_INITIALIZER;
