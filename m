@@ -1,51 +1,55 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Thu, 25 Mar 2021 02:11:47 +0000
-Subject: Re: [bug report] OOM caused by mlock() during exiting blktrace
-Message-Id: <CACVXFVMCz0jrCBkhS736Ubh+Uwt1qw5LzbyhQBi3+sxqARhcbw@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Date: Tue, 20 Apr 2021 12:00:01 +0000
+Subject: Recent changes (master)
+Message-Id: <20210420120001.6F5E51BC0159@kernel.dk>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <CACVXFVNdtEwvMRNi=QcXVaoMfSYu98j+2CuZg+AL4L2bALdWjQ@mail.gmail.com>
-In-Reply-To: <CACVXFVNdtEwvMRNi=QcXVaoMfSYu98j+2CuZg+AL4L2bALdWjQ@mail.gmail.com>
+References: <20130320050001.E340522DFC@kernel.dk>
+In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Hello Jeff,
+The following changes since commit 2ec0bb0b725305025dcc3e3f195894040e2dab90:
 
-On Wed, Mar 24, 2021 at 11:07 PM Jeff Moyer <jmoyer@redhat.com> wrote:
->
-> Hi, Ming,
->
-> Ming Lei <tom.leiming@gmail.com> writes:
->
-> > Hello Guys,
-> >
-> > It is observed that nr_cpu * mlock(128M) is called when exiting
-> > 'blktrace -b 8192 -d $DEV'. And OOM is easily triggered when the
-> > machine has lots of CPU cores.
->
-> The only mlock in the code appears to happen at setup time.  How did you
-> determine this was occurring in the exit path?
+  blktrace: inclusive terminology (2021-02-19 09:42:41 -0700)
 
-It is triggered when pressing 'ctrl^ + C' on 'blktrace -b 8192 -d /dev/nullb0',
-at that time blktrace needs to parse collected trace, even though there is
-nothing collected on nullb0.
+are available in the Git repository at:
 
->
-> > So can we figure out one way to not lock big buffer for avoiding
-> > OOM?
->
-> The obvious question is why are you using -b 8192?  Were you losing
-> events without that option?
+  git://git.kernel.dk/blktrace.git master
 
-It is used by device-mapper[1] which is covered in Red Hat kernel CKI.
+for you to fetch changes up to dc24c67dfbbd11a3221034557548061e7d2c602f:
 
-Seems the locked buffer size is 16 * (buffer size) which is specified by '-b'.
-So at default per-cpu mlock(16 * 512K) will be done, when nr_cpu is bigger,
-it still risks in OOM.
+  blkparse: Print time when trace was started (2021-04-19 11:55:04 -0600)
 
-[1] https://github.com/jthornber/device-mapper-test-suite.git
+----------------------------------------------------------------
+Jan Kara (1):
+      blkparse: Print time when trace was started
 
+ blkparse.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks,
-Ming Lei
+---
+
+Diff of recent changes:
+
+diff --git a/blkparse.c b/blkparse.c
+index 33dd023..1d7ae95 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -32,6 +32,7 @@
+ #include <signal.h>
+ #include <locale.h>
+ #include <libgen.h>
++#include <time.h>
+ 
+ #include "blktrace.h"
+ #include "rbtree.h"
+@@ -2888,6 +2889,7 @@ static void show_stats(void)
+ 
+ 	if (per_device_and_cpu_stats)
+ 		show_device_and_cpu_stats();
++	fprintf(ofp, "Trace started at %s\n", ctime(&abs_start_time.tv_sec));
+ 
+ 	fflush(ofp);
+ }
