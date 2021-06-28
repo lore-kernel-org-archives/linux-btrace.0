@@ -1,51 +1,69 @@
-From: Jens Axboe <axboe@kernel.dk>
-Date: Tue, 29 Jun 2021 12:00:01 +0000
-Subject: Recent changes (master)
-Message-Id: <20210629120001.947451BC0174@kernel.dk>
+From: lijinlin <lijinlin3@huawei.com>
+Date: Mon, 28 Jun 2021 13:25:40 +0000
+Subject: blktrace: exit directly when nthreads_running != ncpus in run_tracers()
+Message-Id: <c79af007-15eb-1ccc-5f54-ad8aa97c5c73@huawei.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20130320050001.E340522DFC@kernel.dk>
-In-Reply-To: <20130320050001.E340522DFC@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-The following changes since commit 366d30b9cdb20345c5d064af850d686da79b89eb:
+From: lijinlin <lijinlin3@huawei.com>
 
-  blktrace 1.3.0 (2021-06-14 08:55:52 -0600)
+We found blktrace got stuck when cgroup restricts blktrace to use cpu,
+the messages and stack is:
+[root@localhost ~]# blktrace -w 10 -o- /dev/sda
+FAILED to start thread on CPU 1: 22/Invalid argument
+FAILED to start thread on CPU 2: 22/Invalid argument
+[root@localhost ~]# cat /proc/1385110/stack
+[<0>] __switch_to+0xe8/0x150
+[<0>] futex_wait_queue_me+0xd4/0x158
+[<0>] futex_wait+0xf4/0x230
+[<0>] do_futex+0x470/0x900
+[<0>] __arm64_sys_futex+0x13c/0x188
+[<0>] el0_svc_common+0x80/0x200
+[<0>] el0_svc_handler+0x78/0xe0
+[<0>] el0_svc+0x10/0x260
+[<0>] 0xffffffffffffffff
 
-are available in the Git repository at:
+Blktrace failed to start thread is caused by thread can't lock on the
+Restricted cpu. In this case, blktrace would't schedule an alarm after
+defined time to set variable 'done' as 1.
+We debug the code and found the call trace as bellow:
+main()
+   =>run_tracers()
+      =>wait_tracers()
+         =>process_trace_bufs()
+            =>wait_empty_entries()
+               =>t_pthread_cond_wait()
+Blktrace was set to piped output, so the process is stuck in
+wait_empty_entries() for wait variable 'done' have been set as 1.
 
-  git://git.kernel.dk/blktrace.git master
+We set variable 'done' as 1 when 'nthreads_running' is not equal to
+'ncpus' in run_tracers() to fix the problem.
 
-for you to fetch changes up to 3a1b1366d30375cdb0f5b299df4edda0c8ba3bcc:
-
-  blktrace: exit directly when nthreads_running != ncpus in run_tracers() (2021-06-28 13:41:32 -0600)
-
-----------------------------------------------------------------
-lijinlin (1):
-      blktrace: exit directly when nthreads_running != ncpus in run_tracers()
-
+Signed-off-by: lijinlin <lijinlin3@huawei.com>
+Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Signed-off-by: Lixiaokeng <lixiaokeng@huawei.com>
+---
  blktrace.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
-
----
-
-Diff of recent changes:
 
 diff --git a/blktrace.c b/blktrace.c
 index 82a6aad..3444fbb 100644
 --- a/blktrace.c
 +++ b/blktrace.c
 @@ -2705,8 +2705,10 @@ static int run_tracers(void)
- 			printf("blktrace: connected!\n");
- 		if (stop_watch)
- 			alarm(stop_watch);
--	} else
-+	} else {
- 		stop_tracers();
-+		done = 1;
-+	}
- 
- 	wait_tracers();
- 	if (nthreads_running = ncpus)
+                        printf("blktrace: connected!\n");
+                if (stop_watch)
+                        alarm(stop_watch);
+-       } else
++       } else {
+                stop_tracers();
++               done = 1;
++       }
+
+        wait_tracers();
+        if (nthreads_running = ncpus)
+--
+2.23.0
