@@ -1,33 +1,42 @@
-From: Jotham Masuku <jmasuku40@flippie-beckerswealthsa.xyz>
-Date: Wed, 09 Jun 2021 12:09:31 +0000
-Subject: Projects
-Message-Id: <20210609120931.62040C3579F4156B@flippie-beckerswealthsa.xyz>
+From: lijinlin <lijinlin3@huawei.com>
+Date: Tue, 29 Jun 2021 02:29:14 +0000
+Subject: blktrace: Fix memleak problem in get_online_cpus()
+Message-Id: <c98e5ed4-432a-3630-129c-bd56efbed9c5@huawei.com>
 List-Id: <linux-btrace.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-Hello there,
+From: lijinlin <lijinlin3@huawei.com>
 
-I hope this message finds you in good spirits especially during 
-this challenging time of coronavirus pandemic. I hope you and 
-your family are well and keeping safe. Anyway, I am Jotham 
-Masuku, a broker working with Flippiebecker Wealth. I got your 
-contact (along with few other contacts) through an online 
-business directory and I thought I should contact you to see if 
-you are interested in this opportunity. I am contacting you 
-because one of my high profile clients is interested in investing 
-abroad and has asked me to look for individuals and companies 
-with interesting business ideas and projects that he can invest 
-in. He wants to invest a substantial amount of asset abroad.
+In get_online_cpus(), after cpu_nums is alloced memory successfully,
+there are two return paths which don't free(cpunums).
 
-Please kindly respond back to this email if you are interested in 
-this opportunity. Once I receive your response, I will give you 
-more details and we can plan a strategy that will be beneficial 
-to all parties.
+Signed-off-by: lijinlin <lijinlin3@huawei.com>
+---
+ blktrace.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Best regards
-
-J Masuku
-Flippiebecker Wealth
+diff --git a/blktrace.c b/blktrace.c
+index 3444fbb..f1f646a 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -2759,6 +2759,7 @@ static cpu_set_t *get_online_cpus(void)
+                while (prevcpuid <= cpuid) {
+                        /* More CPUs listed than configured? */
+                        if (curcpu >= ncpu) {
++                               free(cpu_nums);
+                                errno = EINVAL;
+                                return NULL;
+                        }
+@@ -2774,6 +2775,7 @@ static cpu_set_t *get_online_cpus(void)
+        /* Now that we have maximum cpu number, create a cpuset */
+        set = CPU_ALLOC(max_cpus);
+        if (!set) {
++               free(cpu_nums);
+                errno = ENOMEM;
+                return NULL;
+        }
+--
+2.23.0
