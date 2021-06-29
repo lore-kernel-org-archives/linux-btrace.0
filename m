@@ -1,8 +1,10 @@
 From: lijinlin <lijinlin3@huawei.com>
-Date: Tue, 29 Jun 2021 02:29:14 +0000
+Date: Tue, 29 Jun 2021 03:20:45 +0000
 Subject: blktrace: Fix memleak problem in get_online_cpus()
-Message-Id: <c98e5ed4-432a-3630-129c-bd56efbed9c5@huawei.com>
+Message-Id: <21a48263-5adc-aae6-4293-d122bc2421d2@huawei.com>
 List-Id: <linux-btrace.vger.kernel.org>
+References: <c98e5ed4-432a-3630-129c-bd56efbed9c5@huawei.com>
+In-Reply-To: <c98e5ed4-432a-3630-129c-bd56efbed9c5@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -11,7 +13,7 @@ To: linux-btrace@vger.kernel.org
 From: lijinlin <lijinlin3@huawei.com>
 
 In get_online_cpus(), after cpu_nums is alloced memory successfully,
-there are two return paths which don't free(cpunums).
+there are two return paths which don't free(cpu_nums).
 
 Signed-off-by: lijinlin <lijinlin3@huawei.com>
 ---
