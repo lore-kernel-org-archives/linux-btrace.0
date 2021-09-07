@@ -1,38 +1,56 @@
-From: =?utf-8?B?SGFycmlzIHNvbmcgKOWui+WHrykt5rWq5r2u5L+h5oGv?=  <songkai01@inspur.com>
-Date: Thu, 23 Sep 2021 01:02:48 +0000
-Subject: Re: [PATCH] btt: fix potential memory leak problem in io_free_all()
-Message-Id: <1afc206f45b94d2690f08198be0a9e26@inspur.com>
+From: songkai <songkai01@inspur.com>
+Date: Tue, 07 Sep 2021 20:26:46 +0000
+Subject: [PATCH] blktrace:remove redundant memset() following calloc()
+Message-Id: <20210907202646.110452-1-songkai01@inspur.com>
 List-Id: <linux-btrace.vger.kernel.org>
-References: <20210917091845.133913-1-songkai01@inspur.com>
-In-Reply-To: <20210917091845.133913-1-songkai01@inspur.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-SGkgSmVmZiwNCiANCj4gc29uZ2thaSA8c29uZ2thaTAxQGluc3B1ci5jb20+IHdyaXRlczoNCj4g
-DQo+ID4gSW4g4oCcc3RydWN0IGlv4oCdICwgdGhlICJ2b2lkICpwZHUiIG1lbWJlciBwb2ludHMg
-dG8gdGhlIG1lbW9yeSB3aGljaCBpcw0KPiA+IGFsbG9jYXRlZCBpbiBjb252ZXJ0X3RvX2NwdSgp
-LiBXZSBzaG91bGQgZnJlZSBtZW1vcnkgcGR1IHBvaW50IHRvDQo+ID4gYmVmb3JlIHdlIGZyZWUg
-InN0cnVjdCBpbyIsIG9yIG1lbW9yeSBsZWFrIG9jY3VycmVkLg0KPiANCj4gVGhhdCBzaG91bGQg
-YmUgZnJlZWQgdmlhIGlvX3JlbGVhc2UuICBEbyB5b3Uga25vdyBvZiBhIGNhc2Ugd2hlcmUgdGhh
-dCBkb2Vzbid0DQo+IGhhcHBlbj8gIEFsc28sIGlvX2ZyZWVfYWxsIGlzIG9ubHkgY2FsbGVkIHJp
-Z2h0IGJlZm9yZSBleGl0Lg0KPiBJJ20gbm90IHN1cmUgdGhpcyBwYXRjaCByZWFsbHkgcGx1Z3Mg
-YSBsZWFrIHRoYXQgd291bGQgaW1wYWN0IG5vcm1hbA0KPiBvcGVyYXRpb25zLg0KPiANCj4gVGhl
-IHBhdGNoIHNlZW1zIGhhcm1sZXNzLCBidXQgSSdtIG5vdCBzdXJlIGl0J3MgbmVlZGVkLg0KDQpU
-aGFuayB5b3UgZm9yIHlvdXIgcmVtaW5kaW5nLiBTbyBmYXIsIEkgY2FuJ3QgZmluZCBhIGNhc2Ug
-ZWl0aGVyLg0KRnJlZWluZyBwZHUgaW4gaW9fcmVsZWFzZSBzZWVtcyBsaWtlIGVub3VnaC4gTXkg
-b3JpZ2luYWwgaW50ZW50aW9uIGlzIHRoYXQsIA0Kd2hlbiBjYWxsaW5nIGlvX2ZyZWVfYWxsIGJl
-Zm9yZSBidHQgZXhpdHMsIHRoZXJlIGFyZSBzdGlsbCAgc29tZSBJT3MgaW4gdGhlIGFsbF9pb3Ms
-IA0KSSBhbSBub3Qgc3VyZSBpZiBhbGwgdGhlIHBkdSBpcyBmcmVlZCBiZWZvcmUsIGp1c3QgbGlr
-ZSBkaXAgYW5kIHBpcC4gDQoNClRoYW5rcyBhZ2Fpbi4gDQoNClJlZ2FyZHMsDQpzb25na2FpDQog
-DQoNCj4gPiBTaWduZWQtb2ZmLWJ5OiBzb25na2FpIDxzb25na2FpMDFAaW5zcHVyLmNvbT4NCj4g
-PiAtLS0NCj4gPiAgYnR0L2lubGluZXMuaCB8IDMgKysrDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAz
-IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9idHQvaW5saW5lcy5oIGIvYnR0
-L2lubGluZXMuaCBpbmRleCA2NGI1YTJjLi5mYTVhNTQ2DQo+ID4gMTAwNjQ0DQo+ID4gLS0tIGEv
-YnR0L2lubGluZXMuaA0KPiA+ICsrKyBiL2J0dC9pbmxpbmVzLmgNCj4gPiBAQCAtMTUzLDYgKzE1
-Myw5IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBpb19mcmVlX2FsbCh2b2lkKQ0KPiA+DQo+ID4gIAls
-aXN0X2Zvcl9lYWNoX3NhZmUocCwgcSwgJmFsbF9pb3MpIHsNCj4gPiAgCQlpb3AgPSBsaXN0X2Vu
-dHJ5KHAsIHN0cnVjdCBpbywgYV9oZWFkKTsNCj4gPiArDQo+ID4gKwkJaWYgKGlvcC0+cGR1KQ0K
-PiA+ICsJCQlmcmVlKGlvcC0+cGR1KTsNCj4gPiAgCQlmcmVlKGlvcCk7DQo+ID4gIAl9DQo+ID4g
-IH0NCg0K
+memset() is unnecessary when using calloc() to allocate space,remove it.
+
+Signed-off-by: songkai <songkai01@inspur.com>
+---
+ blktrace.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/blktrace.c b/blktrace.c
+index 3444fbb..4fd1f83 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -1088,7 +1088,6 @@ static int setup_buts(void)
+ 			if (dpp->stats)
+ 				free(dpp->stats);
+ 			dpp->stats = calloc(dpp->ncpus, sizeof(*dpp->stats));
+-			memset(dpp->stats, 0, dpp->ncpus * sizeof(*dpp->stats));
+ 		} else {
+ 			fprintf(stderr, "BLKTRACESETUP(2) %s failed: %d/%s\n",
+ 				dpp->path, errno, strerror(errno));
+@@ -1658,10 +1657,8 @@ static int open_ios(struct tracer *tp)
+ 	struct list_head *p;
+ 
+ 	tp->ios = calloc(ndevs, sizeof(struct io_info));
+-	memset(tp->ios, 0, ndevs * sizeof(struct io_info));
+ 
+ 	tp->pfds = calloc(ndevs, sizeof(struct pollfd));
+-	memset(tp->pfds, 0, ndevs * sizeof(struct pollfd));
+ 
+ 	tp->nios = 0;
+ 	iop = tp->ios;
+@@ -2417,13 +2414,11 @@ static struct devpath *nc_add_dpp(struct cl_conn *nc,
+ 	dpp->cl_connect_time = connect_time;
+ 	dpp->ncpus = nc->ncpus;
+ 	dpp->stats = calloc(dpp->ncpus, sizeof(*dpp->stats));
+-	memset(dpp->stats, 0, dpp->ncpus * sizeof(*dpp->stats));
+ 
+ 	list_add_tail(&dpp->head, &nc->ch->devpaths);
+ 	nc->ch->ndevs++;
+ 
+ 	dpp->ios = calloc(nc->ncpus, sizeof(*iop));
+-	memset(dpp->ios, 0, ndevs * sizeof(*iop));
+ 
+ 	for (cpu = 0, iop = dpp->ios; cpu < nc->ncpus; cpu++, iop++) {
+ 		iop->dpp = dpp;
+-- 
+2.27.0
