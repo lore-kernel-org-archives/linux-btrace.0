@@ -1,48 +1,38 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Date: Mon, 20 Sep 2021 18:08:28 +0000
+From: =?utf-8?B?SGFycmlzIHNvbmcgKOWui+WHrykt5rWq5r2u5L+h5oGv?=  <songkai01@inspur.com>
+Date: Thu, 23 Sep 2021 01:02:48 +0000
 Subject: Re: [PATCH] btt: fix potential memory leak problem in io_free_all()
-Message-Id: <x49r1djqfvn.fsf@segfault.boston.devel.redhat.com>
+Message-Id: <1afc206f45b94d2690f08198be0a9e26@inspur.com>
 List-Id: <linux-btrace.vger.kernel.org>
 References: <20210917091845.133913-1-songkai01@inspur.com>
 In-Reply-To: <20210917091845.133913-1-songkai01@inspur.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: linux-btrace@vger.kernel.org
 
-songkai <songkai01@inspur.com> writes:
-
-> In “struct io” , the "void *pdu" member points to the memory
-> which is allocated in convert_to_cpu(). We should free memory
-> pdu point to before we free "struct io", or memory leak occurred.
-
-That should be freed via io_release.  Do you know of a case where that
-doesn't happen?  Also, io_free_all is only called right before exit.
-I'm not sure this patch really plugs a leak that would impact normal
-operations.
-
-The patch seems harmless, but I'm not sure it's needed.
-
-Cheers,
-Jeff
-
->
-> Signed-off-by: songkai <songkai01@inspur.com>
-> ---
->  btt/inlines.h | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/btt/inlines.h b/btt/inlines.h
-> index 64b5a2c..fa5a546 100644
-> --- a/btt/inlines.h
-> +++ b/btt/inlines.h
-> @@ -153,6 +153,9 @@ static inline void io_free_all(void)
->  
->  	list_for_each_safe(p, q, &all_ios) {
->  		iop = list_entry(p, struct io, a_head);
-> +
-> +		if (iop->pdu)
-> +			free(iop->pdu);
->  		free(iop);
->  	}
->  }
+SGkgSmVmZiwNCiANCj4gc29uZ2thaSA8c29uZ2thaTAxQGluc3B1ci5jb20+IHdyaXRlczoNCj4g
+DQo+ID4gSW4g4oCcc3RydWN0IGlv4oCdICwgdGhlICJ2b2lkICpwZHUiIG1lbWJlciBwb2ludHMg
+dG8gdGhlIG1lbW9yeSB3aGljaCBpcw0KPiA+IGFsbG9jYXRlZCBpbiBjb252ZXJ0X3RvX2NwdSgp
+LiBXZSBzaG91bGQgZnJlZSBtZW1vcnkgcGR1IHBvaW50IHRvDQo+ID4gYmVmb3JlIHdlIGZyZWUg
+InN0cnVjdCBpbyIsIG9yIG1lbW9yeSBsZWFrIG9jY3VycmVkLg0KPiANCj4gVGhhdCBzaG91bGQg
+YmUgZnJlZWQgdmlhIGlvX3JlbGVhc2UuICBEbyB5b3Uga25vdyBvZiBhIGNhc2Ugd2hlcmUgdGhh
+dCBkb2Vzbid0DQo+IGhhcHBlbj8gIEFsc28sIGlvX2ZyZWVfYWxsIGlzIG9ubHkgY2FsbGVkIHJp
+Z2h0IGJlZm9yZSBleGl0Lg0KPiBJJ20gbm90IHN1cmUgdGhpcyBwYXRjaCByZWFsbHkgcGx1Z3Mg
+YSBsZWFrIHRoYXQgd291bGQgaW1wYWN0IG5vcm1hbA0KPiBvcGVyYXRpb25zLg0KPiANCj4gVGhl
+IHBhdGNoIHNlZW1zIGhhcm1sZXNzLCBidXQgSSdtIG5vdCBzdXJlIGl0J3MgbmVlZGVkLg0KDQpU
+aGFuayB5b3UgZm9yIHlvdXIgcmVtaW5kaW5nLiBTbyBmYXIsIEkgY2FuJ3QgZmluZCBhIGNhc2Ug
+ZWl0aGVyLg0KRnJlZWluZyBwZHUgaW4gaW9fcmVsZWFzZSBzZWVtcyBsaWtlIGVub3VnaC4gTXkg
+b3JpZ2luYWwgaW50ZW50aW9uIGlzIHRoYXQsIA0Kd2hlbiBjYWxsaW5nIGlvX2ZyZWVfYWxsIGJl
+Zm9yZSBidHQgZXhpdHMsIHRoZXJlIGFyZSBzdGlsbCAgc29tZSBJT3MgaW4gdGhlIGFsbF9pb3Ms
+IA0KSSBhbSBub3Qgc3VyZSBpZiBhbGwgdGhlIHBkdSBpcyBmcmVlZCBiZWZvcmUsIGp1c3QgbGlr
+ZSBkaXAgYW5kIHBpcC4gDQoNClRoYW5rcyBhZ2Fpbi4gDQoNClJlZ2FyZHMsDQpzb25na2FpDQog
+DQoNCj4gPiBTaWduZWQtb2ZmLWJ5OiBzb25na2FpIDxzb25na2FpMDFAaW5zcHVyLmNvbT4NCj4g
+PiAtLS0NCj4gPiAgYnR0L2lubGluZXMuaCB8IDMgKysrDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAz
+IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9idHQvaW5saW5lcy5oIGIvYnR0
+L2lubGluZXMuaCBpbmRleCA2NGI1YTJjLi5mYTVhNTQ2DQo+ID4gMTAwNjQ0DQo+ID4gLS0tIGEv
+YnR0L2lubGluZXMuaA0KPiA+ICsrKyBiL2J0dC9pbmxpbmVzLmgNCj4gPiBAQCAtMTUzLDYgKzE1
+Myw5IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBpb19mcmVlX2FsbCh2b2lkKQ0KPiA+DQo+ID4gIAls
+aXN0X2Zvcl9lYWNoX3NhZmUocCwgcSwgJmFsbF9pb3MpIHsNCj4gPiAgCQlpb3AgPSBsaXN0X2Vu
+dHJ5KHAsIHN0cnVjdCBpbywgYV9oZWFkKTsNCj4gPiArDQo+ID4gKwkJaWYgKGlvcC0+cGR1KQ0K
+PiA+ICsJCQlmcmVlKGlvcC0+cGR1KTsNCj4gPiAgCQlmcmVlKGlvcCk7DQo+ID4gIAl9DQo+ID4g
+IH0NCg0K
