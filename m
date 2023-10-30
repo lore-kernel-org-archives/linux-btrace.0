@@ -1,52 +1,50 @@
-From: Stephen Bates <sbates@raithlin.com>
-Date: Mon, 19 Dec 2022 05:52:55 +0000
-Subject: Re: Thread 0 failed read of /sys/kernel/debug/block/nvme0n1/trace0: 14/Bad address
-Message-Id: <Y5/8N1lKjQyAXxCS@bunbeg>
-List-Id: <linux-btrace.vger.kernel.org>
-References: <80891a87-0629-0438-60e9-959ca4871208@kernel.dk>
-In-Reply-To: <80891a87-0629-0438-60e9-959ca4871208@kernel.dk>
+Return-Path: <linux-btrace-owner@vger.kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3120FC4332F
+	for <linux-btrace@archiver.kernel.org>; Mon, 30 Oct 2023 20:33:04 +0000 (UTC)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S229854AbjJ3UdE (ORCPT <rfc822;linux-btrace@archiver.kernel.org>);
+        Mon, 30 Oct 2023 16:33:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39264 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229763AbjJ3UdE (ORCPT
+        <rfc822;linux-btrace@vger.kernel.org>);
+        Mon, 30 Oct 2023 16:33:04 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70B22DF
+        for <linux-btrace@vger.kernel.org>; Mon, 30 Oct 2023 13:33:02 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5505C433C8;
+        Mon, 30 Oct 2023 20:33:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1698697981;
+        bh=nQE8M9b1x+iVivrRMkxRJD0wGbP5JDGDaf86E3pJy1o=;
+        h=Date:From:To:Subject:From;
+        b=cSI8KsL5DOw8CEJZhLsfoU+C6CXLXBjK/TqDtWt/UGgzzJCIhR2ya/yl9ZE186NzA
+         3uixSXvR6LYCLwPdZ7B2djoC+SEsrIjhaMHqJd4z0TmUTLSjMMflVfJ25AWRgSj6eI
+         yZkJEBWC/yzsSMteCM6u9Cnw0lIaCs49VFX0dFpY=
+Date:   Mon, 30 Oct 2023 16:33:00 -0400
+From:   Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+To:     linux-btrace@vger.kernel.org
+Subject: PSA: migrating linux-btrace to new vger infrastructure
+Message-ID: <20231030-amaranth-curassow-of-penetration-85fb4e@nitro>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-btrace@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Precedence: bulk
+List-ID: <linux-btrace.vger.kernel.org>
+X-Mailing-List: linux-btrace@vger.kernel.org
 
+Good day!
 
-> >> Would be useful  to strace that so we can get some hints on why
-> >> you're getting EINVAL on the mmap, not enough info in here to render
-> >> an opinion on why that would fail on your kernel.
-> >>
-> > 
-> > $ sudo strace -f blktrace -b 8192 -a queue -a complete -a issue -a notify -o ./trace -D . -d /dev/nvme0n1
-> > <snip>
-> > [pid 2269231] <... ppoll resumed>)      = 1 ([{fd=8, revents=POLLIN}], left {tv_sec=0, tv_nsecB9998741})
-> > [pid 2269231] ftruncate(9, 134217728)   = 0
-> > [pid 2269231] mmap(NULL, 134217728, PROT_WRITE, MAP_SHARED, 9, 0) = -1 EINVAL (Invalid argument)
-> > [pid 2269231] dup(2)                    = 12
-> > [pid 2269231] fcntl(12, F_GETFL)        = 0x2 (flags O_RDWR)
-> > [pid 2269231] newfstatat(12, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x8), ...}, AT_EMPTY_PATH) = 0
-> > [pid 2269231] write(12, "setup_mmap: mmap: Invalid argume"..., 35setup_mmap: mmap: Invalid argument) = 35
-> > 
-> > Excuse the mangling of the last line as the strace and stderr message
-> > trash each other. Does this point in any particular direction?
-> 
-> Only guess is that whatever fs is hosting the blktrace files doesn't
-> support mmap? There's no reason why that mmap should fail otherwise.
->
+I plan to migrate the linux-btrace@vger.kernel.org list to the new
+infrastructure this week. We're still doing it list-by-list to make sure that
+we don't run into scaling issues with the new infra.
 
-Oh that was the clue I needed. My VM uses UTM which leverages VirtFS [1]
-for sharing of my Projects directory on my MacOS host into the
-guest. I don't know exactly why but the files in this share are not
-mmap'able. If I cd to a folder outside the share then blktrace works
-fine.
+The migration will be performed live and should require any downtime.
 
-$ mount | grep Projects
-share on /home/batesste/Projects type 9p (rw,relatime,sync,dirsync,access=client,trans=virtio,_netdev)
+Please speak up if you have any objections.
 
-[1]. https://docs.getutm.app/guest-support/linux/#virtfs
-
-I will follow up with the UTM folks and see if we can get to a
-specific root cause. Thanks for the prompt help!
-
-Cheers
-
-Stephen
+Best wishes,
+-K
