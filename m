@@ -1,95 +1,93 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+Received: from mail-io1-f44.google.com (mail-io1-f44.google.com [209.85.166.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19051125A3
-	for <linux-btrace@vger.kernel.org>; Wed, 17 Jan 2024 08:37:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CDE828DA7
+	for <linux-btrace@vger.kernel.org>; Wed, 17 Jan 2024 23:02:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705480634; cv=none; b=XKyIuLu16U/J/IsPPQISpX8g4sY+486/bmVifmcYUSuhhnK9jMpsK+r1/DJWf+YlOOZCIk+uhgcHdbbENFdLwYE3DHEtmIsRY/niLLlReLn1IxRh1b958D6zTSD6IYDE/8GLr5qkfiryIN3fF0TEkNa3Y3VjUWHP+Kw5xJNdqP0=
+	t=1705532581; cv=none; b=ZAP9y2inp48mlxxWpIqXARzUFuP/ksi7JnMkikcj6BqVn0zdtoQi5A2N30OqwS6dyxuYc+5WdHVTt+Hb8SwfvYShGXl4N3UNnDwaXzOtFFz9vqGzJ52D8xgIksE1yyeKHCatzRRx4J2mRff8j8Kpq0OK2eR72xOG/cWpjWUiaTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705480634; c=relaxed/simple;
-	bh=SS+TAcyo/MgIu5butqYqrBlfI0hmx7zcKOLux0DM/rs=;
+	s=arc-20240116; t=1705532581; c=relaxed/simple;
+	bh=7Nrw6iw/ABNB6L36giGtcZh1VaAZLpEVCwAo7+eaa/c=;
 	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:Sender:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding; b=jLh9mchByOMDaEXdVC1FfTT7vLm08IKGxYhNhbuvULwKQyrFt6awC1TV05FMEQapOI+Pxk7z5OOUbcPppB2QDshy75FXPcyqmBC5fRe+6AptJOtpZN4CzcSqodqnb7qLXp0S1NDqafnQq8XBd2uaMXMbnYAAmP1Z10KgilsPLwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=akane.waseda.jp; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HOfHSTMa; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=akane.waseda.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:From:
+	 To:Cc:In-Reply-To:References:Subject:Message-Id:Date:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-Mailer; b=tnj2X/DpF27pAW3BZg/QPqnPTQaZp33k2Z0vrAjhDekNnlyaXSku1TRAsjgsPL5pUIHxTgoxyVJWydyQqTHk4pgM+ego5NQGY+cCFU88UI2ExDybiJvQuL2lv2FUYWPEsRPYhpTVGPTPsXUA1sgY1jqhxObo6ONEial9foriayM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=WHxhW/Nn; arc=none smtp.client-ip=209.85.166.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HOfHSTMa"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6d9b23698c0so777194b3a.0
-        for <linux-btrace@vger.kernel.org>; Wed, 17 Jan 2024 00:37:11 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="WHxhW/Nn"
+Received: by mail-io1-f44.google.com with SMTP id ca18e2360f4ac-7beeeb1ba87so59592739f.0
+        for <linux-btrace@vger.kernel.org>; Wed, 17 Jan 2024 15:02:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1705480631; x=1706085431; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=8Vy1c44NWsuctT6RA7K6rypvctiqHAULnEsO4QKFeBs=;
-        b=HOfHSTMazBl0IO+RNhcvJGdRfmwMG641n8ulPoMCpmOYh73wQhEPIWhVy8poCPWGQb
-         W1Z0iLv80ZjA1nKi2FEYCS8LuOGA4YLPXNDcAGRfQExlBePybx2HdowmiU77Z8LUBRcI
-         ORIj+sOhP7vXaA0hWtBYZRDgoyfX5Rz6NB9vjW7k2BvK/GLnxvJsEyS811PAOjcO4Cz8
-         Q/XMGQ0funQixVquFL6YJ4Tfk2LfEm3Le3k5Z2ahtjKBDAicwj5aFnQOhWvBQ4Mrik1l
-         HnMvmGVfc6hTEIfNePX3+Ub95XatYOqRNz3wx/1ud8AT1U4vAjuxi2V8W11CnlbLYQkJ
-         I9WA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705480631; x=1706085431;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:x-gm-message-state:from:to:cc:subject:date
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1705532577; x=1706137377; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=8Vy1c44NWsuctT6RA7K6rypvctiqHAULnEsO4QKFeBs=;
-        b=cxmqIIMIhoRafP1ca4xtxyUhL2WwpuOcb9JtVdRHIoN8z/zfIRGwj++4ybxgkbWDcz
-         Lr6Mj1qeOuYPibYOgacem4GrXhuH/vM9EHsGi9J6L/mCpgFSQzHV7XeEc6lfpCG/f18x
-         bjRjfmYfKpMYJNmiBJqum52X9F1s/xR0L09sCM64nOTs2r+jJULyiAvt8Bo6feAAhgI4
-         yfSSa3y433IlXUrCzyzdr5WKeyurNj+BQzOrekMWpiVbJje9OgDhcYyzV/CTEFTwhbED
-         rAUc18Os2ZWMEB1/9BEaGrNnvxC1iKYaOcHwjOEWuv6GqCQVF0u64XykbWPunhq1aRNe
-         WFsA==
-X-Gm-Message-State: AOJu0YwIiwySYE5WtHrnLjxmb3OYn3YvrmfGO9W0PcH2K/R8I1UqpHlT
-	pXDjqLiueiPLAUewUBCYXujE334RetTLyQ==
-X-Google-Smtp-Source: AGHT+IEjA4u3vfhmHs++AL4+aSyd7x3OYlgHX8LulgWXzWk7JiOB7HAiglkCZ48EiNLX2A9jS/hH9w==
-X-Received: by 2002:a05:6a00:939d:b0:6da:83a2:1d9a with SMTP id ka29-20020a056a00939d00b006da83a21d9amr18364101pfb.1.1705480631069;
-        Wed, 17 Jan 2024 00:37:11 -0800 (PST)
-Received: from localhost.localdomain (M106072130065.v4.enabler.ne.jp. [106.72.130.65])
-        by smtp.googlemail.com with ESMTPSA id h20-20020a62b414000000b006d9a9727a8esm893699pfn.178.2024.01.17.00.37.09
+        bh=o/dsZxsf+Ng8auhlEwlFXiCZObxUFDD85a15F5BIADc=;
+        b=WHxhW/Nnn3hKLYbbwLh+RJOomS3/BpiIDUtU770ZqgEkFIsqRe7VlbLD2xXnhnqwhO
+         SDE4gIHll5XBvh17JzIF/QCC3AOt2DB7+FSdmNvqkpEK8TeLNj5HRzfawqTt7ptcjqVo
+         NzzCertWj9lpkafX5/+WvAAte6FzTlDEEkyQj9xRr5KLdSZt+zgiTWxIGkVscf9W6J/X
+         8yNCkKm9LEnsAP4U2xuFXHTad02J6hwwVgbqGnMnYNCcLgBUNjk4NTj0zbk7ko1S0ff4
+         4Z7I81nU+Hypjx02IQDz2vlTx9D7xmNDdjdxJbYWoOcF0lBk/KP4LK0c+YCrAgvFImEE
+         xz0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705532577; x=1706137377;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=o/dsZxsf+Ng8auhlEwlFXiCZObxUFDD85a15F5BIADc=;
+        b=OZpoVDJWh0R5cQRBdBY48wOFBPFK0I2uxoXOLAH3m2Wp7+L5ZVV7aboaioHBZSwiod
+         XaKBXPn+mhc6THsmYNGt+MlGZegtG7tsU2NR7lBfOGhB5EqHe+hPZ6ho7X516zVdin5m
+         bYJvJhap7Y6Wj3/UccLjU+9JCs+RwkO+XTXc+YZgGm/r+VKlbM8Up0iFke0LEdAxBsEb
+         WA9YNF41JLmq1iMJ1hZdBzE4x7e/g2tJqlvVYuVEKdWwBfJbM9yBi90Hcxom64DLBTDb
+         IXFrrKYJAs6OnbjLbNqigGjAqvzcNkHehYOyRkBvtv9+4p/mq0t10j9ptfD3MBoBOU6/
+         JVXQ==
+X-Gm-Message-State: AOJu0YwoMAEtywmwAVchyxjm2kJS4er0Gqck02F6znSG1R0caYlMSFpw
+	Fo0MRLYAMhPJITUP8EI2A2mxqL+9Ui9lOrKLR4RoP/8/FcuSZoiYVhEIEz6wQyc3LG3qMjiUTXQ
+	zfIw=
+X-Google-Smtp-Source: AGHT+IHHyR0qXB8cpD3sXIik6S2uKNAVrwbeTztW1dzXJSfcYXNHfYooIkST+bzcQ1Yag32nzrnHKQ==
+X-Received: by 2002:a5e:da4c:0:b0:7bf:3651:4c6d with SMTP id o12-20020a5eda4c000000b007bf36514c6dmr74383iop.2.1705532577363;
+        Wed, 17 Jan 2024 15:02:57 -0800 (PST)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id gc18-20020a056638671200b0046e5c69376asm660238jab.40.2024.01.17.15.02.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jan 2024 00:37:10 -0800 (PST)
-Sender: Daichi Fukui <when.a.cat.sits.beside.you@gmail.com>
-From: Fukui Daichi <a.dog.will.talk@akane.waseda.jp>
-To: linux-btrace@vger.kernel.org
-Cc: when.a.cat.sits.beside.you@gmail.com,
-	Fukui Daichi <a.dog.will.talk@akane.waseda.jp>
-Subject: [PATCH] doc: btrace: fix wrong format on doc
-Date: Wed, 17 Jan 2024 08:36:51 +0000
-Message-ID: <20240117083651.954-1-a.dog.will.talk@akane.waseda.jp>
-X-Mailer: git-send-email 2.43.0
+        Wed, 17 Jan 2024 15:02:56 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: linux-btrace@vger.kernel.org, 
+ Fukui Daichi <a.dog.will.talk@akane.waseda.jp>
+Cc: when.a.cat.sits.beside.you@gmail.com
+In-Reply-To: <20240117083651.954-1-a.dog.will.talk@akane.waseda.jp>
+References: <20240117083651.954-1-a.dog.will.talk@akane.waseda.jp>
+Subject: Re: [PATCH] doc: btrace: fix wrong format on doc
+Message-Id: <170553257653.797202.12304676152267000923.b4-ty@kernel.dk>
+Date: Wed, 17 Jan 2024 16:02:56 -0700
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.12.5-dev-2aabd
 
-The synopsis part of the btrace documentation gets highlighted with
-wrong format. Let's fix the format. There is no change to the contents.
 
-Signed-off-by: Fukui Daichi <a.dog.will.talk@akane.waseda.jp>
----
- doc/btrace.8 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, 17 Jan 2024 08:36:51 +0000, Fukui Daichi wrote:
+> The synopsis part of the btrace documentation gets highlighted with
+> wrong format. Let's fix the format. There is no change to the contents.
+> 
+> 
 
-diff --git a/doc/btrace.8 b/doc/btrace.8
-index a1f34c2..2080e6e 100644
---- a/doc/btrace.8
-+++ b/doc/btrace.8
-@@ -6,7 +6,7 @@ btrace \- perform live tracing for block devices
- 
- 
- .SH SYNOPSIS
--.B btrace [\-s] [\-t] [\-w \fIN\fN] [\-n \fIN\fR] [\-b \fIN\fR] [\-r \fI<dbg mnt>\fR] [\-a <\fItrace\fR>...] <\fIdev\fR>...
-+.B btrace [\-s] [\-t] [\-w \fIN\fR] [\-n \fIN\fR] [\-b \fIN\fR] [\-r \fI<dbg mnt>\fR] [\-a <\fItrace\fR>...] <\fIdev\fR>...
- .br
- 
- 
+Applied, thanks!
+
+[1/1] doc: btrace: fix wrong format on doc
+      commit: b9ea6e507e8849f01d06aa48c0c59c5cee4820be
+
+Best regards,
 -- 
-2.43.0
+Jens Axboe
+
+
 
