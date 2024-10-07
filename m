@@ -1,183 +1,144 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f201.google.com (mail-yw1-f201.google.com [209.85.128.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB4E41ABEC9
-	for <linux-btrace@vger.kernel.org>; Fri,  2 Aug 2024 19:58:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B531513698F
+	for <linux-btrace@vger.kernel.org>; Mon,  7 Oct 2024 21:12:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722628739; cv=none; b=WU+L2CAhByhqMhJBtY7iCr86lpDU3b06/8cjC898PzaW7zZ/+JLi44O/zRLYdgNqzWkw14BIxtQbLgYbPvKvuAmmOhIEhr1snoG2YJYdPnF/Kc+OLfMO66khfHxZpaxhnpqwpPXBW1UFL3EKoz79CEbpY1U5+5b4OXqJ2wPle84=
+	t=1728335571; cv=none; b=pGVNdsuIgthz40/hctPywba7CtBy9+xdm3FbZ+mg/uDz3ZsPZZUiQ2pur31uazUwnfZBZHAL6V0vkyALMNi/6Z12dNMEKdj1Iw1zwlgmAAKbM6KwxvzAsUprxxhvFm1J4RrdjRsVCG75hulf1oXrpfncXMUDuwYS//S6Vs2ZRS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722628739; c=relaxed/simple;
-	bh=8RflBWc9HdsepNBgAIhHnnyyaSdbfrI4sAe/ie+rY1c=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XaLZwwPYI27waS4l3kRw2T4zyalGzaHSdksbLcmqwGsOgBBeufK0zhk/WWSFm5E4v5B9Vb7gMQHVX6xAHirEg056RGG9+aM1F/q12Eg2pZYWFPvkJk3efVdXbu53Jpqu/c1vBuO21urZvfElLdHBW7UJI5/PFVHhc8wCUP2lYlU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=M1yP5v34; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1728335571; c=relaxed/simple;
+	bh=ZuohLnnC2ILqrQOUyMFsj/ANEOTpAy13BftIUmVPdio=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=hWYc2JJcNOgT4xVeiRNamW2z1R8wlvKJ0gPfTtl9RGIOpbKrqCTv3NWyEgmBN82eODQVGr8Bf/yKa92NsNF/yqSRQ7/9qtJjeIfGuAkGNqBSMKlLzoi+qJTTV9pV+TFbtZ7kfFX3Zc0MlsRPMW1ThSyhW1DdFlrRFeX7gkoGhbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MhBJJUCo; arc=none smtp.client-ip=209.85.128.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M1yP5v34"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1722628736;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XVHWlGsfaV3JAt83FTQK6nu3pxL1il4gTxx8tNRrfvQ=;
-	b=M1yP5v34okZW+tGPSOYvkI+6qqYXGRrJsFf9ag31zLOsUG05PIVJnidOpvviWjUtoloq7O
-	PcUANzvZRg3MynOyxtQpuusEu6thyDx0U6Y6aarMdyt2C6sg3w+S+W4aRrMeMVqM5aEtf+
-	QE5EL9NmKxTILz3bvRLq7jFdrpJMmBI=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-662-8g7c1ABbMm6ZWvrSiPTOJw-1; Fri, 02 Aug 2024 15:58:55 -0400
-X-MC-Unique: 8g7c1ABbMm6ZWvrSiPTOJw-1
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-368374dc565so3864784f8f.2
-        for <linux-btrace@vger.kernel.org>; Fri, 02 Aug 2024 12:58:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MhBJJUCo"
+Received: by mail-yw1-f201.google.com with SMTP id 00721157ae682-6e25a6fdde8so78757867b3.2
+        for <linux-btrace@vger.kernel.org>; Mon, 07 Oct 2024 14:12:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1728335569; x=1728940369; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=12gMoK5ruCKG+G5/zC7c6BxpE8VHv0YCip+lGFpzNp0=;
+        b=MhBJJUCo7fifN4t0TUm7hic9vJx9yl8KGCMR0efCFY/3xHcv1UQjCz0mdPOtmD54q8
+         uUMwFhAo+kxcinYOWkK1AJRZGlhP1vsKeNlK9P3cC+N5FGW5pQ91j2LsJ4mV3q5Q9yUt
+         HTHTFq8tAGA2WfFGF82FIjPzQi4umqibjVGdZBFWw37IY1CwqvKybmPParFhj13xqYSo
+         +pecFdjggA6imsLjuUdvGVIQvjny/IUuY2WQWx2yu+eVsT5t4LTPZzCjiekTAi3RE/NG
+         XSDtoad1TfW6+Nq29Dw94NR8lzIELIS+Z7mqYgJr3uHeookCOfjVS4wmoT4NPrAKseYW
+         +O9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722628733; x=1723233533;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XVHWlGsfaV3JAt83FTQK6nu3pxL1il4gTxx8tNRrfvQ=;
-        b=MBo09S6lOrdzyiINUTVkyWSA4GCbtiY8yiCI1b33CRK3SAbZrnh/LP7OBAr+AXWp4q
-         QYXhd1l9KjJ5XRMFOATy+/fPymyWjrtBxBqDrqkYeAWnRtHaXLbQqEVQea113w7Pib3D
-         bTOjkRVirfDDoWjLAmtcEm0XhiqCWLXsweNhO1/6B1Cfo2RVbTqrSlhCBtttzNQfvtYF
-         ELBNi8NQ3WnDPC+6qLE8fDTfl85W6ZMjC6FbRTaKdymy4q2DyGQgDNWbGy5kur0C1XlQ
-         LptFUWey+19KLyC0J6OBEpzaeS3q7GBFIQntK0Aw0bYEMpq9E9yh9CurM5tCvC089t6j
-         Y8jg==
-X-Forwarded-Encrypted: i=1; AJvYcCVf3llyoDh0SotgqMEc7jCZiKKAfyRwusGmqrLycoTxq8fJDdqAZByPymGJSG6LfxbuaeTkXchBPYMqqpO0dzuU/G/ayOLi6ZaGccT6
-X-Gm-Message-State: AOJu0YzxRG1F9cpTZLUWcvuAR11i9tUi2FRsL4IaxpMORkSxwkukL8ys
-	EfoKicyDIa65uFPpHbqqJhMbiAUIdDRmCaEs8cl7HGwes5vXf36nVx3kpD41oKZ3yWQpmYW92B7
-	yau6DPWGjXW+tm9CGqz11bsdE+yOHxqPYrNBjbJFbTgk1fS3kNBFmuISydGmg6+66BtqoEOVe6P
-	dNagrjmgZbM9lnbjq7ddsWCYUrwXQUlQhe00PKQCItqe2YyHE=
-X-Received: by 2002:a5d:5248:0:b0:368:319c:9a77 with SMTP id ffacd0b85a97d-36bbc0fff6cmr3060523f8f.29.1722628733315;
-        Fri, 02 Aug 2024 12:58:53 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHS5SPkZfAr0vXFFRZu1Yab/IPcHMXY8x40w225u7qHkyq5S7m0WufO2JL7b85IhyzCj5VjGL2TBHM7lGDiaXA=
-X-Received: by 2002:a5d:5248:0:b0:368:319c:9a77 with SMTP id
- ffacd0b85a97d-36bbc0fff6cmr3060506f8f.29.1722628732248; Fri, 02 Aug 2024
- 12:58:52 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1728335569; x=1728940369;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=12gMoK5ruCKG+G5/zC7c6BxpE8VHv0YCip+lGFpzNp0=;
+        b=G203Eek3HDyywBpWIHdWh0alJk0TpkrBp6p2KwFjdJHSVnw4K7KV+ZEOjQL+2rHMFb
+         Mo2b7VZvoH10Oby/KE/d21N4u7iH/OQi71PzzQ+jfKe2JH2ScT01AKoVRUtM+XyqBMSG
+         9JdTPoZdEwXluN9khjfrSa/AMGTkpvrr+22CzJFvdkd3Du63UjBLVmmMTOv4OdMqySUx
+         69/BGfmHDj2KYE45cZVRcHTrFpE3ccdCE49K1ho8JWBDVXeus4t+hXZizoLXykSrZYPb
+         ii2iB6ygmHGFinOFbzXffAIjZPAd6lGVAaW77NqxEszuagoXHYkUhlrhE5x/O/UJb6+M
+         3JIw==
+X-Gm-Message-State: AOJu0YyzdASswUunFEu2SdwTAjqeF2gYHd7S2xGPS5YnHL7hBftn/WhR
+	xeKwBqVbiYKJJtTHXzAMMg0+//F7fXAX6F0DItgeZRh6gX3GQriJkFngPByC/MPQRZ//Yw0AH73
+	ZBozEBcdnlA==
+X-Google-Smtp-Source: AGHT+IEN/dZG/e4N/ffM191YpnF2OsCe5tMEafKmFLYvrZeemL8R+9itIXnEfe4St1DUkzMBSej+itBhT1A9Tg==
+X-Received: from ip.c.googlers.com ([fda3:e722:ac3:cc00:ef:85c8:ac13:4138])
+ (user=ipylypiv job=sendgmr) by 2002:a05:6902:4a8:b0:e28:e4a7:3206 with SMTP
+ id 3f1490d57ef6-e28e4a732e6mr10302276.8.1728335568635; Mon, 07 Oct 2024
+ 14:12:48 -0700 (PDT)
+Date: Mon,  7 Oct 2024 21:12:43 +0000
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <87a26aff-78b4-4e87-9c83-8239d238b381@online.de> <Zq01Nx8SyhoY0/R7@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
-In-Reply-To: <Zq01Nx8SyhoY0/R7@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
-From: Bryan Gurney <bgurney@redhat.com>
-Date: Fri, 2 Aug 2024 15:58:40 -0400
-Message-ID: <CAHhmqcQf+kYnYmQqEyC8033bSDT5F6x6WKt-TEcZ06e1j=gAjQ@mail.gmail.com>
-Subject: Re: Understanding blktrace; measuring extra writes on ext4 with
- open(...,O_DSNYC | O_TRUNC)
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: Max Schulze <max.schulze@online.de>, linux-btrace@vger.kernel.org, axboe@kernel.dk, 
-	linux-ext4@vger.kernel.org
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.47.0.rc0.187.ge670bccf7e-goog
+Message-ID: <20241007211243.1351143-1-ipylypiv@google.com>
+Subject: [PATCH] iowatcher: Calculate ios_in_flight per trace
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-btrace@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, Aug 2, 2024 at 3:36=E2=80=AFPM Ojaswin Mujoo <ojaswin@linux.ibm.com=
-> wrote:
->
-> On Fri, Aug 02, 2024 at 10:28:47AM +0200, Max Schulze wrote:
-> > Hello,
-> >
-> > so I have an embedded application with limited flash write cycles. I am=
- writing 2 blocks to disk 5 times a second (ext4, block size 1024).
-> > The data written is binary and fixed size and to date I open the files =
-with (O_CREAT | O_WRONLY | O_DSYNC | O_TRUNC).
-> >
-> > I set out to measure whether this O_TRUNC leads to an extra write (beca=
-use I might be able to do without - data is fixed size) and understand the =
-linux tooling around for inspection.
-> >
-> > I wrote a test script, that creates a 2MB ext4 file system on a separat=
-e block device, so I can trace with blktrace -d /dev/sdc
-> >
-> > If somebody please could have a look if the interpretation of the trace=
-s is correct and what the missing identifiers are.
-> >
-> >
-> > Below is the output from blkparse for the moments where I write with op=
-en (DSYNC | TRUNC)
-> >
-> > >
-> > >   8,32   2      152     8.831293895 22900  C RAM 2060 + 2 [0]        =
-     <-- previous _C_omplete
-> > >   8,32  10        2     9.245982628 14449  D   N 0 [kworker/u40:2]   =
-     <-- D =3Dissued
-> > >   8,32   2      153     9.246369033 22900  C   N [0]                 =
-     <-- C_omplete
-> > >   8,32   0      200     9.268019255 15706  A  RM 2062 + 2 <- (8,33) 1=
-4    <-- A =3D remap
-> > >   8,32   0      201     9.268020922 15706  Q  RM 2062 + 2 [writerdt] =
-     <-- Queued
-> > >   8,32   0      202     9.268034745 15706  G  RM 2062 + 2 [writerdt] =
-     <-- Get =3D allocate Req.
-> > >   8,32   0      203     9.268051167 15706  I  RM 2062 + 2 [writerdt] =
-     <-- I_nserted in Queue
-> > >   8,32   0      204     9.268107127   161  D  RM 2062 + 2 [kworker/0:=
-1H]  <-- D issued "R"ead
-> > >   8,32   2      154     9.268704050 22900  C  RM 2062 + 2 [0]
-> > >   8,32   0      205     9.268881750 15706  A  WS 2160 + 2 <- (8,33) 1=
-12
-> > >   8,32   0      206     9.268882510 15706  Q  WS 2160 + 2 [writerdt]
-> > >   8,32   0      207     9.268890935 15706  G  WS 2160 + 2 [writerdt]
-> > >   8,32   0      208     9.268891685 15706  P   N [writerdt]
-> > >   8,32   0      209     9.268892510 15706  U   N [writerdt] 1
-> > >   8,32   0      210     9.268895672 15706  I  WS 2160 + 2 [writerdt]
-> > >   8,32   0      211     9.268913234 15706  D  WS 2160 + 2 [writerdt] =
-     <-- D issued "W"rite "S"ynchronous
-> > >   8,32   2      155     9.271009859 22900  C  WS 2160 + 2 [0]
-> > >   8,32   0      212     9.271041534 15706  A WSM 2126 + 2 <- (8,33) 7=
-8
-> > >   8,32   0      213     9.271041910 15706  Q WSM 2126 + 2 [writerdt]
-> > >   8,32   0      214     9.271051615 15706  G WSM 2126 + 2 [writerdt]
-> > >   8,32   0      215     9.271053774 15706  I WSM 2126 + 2 [writerdt]
-> > >   8,32   0      216     9.271075678   161  D WSM 2126 + 2 [kworker/0:=
-1H]  <-- D issued "W"rite "S"ynchronous
-> > >   8,32   2      156     9.273122709 22900  C WSM 2126 + 2 [0]
-> > >   8,32   4       67    10.277429577 13420  A  WM 2050 + 2 <- (8,33) 2
-> >
-> >
-> > -> What are M and N in the "rwbs" field? I could not find this in the m=
-anpage.
->
-> Hey Max,
->
-> I had the same confusion sometime back and had to dig in the kernel
-> code. All the rwbs values the latest kernel supports can be found
-> in this function [1].
->
-> So 'M' is added for metadata requests eg when FS is reading some
-> metadata blocks. 'N' is added when the request is neither
-> read/write/discard etc. I'm not sure what kind of IO results in N though
-> so maybe someone else might be able to add to this.
->
-> [1]
-> https://github.com/torvalds/linux/blob/master/kernel/trace/blktrace.c#L18=
-75
->
-> (I'll try to go through the trace you provided when i find some time and
-> update here)
->
-> Regards,
-> ojaswin
->
+When multiple trace files are passed, the generated queue depth graph
+ends up adding queue depths from previous traces.
 
-I did a presentation on blktrace / blkparse at DevConf.US 2019, so
-that presentation PDF might be useful [1].
+iowatcher -t blktrace1 -t blktrace2
 
-The "N" is shown mainly for "queue plug" or "queue unplug" events:
+Assuming blktrace1 has a queue depth of 8 and blktrace2 has a queue depth
+of 32, the resulting graph will display blktrace1 with a queue depth of 8
+and blktrace2 with a queue depth of 40 instead of 32.
 
-P  N (queue was plugged)
-U  N (queue was unplugged)
-UT  N (queue was unplugged by timer)
+Replace global ios_in_flight with a per trace ios_in_flight to show
+a correct queue depth for a given trace.
 
-[1] https://devconfus2019.sched.com/event/RknY/block-storage-tracing-in-the=
--linux-kernel
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
+ iowatcher/blkparse.c | 13 ++++++-------
+ iowatcher/blkparse.h |  1 +
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-
-Thanks,
-
-Bryan
+diff --git a/iowatcher/blkparse.c b/iowatcher/blkparse.c
+index 6203854..0518083 100644
+--- a/iowatcher/blkparse.c
++++ b/iowatcher/blkparse.c
+@@ -41,7 +41,6 @@
+ #define IO_HASH_TABLE_BITS  11
+ #define IO_HASH_TABLE_SIZE (1 << IO_HASH_TABLE_BITS)
+ static struct list_head io_hash_table[IO_HASH_TABLE_SIZE];
+-static u64 ios_in_flight = 0;
+ 
+ #define PROCESS_HASH_TABLE_BITS 7
+ #define PROCESS_HASH_TABLE_SIZE (1 << PROCESS_HASH_TABLE_BITS)
+@@ -1037,8 +1036,8 @@ void add_pending_io(struct trace *trace, struct graph_line_data *gld)
+ 		return;
+ 	}
+ 	if (action == __BLK_TA_REQUEUE) {
+-		if (ios_in_flight > 0)
+-			ios_in_flight--;
++		if (trace->ios_in_flight > 0)
++			trace->ios_in_flight--;
+ 		return;
+ 	}
+ 	if (action != __BLK_TA_ISSUE)
+@@ -1054,10 +1053,10 @@ void add_pending_io(struct trace *trace, struct graph_line_data *gld)
+ 	}
+ 
+ account_io:
+-	ios_in_flight++;
++	trace->ios_in_flight++;
+ 
+ 	seconds = SECONDS(io->time);
+-	gld->data[seconds].sum += ios_in_flight;
++	gld->data[seconds].sum += trace->ios_in_flight;
+ 	gld->data[seconds].count++;
+ 
+ 	avg = (double)gld->data[seconds].sum / gld->data[seconds].count;
+@@ -1088,8 +1087,8 @@ void add_completed_io(struct trace *trace,
+ 	if (!pio)
+ 		return;
+ 
+-	if (ios_in_flight > 0)
+-		ios_in_flight--;
++	if (trace->ios_in_flight > 0)
++		trace->ios_in_flight--;
+ 	if (io->time >= pio->dispatch_time) {
+ 		latency = io->time - pio->dispatch_time;
+ 		latency_gld->data[seconds].sum += latency;
+diff --git a/iowatcher/blkparse.h b/iowatcher/blkparse.h
+index fce9d01..f828763 100644
+--- a/iowatcher/blkparse.h
++++ b/iowatcher/blkparse.h
+@@ -57,6 +57,7 @@ struct trace {
+ 	int mpstat_fd;
+ 	int mpstat_seconds;
+ 	int mpstat_num_cpus;
++	u64 ios_in_flight;
+ 
+ 	char *fio_start;
+ 	char *fio_cur;
+-- 
+2.47.0.rc0.187.ge670bccf7e-goog
 
