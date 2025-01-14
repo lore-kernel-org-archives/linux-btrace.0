@@ -1,71 +1,87 @@
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C850222DC5D
-	for <linux-btrace@vger.kernel.org>; Tue, 14 Jan 2025 09:35:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2EAA139D1E
+	for <linux-btrace@vger.kernel.org>; Tue, 14 Jan 2025 14:29:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736847302; cv=none; b=b1aaElHEDR40Wgyf40N+YbT2j6nb6MTaNjmEFErJwG9TtfXpbkch4em4knL9a/3x5UnS7PCEK1unXqdK6q6KmGH1BprUXJnQhViZIkWQ6Oshy5miuWWx5zGY4Ncek4bBTeBoaZHvZgqlYdpZN+OtBgS+1bC/aR+ME7dK+//8faY=
+	t=1736864981; cv=none; b=qsF2m5Q/srKe1lSHW+PG9HSauqSN0LRdVMQrHBZjU6exjpmvQvxEI9EWQHkCyXt35oS+fr6IZsYxwvQ7Cg+Aaqyh+d1xEC4HgGhcLi8oOCCmA3GuyP3dekzL0Ep1O/eF92WVvQiehE4K0VCW6MRHedp4lBJyBAbvYU0MhVqKx1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736847302; c=relaxed/simple;
-	bh=JtQ8cjMN0SoFjGVqS+zX2hFnQaqLeQrkjm0cFjOzpNQ=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=ISZYDrdBXNMKerZ7qbr+nNV78UueVfRLW2DuOWJPQBu5dDB7dyD7XRKJd0CGogTGMIl5z+Kom06xX/v+gt5PxHOfWdR8NY0J1jDaEWCZt631j9cXgxWZBe2O5oOwqeDDv/ocBiV4kDEU0vdXsIJ6KESPtS/PTpn8Ce4AvVKUCSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SjslkXP5; arc=none smtp.client-ip=209.85.167.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1736864981; c=relaxed/simple;
+	bh=vlz3L+JcuMLQuZQsqhvKkzW9p9dmKeDXy0S1T8MmNx0=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=UV/t2KTM8oq0z1aTAl5pu3BjqGzczW5L8mGNVlxDhNwKpfnlLTqc4JRbEhHm1BYL4qNjGH3RsHhaakJ5Ioz7Uftl7N/ocGfx0tzUMGiIWJYSN4PI1Dtp4I/zy2z9+QBF6J9tA7i86Ca/0lm5+mPGmruR+FPRl+iPRWvwa3NuLsQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JAp2yS+A; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SjslkXP5"
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-53e3c3e38d0so686105e87.3
-        for <linux-btrace@vger.kernel.org>; Tue, 14 Jan 2025 01:35:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1736847298; x=1737452098; darn=vger.kernel.org;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=JtQ8cjMN0SoFjGVqS+zX2hFnQaqLeQrkjm0cFjOzpNQ=;
-        b=SjslkXP5mOylW8QDPAeLQeyVd6aLgx9PdkY2pPK3J330wo5cRohduDasgqASH/BBfT
-         R25q/FBbCMsBexyqf3NZEVUvvTzXQOTKQ+qQTN5xwVWvoN1yvkTzBccZNFOEEf7pN6pY
-         32YAwB8fNsF7xwZR4UcgciP84JRMoKSXVO2LXY1NNQ0x7OZJ89NMvK/5y0sbdKAWuh/8
-         KA2cGOjGPqSqBr4oLt/KknW05tTz93H7wRVbeNqfETCBY1vqb9RD+6ptCwXNlHh3H6wn
-         clhFoU7cHxh44o875UOkGzhIrpVQlYmtBWKKrpeZKAUNrH3ACF7wkueQQt1TbeOwgER+
-         XBmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736847298; x=1737452098;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=JtQ8cjMN0SoFjGVqS+zX2hFnQaqLeQrkjm0cFjOzpNQ=;
-        b=MG9/qkuO//dFK6y+GRWVogdXrllEiMLpXq3IHCUSgrb6BrKqLPrxnNZd5d+joGuov2
-         aXi2jQU6C5kFmVBt/LuKoR7nM5ms/lTC0Q+2Jml3XxeD9ab+VXizKKMsmFgp/1oivzto
-         faP7KBRwxkDCslEEf1HYUEidu18veEHLDB0L2q5ISVNEjgoZppDBT8s9LOCe+JyQXBj6
-         84HAX5JNdKWCj5hKjW1AefBx8/cbvS6X+bqSqGTNn3JAGFUd9cKhiQUHUfu2EIte78le
-         WiVZH5BnmiKPrVwu8oF9P1gVv6f2ADUNyYgjapY1ekLXWDjZey4NtZEQU4sy+CcEcRUr
-         Sm+g==
-X-Gm-Message-State: AOJu0YzRTmfxCG4/HFE6EfcG/8fxqk3Gj/rpKzn0YjhX0VEHbnkAaPtM
-	FAJQf5SQ6S8nOKmgpA2kc28b4S8OjivoNKpH5l+XIMvww/fvOvBKEStr7CEUqdcXki0WUZsy+ED
-	MLoNoYlIL8Yw7qP8qZPJAc30VSoU1zwZ2bd0=
-X-Gm-Gg: ASbGncumo/iwZiQeKoQNU8B5VQh2tof5F9roLkseIAqkTCELfMdeSjLAg+MF5qNjq53
-	ZysUsTYwR73/latrhE0GXS6X+Xy8p//2Z/G6ZLQ==
-X-Google-Smtp-Source: AGHT+IFMWrW6iNRTieLQSwxMlM5ewAGuswGE4wwQjXFXcTCVicWMOQAjWbL0q9oyCqQ5OYTTpypRHF+v8Ux9ypJtV2M=
-X-Received: by 2002:a05:651c:19a9:b0:302:289f:3c5f with SMTP id
- 38308e7fff4ca-305f45d4a09mr26547391fa.8.1736847298085; Tue, 14 Jan 2025
- 01:34:58 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JAp2yS+A"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1736864978;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=48jYWuwOpO1aPP75mT3Q1HpnSFFfX21z2lxuWydhvfw=;
+	b=JAp2yS+AoGMASwo5CnOf/u464aZdAd03wzA284a73WnUX8l1c0L/ek+wqnTxqmSHLRLFkC
+	BTT0uh4/Mt/sPlXM7S5/ujSZZCTMCV2j+IMEK0SWvaYv5d9XCpz28SCrBM8eL32X6QTqfE
+	JzxvpPkzd9RZ/tcA1543XVwbC5J93pI=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-434-BPaGyrVUP3WJZdFr3Rm83Q-1; Tue,
+ 14 Jan 2025 09:29:36 -0500
+X-MC-Unique: BPaGyrVUP3WJZdFr3Rm83Q-1
+X-Mimecast-MFC-AGG-ID: BPaGyrVUP3WJZdFr3Rm83Q
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0AC80195D013;
+	Tue, 14 Jan 2025 14:29:34 +0000 (UTC)
+Received: from segfault.usersys.redhat.com (unknown [10.22.89.100])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7A69619560AA;
+	Tue, 14 Jan 2025 14:29:31 +0000 (UTC)
+From: Jeff Moyer <jmoyer@redhat.com>
+To: Stephen Bates <sbates@raithlin.com>
+Cc: linux-btrace@vger.kernel.org,  axboe@kernel.dk
+Subject: Re: [PATCH v1 0/1] Add an option to stop blktrace based on events
+ recorded
+References: <Zz-tmR3IyJFdSR8Y@snoc-pinewood>
+X-PGP-KeyID: 1F78E1B4
+X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
+Date: Tue, 14 Jan 2025 09:29:30 -0500
+In-Reply-To: <Zz-tmR3IyJFdSR8Y@snoc-pinewood> (Stephen Bates's message of
+	"Thu, 21 Nov 2024 15:00:57 -0700")
+Message-ID: <x49plkpeaet.fsf@segfault.usersys.redhat.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: user Freshmaker <freshmakeruser@gmail.com>
-Date: Tue, 14 Jan 2025 17:34:47 +0800
-X-Gm-Features: AbW1kvYmK-hEw6rbBAlBXyqMs0dVyt57dy1JHLNCjL4Zn4yp21_X8hw5rH7m0CA
-Message-ID: <CAPVOfWc8iz_Q4HE08pmDMTUvD7zvaTn=DNFLdTn750ph3VxgQw@mail.gmail.com>
-Subject: blktrace: why it has not provided Q2X, X2G stats
-To: linux-btrace@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-I have a question about blktrace, currently blktrace has provided
-X=EF=BC=88Split=EF=BC=89 event capture, but why it has not provided Q2X, X2=
-G stats, is
-it not necessary or something else?
-Any information is appreciated.
+Hi, Stephen,
+
+Stephen Bates <sbates@raithlin.com> writes:
+
+> Hi
+>
+> I am exploring the idea of tying blktrace to a prometheus exporter to
+> gather more precise block layer activity across a fleet of servers. As
+> part of that I thought it might be useful to be able to run blktrace
+> until a user-specified number of events are recorded.
+>
+> So the following patch adds a new option to do that. I also updated
+> the relevant documentation.
+>
+> I'd appreciate feedback or comments on this!
+
+Can you expand on the use case?  Why is the number of events a useful
+parameter?
+
+Thanks,
+Jeff
+
