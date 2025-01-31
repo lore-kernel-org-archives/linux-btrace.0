@@ -1,94 +1,151 @@
-Received: from mail-io1-f44.google.com (mail-io1-f44.google.com [209.85.166.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6EE213FEE
-	for <linux-btrace@vger.kernel.org>; Thu, 30 Jan 2025 16:55:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D52671C3C0F
+	for <linux-btrace@vger.kernel.org>; Fri, 31 Jan 2025 13:00:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738256114; cv=none; b=blLvXQX9p40bqpodOBG9wIPus6rt+ejUdL9XP8Jw2hb3yy1pdGc776t/b0BJvZfwK9ktQT90qhjvTdNQElwCJPfGrqQ+/YNzUUV0YqKiyoHVXLoyh/lNOqgjT8EbVw2AoqjLkLL5OhXQdodA8vaP0i0T838YCHYfiuU8mMphrJE=
+	t=1738328418; cv=none; b=T5NxtXin+1RUxuRIo+Wt3/KM3UutB+EEou4Fx8HBr+K7Z48Hd0mHMyNxe5fZvzPPoxJTuYsJNjXrcO5Qfdb2+5zuQt7fahqexG/ASjTxtl+kuWggV0bdlOWrQbkGNQgEdbwsE/NmUVrcUKEeuQa8/Moum+GUaPG4dvCLQaY//P4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738256114; c=relaxed/simple;
-	bh=eTfWa9w0D7djCJJ9TzLnmvOddgvry73O80U6D+KVNII=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Qs/zMBk4kyM4y+iao/vyUgOm00br9QoxQCq2p62cUjnVNWp8eW4MVSOpAydYp1V7Wl3PQZfc9Nq+55g1PRZgii2WKlaHxVN3cKRjKKGzzlc3znDcBn/VUyo/iBExXkzWiKIQANFm/5emTUPRWCs87qEax03B9KvK8ArrhBKz3w8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=HF54LXTZ; arc=none smtp.client-ip=209.85.166.44
+	s=arc-20240116; t=1738328418; c=relaxed/simple;
+	bh=O72Pp0tlFMonKFaIH+/yzBELpzOOZdhZosBgbbZ9B+0=;
+	h=Subject:From:To:Message-Id:Date; b=iFi1HXtAd66jDpql4nRqYQpMVuVBXWzTtTavO65LUanF33zNmP9x3OKPue6qFDVNVJ4buX53WDAi9bqJXEdSoUADS6U1Xzn/kSEAupUC3U/Qf8e83Wgl4wzxsfz1YRlv5q018RdX/gSJZgibC/iLh/lmSRuOTf5qDEv+7xYVkVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=fail smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gnQntens; arc=none smtp.client-ip=90.155.92.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="HF54LXTZ"
-Received: by mail-io1-f44.google.com with SMTP id ca18e2360f4ac-844cd85f5ebso71233739f.3
-        for <linux-btrace@vger.kernel.org>; Thu, 30 Jan 2025 08:55:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1738256110; x=1738860910; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HNI8G6mwomswWemQnq6UEEiyNpSOqOF240vbmuS0GzY=;
-        b=HF54LXTZEGO1lxaDhAtljSFm8cKLWMW2pXFOFsZ/rNEMj+NtnkRJt1h9vOivVx/Ph6
-         MEG+sGxECpCw0XQLqcQQIu/6MtkefLUPB3wZLr8eysCpsauHnKf9Q5nbwEK/SzvEMRBd
-         LvbXvOeKGHPW28X7D8I9VQ/SEEJx5705SP802OPHmqLGdF3FVuyxa9/tdUc5f6as2Tf/
-         OQDdRxbib/OgSe3XI8oksDbPlSMtPYihTmIU1PtwLkpzAuqeDnQ+Wmjxd4x/l7E4peaL
-         qWzL0SvkFRT8kKrCvh26sMdjWbOkiHFzEx7+4m5g3FfWOuhc/N4v1uvWPJPUWz7ek66F
-         9Sew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738256110; x=1738860910;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=HNI8G6mwomswWemQnq6UEEiyNpSOqOF240vbmuS0GzY=;
-        b=paT/ryvUFcIL5mU8qbd1tqe4l38QwcKI71O1E5GyqZUjuL4ozVL+Un/gIMvTlJ1nyB
-         DBZWaPKM17MicrCIPvaDZBlkrYp1dGykTHxV9ibKMDRyRkWJySbOYsTvcLbyzwJN95E+
-         SObmJGMC3aI4bAN0YE+NvM68KyFMmf9gpZ9qgBElqmT9KL2FMDpNwpO9noV0W120vBCL
-         FNylGSut1AKc8eDnec86M7n6rZiUwhhk0r1Ghz9MEsWnuLQ07dGw7p1OwV6VVf3/rHs7
-         2PgsMd8OgO40YCXdeTEOhr9uZtqa1jcOss7SboNBtqKyuwJ/6+woKfPm5LxWZ9M8D+sW
-         Do5Q==
-X-Gm-Message-State: AOJu0YxnaxJr2+ff/3UiuOhiY7PgzuPUR1Ikzqu6kfLZ+w0h7MZAzwQU
-	/YJiUXsKDb7+oSPD7yBaKNXWqs7EhtSGc7a71qg6MOelAY/Yb58wfrcUn5PPdfoFG9OQO43oymc
-	R
-X-Gm-Gg: ASbGncubcY0o8HBXb0MDS4wI8zy2PLbqfyBo2l9jTyu6HgIGO2RzrWyJ53GTGr4p4GR
-	MRjBHwwbaaPRZS4Jjm5QiTHYIdxLdvPJEV8Q4LFwYEOvvvvGyMW8FR1kWVu6eiNafbhshhfnC6p
-	lG7oFg1rK8HeAjX5AuoNnlu0PcMYEyK1Lt2xvH963jKY1aV4eryV8o5BkGPvCIR122p6BFpY8TG
-	I3pS/ERZ4D8hGbu23W8dn4gK6FMpjgP78H+CyV2HqwydUmDig6BKTEvNYNmKU/7YUjlAx9bdurq
-	OwDPVg==
-X-Google-Smtp-Source: AGHT+IHbvqRPzHvEO5PfEZCdhnEFGLfmea7/xIQv31SrPRVtraP+BgyhaBZGrb3B21Sg4K6RCd34fg==
-X-Received: by 2002:a05:6602:1514:b0:84c:e8ce:b52e with SMTP id ca18e2360f4ac-85439fd6c6cmr670352339f.13.1738256110708;
-        Thu, 30 Jan 2025 08:55:10 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-854a18407f9sm44614439f.42.2025.01.30.08.55.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jan 2025 08:55:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gnQntens"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=desiato.20200630; h=Date:Message-Id:To:From:Subject:Sender
+	:Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=N/mi20F3N56wvj8IPdJIZXjHEatC3RI9KMuYP8R/Kh4=; b=gnQntensmmvDjDYUpH9xssE82J
+	jHwUXF4D+vQ5NwYk7E26jP3Wpxi7ktIfEuiVasLCcQOyEsa3P7TGmhAeRvMtZABLhFwIv5uC9fxhJ
+	Q+HTtW9KNhQOIaF9XoSMrs9VBOHwYg/8fmb6iQj893U8koK6M+urk9ifJh7wbqm0ue16XSF6WN7qJ
+	a2t1W3OIFR9O+X35o/7lG101/KFjLJXacDgWBusjwrww8LLup34leQzQKron3um9UJ4o1/a9vIpmu
+	DwVM/z9WTnShyFsQVWiXWNnObU7TZG7QlD13U4dghujSypBBOnJgT3CKpFhkeeNcDuJtPSeJls83g
+	tM72muoA==;
+Received: from [96.43.243.2] (helo=kernel.dk)
+	by desiato.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tdqcv-0000000FYDS-0Oh5
+	for linux-btrace@vger.kernel.org;
+	Fri, 31 Jan 2025 13:00:05 +0000
+Received: by kernel.dk (Postfix, from userid 1000)
+	id 74B6E1BC0154; Fri, 31 Jan 2025 06:00:01 -0700 (MST)
+Subject: Recent changes (master)
 From: Jens Axboe <axboe@kernel.dk>
-To: linux-btrace@vger.kernel.org, Stefan Hajnoczi <stefanha@redhat.com>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-In-Reply-To: <20250128190544.113575-1-stefanha@redhat.com>
-References: <20250128190544.113575-1-stefanha@redhat.com>
-Subject: Re: [PATCH v2] doc: update RWBS descriptions
-Message-Id: <173825610970.165401.9637974090807542624.b4-ty@kernel.dk>
-Date: Thu, 30 Jan 2025 09:55:09 -0700
+To: <linux-btrace@vger.kernel.org>
+X-Mailer: mail (GNU Mailutils 3.7)
+Message-Id: <20250131130001.74B6E1BC0154@kernel.dk>
+Date: Fri, 31 Jan 2025 06:00:01 -0700 (MST)
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-14bd6
 
+The following changes since commit f49e7ded6405bcecd10846a614f40061ca6301c8:
 
-On Tue, 28 Jan 2025 14:05:44 -0500, Stefan Hajnoczi wrote:
-> New RWBS flags have been added. Document them.
-> 
-> 
+  iowatcher: Calculate ios_in_flight per trace (2024-10-08 07:40:39 -0600)
 
-Applied, thanks!
+are available in the Git repository at:
 
-[1/1] doc: update RWBS descriptions
-      commit: 16b952f4ea2db052f7cc613474d15a76c91c93d2
+  git://git.kernel.dk/blktrace.git master
 
-Best regards,
--- 
-Jens Axboe
+for you to fetch changes up to 16b952f4ea2db052f7cc613474d15a76c91c93d2:
 
+  doc: update RWBS descriptions (2025-01-30 09:54:59 -0700)
 
+----------------------------------------------------------------
+Stefan Hajnoczi (1):
+      doc: update RWBS descriptions
 
+ doc/blkparse.1   | 37 ++++++++++++++++++++++++++++++++++---
+ doc/blktrace.tex | 21 ++++++++++++++++++---
+ 2 files changed, 52 insertions(+), 6 deletions(-)
+
+---
+
+Diff of recent changes:
+
+diff --git a/doc/blkparse.1 b/doc/blkparse.1
+index 4c26baf..93aa449 100644
+--- a/doc/blkparse.1
++++ b/doc/blkparse.1
+@@ -435,10 +435,41 @@ Split
+ 
+ .SH "RWBS DESCRIPTION"
+ 
+-This is a small string containing at least one character ('R' for read, 'W'
+-for write, or 'D' for block discard operation), and optionally either
+-a 'B' (for barrier operations) or 'S' (for synchronous operations).
++This is a small string containing characters in the following order:
+ 
++.IP F
++Flush
++
++.IP R
++Read
++
++.IP W
++Write
++
++.IP D
++Discard
++
++.IP B
++Barrier
++
++.IP N
++Other operation
++
++.IP F
++Force Unit Access (FUA)
++
++.IP A
++Readahead
++
++.IP S
++Synchronous
++
++.IP M
++Meta
++
++.PP
++One of 'R', 'W', 'D', or 'N' is always present. The other characters are
++optional. Note that 'F' has two meanings, depending on its position.
+ 
+ .SH "DEFAULT OUTPUT"
+ 
+diff --git a/doc/blktrace.tex b/doc/blktrace.tex
+index 836ac4a..d747de7 100644
+--- a/doc/blktrace.tex
++++ b/doc/blktrace.tex
+@@ -653,9 +653,24 @@ X & Split \\ \hline
+ \end{tabular}
+ 
+ \subsubsection{\label{sec:act-table}RWBS Description}
+-This is a small string containing at least one character ('R' for read,
+-'W' for write, or 'D' for block discard operation), and optionally either
+-a 'B' (for barrier operations) or 'S' (for synchronous operations).
++This is a small string containing characters in the following order:
++
++\begin{tabular}{|l|l|}\hline
++Character & Description \\ \hline\hline
++F & Flush \\ \hline
++R & Read \\ \hline
++W & Write \\ \hline
++D & Discard \\ \hline
++B & Barrier \\ \hline
++N & Other operation \\ \hline
++F & Force Unit Access (FUA) \\ \hline
++A & Readahead \\ \hline
++S & Synchronous \\ \hline
++M & Meta \\ \hline
++\end{tabular}
++
++One of 'R', 'W', 'D', or 'N' is always present. The other characters are
++optional. Note that 'F' has two meanings, depending on its position.
+ 
+ \subsubsection{\label{sec:default-output}Default output}
+ 
