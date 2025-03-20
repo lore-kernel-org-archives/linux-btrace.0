@@ -1,109 +1,89 @@
-Received: from mail-io1-f42.google.com (mail-io1-f42.google.com [209.85.166.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out162-62-57-210.mail.qq.com (out162-62-57-210.mail.qq.com [162.62.57.210])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C024835963
-	for <linux-btrace@vger.kernel.org>; Wed, 19 Mar 2025 13:11:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A6401E1A18
+	for <linux-btrace@vger.kernel.org>; Thu, 20 Mar 2025 01:56:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.210
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742389863; cv=none; b=KPLK1ES0pTklrufWaNbD/ttc/3t0jYKH0TZTL5bcYhyrW9Lee+V4hqtJz5NGrD3UJ7I8a+jcbw0yL+Hza405pLlAl/Yo0Lr+SU5YjBgCpEoa3IfSRKH06yR1JXX9LKZzfM29ADZKfHpg1W/JN2DKz+mYzT13u4cNvlRC6h5nIiU=
+	t=1742435823; cv=none; b=Q4qcDUS8FPYyWln/tdyrPozS8/0nFoSMClM41YIfpFgCSiRUiDgYpWvDVKYSjAn+pSPwU5TSFahB9xY4wdNdLc0lHJDVtCdcruWP44dUzIdLtpJkgsR4xeXgrNPsvJpIUqCwmJiEGKy5/PORzg0LSn8OGP/nKapzChm+2u0CYpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742389863; c=relaxed/simple;
-	bh=tKxLOjMGSOFW5Rt4gJYR5HZu1qdjxvpwX0bLL6+rBOI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AAwWH/nhXrWysOJQDHxu9Tr4F9zSzJ7QAxAIAqoUT+0XHUaYBHVHMNrs86zPtLux972FVuoT4lCT3mKWxGH1vmoWayuttt4/0XuWdkSDYpc65z5XAbqIbvmws82BS/QNccYlvyYchh9nAMHCt9yK3nS/9XcVH9Hj6/RUAim/V0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=bd3Ku9so; arc=none smtp.client-ip=209.85.166.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1742435823; c=relaxed/simple;
+	bh=U1quFmViZ1zjDqXisjEHewnY2VY6BpLMayq/l4oqTHg=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WgKhoMm8r21yluOqXSMAY3Y/LkjShFdQn41LnloMr1y/5xp4zhlUK+xiVX2/fBd2ePAjJPvxAYnsDh5FP0fVYLKhZ6m/2Je4KMUh1Wdm6UoF7mBk5c19WE0Gn3m+G6sRJwrET1XX2mIy2nGCFiEtfvlqofN7wxY+szJF+lOhhuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=kYCVoKno; arc=none smtp.client-ip=162.62.57.210
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="bd3Ku9so"
-Received: by mail-io1-f42.google.com with SMTP id ca18e2360f4ac-85ad83ba141so717267339f.2
-        for <linux-btrace@vger.kernel.org>; Wed, 19 Mar 2025 06:11:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1742389860; x=1742994660; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=PFIvL9G0oZKU88XNJN89GusYqC6GJ4sBAXG629kSi0E=;
-        b=bd3Ku9soZiqOCBTs5ugrfZBPMsl9CiEcXfzVia0ocxIRmuOqifbhR0FI6SShsCn8zQ
-         JPBX+gsvd5CB/+Mu7VtIItxdQZfMstU9pIOlK7cUEbetq2QM7avyirJKkYhvYDYsmj5z
-         LkPkwUrharPI5WOmI5W39Hzp8gFpP5m0MUruNzam+MH6UK6R39BQw1ZLgpZWNw1Gwo6H
-         AM3wDXuLcaO79ToOodfZwyGyGODqStMOcUNUVUxYIj6E0cxd2krkIqZIHOLL+9EXAGsY
-         gKWEq+fSRgeqearRmvikPqZxBx4n13LlYENzwQYC2AshxDhhoKAJMaYEnACXl+sWzd2U
-         Iy4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742389860; x=1742994660;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PFIvL9G0oZKU88XNJN89GusYqC6GJ4sBAXG629kSi0E=;
-        b=a9sSthG+zSHaDVG67UJhgJkO7dtM+T2+KPMUJaxahj30U4MwkLyudHFsQv3YrLrXui
-         kQcgoelVyXygOTCTf38O7L9Lww+YRdrKQcBfJryntlrZC++bQICO8ygAld8H9aaNciIf
-         cW9XScvWBVVlVV81J9dr5Y22JjlSXqBjthTGrdGdbfpD7stpMKNNj/hTOGpVWprpZXi5
-         JF8pWwwoYoEmbA6WsmAct1EP7KTzOHYcOiqLoUM4RUKFHq9joa9w/+QJk3w51dSQulF+
-         UMgxVFxwZMd+l2X7z9GhwlnH7PZT8VlbfKiDNn/K4J4HB1aK34JyLYt30z5JEweIOJeH
-         cihA==
-X-Forwarded-Encrypted: i=1; AJvYcCUgAk/QyMvSJ7fetHPpNj0e3ash5qEqpEtKODbf/G7Qh00tu61AbFf4zCBpLStbnpsdPxQgynoquR2Q5RM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzpsEdwMPmKoWkco9tRQMT1Cp75tpSCqu28/7m+7C00WAVu9+2W
-	oVu9lEVMxV/CsTj27oZDJSjLSM8RrFItcGTDoKG6Hdfoft2rDsLzQbJvZ7OnbLVM7pxzIGrQ6kL
-	T
-X-Gm-Gg: ASbGncss0lKg903nVbr1XpMUEs+XEntbxRTglVs83zvF0gpC+P0l9ZKMg5tpqZGJTTO
-	THuiKQkFAAmPj+mIdNAgeygzY1QmLLiKPEl7s3enJjb6Z/5G3kgBvAgt8gRorg6yCpiO7ZMUuLq
-	dbVTwJFDCkwRQfxzkPUrT4jQomEedvhUDM7so1/oCl6e4WwJfmdNwL7MpOOLBQicr0qiUPPLCuc
-	JMUTC+Ky6GJPuziIj9xOz/QBRDzsckhhVUXSkgfxO9VzLAXiYpC5Ih9e/yYr/oSZAkz4EQQiCz0
-	jq8NasjnTXNEcqhm5D6fuM6sH+X7mK4GdtrbF8Ur
-X-Google-Smtp-Source: AGHT+IFbGYA0bhQrdWOwxMn4VNHL36Iil5eFnV3jMKZFwaHmtIrxC+wUry2H8R7QC2/b8x5LNsKAgw==
-X-Received: by 2002:a05:6602:368d:b0:85a:efae:2f15 with SMTP id ca18e2360f4ac-85e1377d86dmr324572439f.1.1742389859605;
-        Wed, 19 Mar 2025 06:10:59 -0700 (PDT)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-85db8745189sm301072539f.7.2025.03.19.06.10.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Mar 2025 06:10:59 -0700 (PDT)
-Message-ID: <1962cea3-e413-441c-b98a-ded4a6a4fe68@kernel.dk>
-Date: Wed, 19 Mar 2025 07:10:58 -0600
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="kYCVoKno"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1742435809; bh=vjvEG18XDAIz+EDLs48ks7PMb/g2usP/52gWrQI87rQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=kYCVoKnoRV/Vn+nqvQRuWBhkCL7WzLXsBG/ZZqwyqK3zNxoRu/Sikqg4p4xtYKl+C
+	 TZ6lFGnO0nbsb88ounXQfMayolqq2gFZaUyR5GiH+fREbB9e4/NocFSRYtLpnNEn68
+	 ul7T5rpeg2gwsBNae63iWWvEyOtFAF6DH1/ESYc4=
+Received: from localhost.localdomain ([39.144.177.15])
+	by newxmesmtplogicsvrszb16-1.qq.com (NewEsmtp) with SMTP
+	id CA2B68DC; Thu, 20 Mar 2025 09:50:34 +0800
+X-QQ-mid: xmsmtpt1742435434ts4qgwdfu
+Message-ID: <tencent_D844947035F128017DDC0AA43ECF482BA808@qq.com>
+X-QQ-XMAILINFO: MR7w4hg+gyTSk3ghCrmPx47NOWuYhKVkmjRolso5U7HIlG4Lu1cfoU/f2g/JMY
+	 pjSGL3y+xfViFNtAi64/jdto91K3Fzpmnj+QiEf//C4iAW4+ZQY1/gimeH0y3HUzsLofb28W3oY9
+	 fb/TQVfhD3Ftnrulm9lzpQ5RYtC0eQVzDdlTfl2hdQkxVskiq20WPr6vcvKojUK4/XfamBCQ5dnl
+	 bMmPsjRXj1nddP9JEtWqrYDCKf+x/w7gJ9G77B+QHWgs13xWStJ+/keHpYgB0Ub0SrcN5UZtLJVF
+	 v60rAL9FwO9tpQr78OeycbC6SUxnpSVu/pYDdFPnmhDx5xBv0Wh+uapSgPD/2lK1aHZFv0XLzgFm
+	 T/nZc/n0Js8Ub9YiEprHloWN71P3Aor20mcUSMqtxrKWRAGRXl4eb7psTrsGRka0OSmvc8aAMeiV
+	 XY9DZSspeNQ3+INkU8Cygz6K9xdOJj8EF94Mr18yjv2ar7hsg21YADciti6xIx4XRfsNrbdTi788
+	 0sPbxKCd0lsTWxukgzW3luyp9BgUXTEKSV1IVqB1tOI0BnEKzGvQAlifQ1k6cbTSGBpLyrFFNC6n
+	 tsl8j4USgu9g737gSrj2A4Jtxr8202abMnIYdowk9UHzyFqTs8uy/mcahS+UYWDsrx63+O8G95/Z
+	 AmbKhRnNL1XLX4at2N0p539+Q1DwdigJz2C2/AwKsYdPKVIwGu1dHsUTKvE1pJWVssWhyvnGjAD/
+	 j6rgPMJ51HMYVoMqJ90zltqOVAHZGfF2Q3nWRNuchI6L1Zejisi1iYtA74As3VPI0Kj4O7pSq123
+	 ckXwkUpGzjdl+by74kFkZPmUCOJAL4JHTT1HvogYdkBRhQhwaG26rqIaOFH8dV9RJxJ26CTX8DYP
+	 B2uJ9JMEQUQ19MI9CUHPlK+OgNcjAOdf1kmFI87OKuahc5W6dAUhvo+IgdcWJ3t4GvarBAoh3zf5
+	 yVppwexTqYZWtiK1XYlPvhjkweIKKzWFwwwGQ/vwY=
+X-QQ-XMRINFO: NS+P29fieYNw95Bth2bWPxk=
+From: 303146950@qq.com
+To: axboe@kernel.dk
+Cc: 303146950@qq.com,
+	kouwenqi@kylinos.cn,
+	linux-btrace@vger.kernel.org
+Subject: Re: [PATCH v3] blkparse: Fix a potential coredump issue
+Date: Thu, 20 Mar 2025 09:49:54 +0800
+X-OQ-MSGID: <20250320014956.3311-1-303146950@qq.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <1962cea3-e413-441c-b98a-ded4a6a4fe68@kernel.dk>
+References: <1962cea3-e413-441c-b98a-ded4a6a4fe68@kernel.dk>
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] blkparse: Fix a potential coredump issue
-To: 303146950@qq.com, linux-btrace@vger.kernel.org
-Cc: Kou Wenqi <kouwenqi@kylinos.cn>
-References: <tencent_DE806EEE1852F9E79115172254B8A2789207@qq.com>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <tencent_DE806EEE1852F9E79115172254B8A2789207@qq.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/19/25 7:02 AM, 303146950@qq.com wrote:
-> diff --git a/blkparse.c b/blkparse.c
-> index 9d2029a..d6aaa8b 100644
-> --- a/blkparse.c
-> +++ b/blkparse.c
-> @@ -1022,7 +1022,7 @@ static struct io_track *find_track(struct per_dev_info *pdi, pid_t pid,
->  	if (!iot) {
->  		struct io_track_req *req;
->  
-> -		req = malloc(sizeof(*req) + sizeof(*iot));
-> +		req = calloc(1, sizeof(*req) + sizeof(*iot));
->  		req->ppm = find_ppm(pid);
->  		if (!req->ppm)
->  			req->ppm = add_ppm_hash(pid, "unknown");
-> @@ -1106,7 +1106,7 @@ static void log_track_split(struct per_dev_info *pdi, struct blk_io_trace *t)
->  	 * parts.
->  	 */
->  	iot = find_track(pdi, t->pid, t->sector);
-> -	split = malloc(sizeof(*iot));
-> +	split = calloc(1, sizeof(*iot));
->  	split->req = iot->req;
->  	split->next = iot->next;
->  	iot->next = split;
+From: Kou Wenqi <kouwenqi@kylinos.cn>
 
-Nit picking, but the idiomatic way would be to make it calloc(size, 1)
-not the other way around. The first one is the size, the 2nd one is the
-number of them.
+On 3/19/25 7:10 AM, axboe@kernel.dk wrote:
+> Nit picking, but the idiomatic way would be to make it calloc(size, 1)
+> not the other way around. The first one is the size, the 2nd one is the
+> number of them.
+
+Thank you for reviewing the patch!
+I wanted to double-check the calloc usage
+to ensure alignment with the project's conventions. 
+The man page defines calloc as:
+void *calloc(size_t nmemb, size_t size); 
+where nmemb is the number of elements, and size is the size of each element.
+In the submitted code, 
+split = calloc(1, sizeof(*iot)) follows this order: nmemb=1 and size=sizeof(...). 
+I also reviewed existing code in blktrace and saw consistent usage like calloc(1, size), 
+which matches the man page’s parameter order.
+Could you clarify if there’s a specific reason or project-specific idiom
+for reversing the parameters (e.g., calloc(size, 1) instead)?
+I’m happy to adjust it if there’s a stylistic preference or guideline I’ve overlooked.
+Thanks again for your guidance!
 
 -- 
-Jens Axboe
+Kou Wenqi
+
