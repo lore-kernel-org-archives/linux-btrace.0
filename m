@@ -1,53 +1,52 @@
 Received: from out203-205-221-240.mail.qq.com (out203-205-221-240.mail.qq.com [203.205.221.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2546A20FA96
-	for <linux-btrace@vger.kernel.org>; Fri, 21 Mar 2025 09:35:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 028C02528E9
+	for <linux-btrace@vger.kernel.org>; Wed,  9 Apr 2025 09:45:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742549748; cv=none; b=OO1xsTOhwn9doq7muTo2GaBmDc7D62JW+AtpbmFhXRZNSNdT8v90mhtknGMIfuLGId5i43W0RbJY2+uQ/ORex+dp9IRTQspJD1wXEY7nBp8wfIq99yF+DI54ug7zC27c6jqT9u7QAmjeEZPNFKzAgLJ92Fn+q1glncVmBfd6uhE=
+	t=1744191925; cv=none; b=rIU4/xHj0/OzfdufSdJUC2/qyQEtWAbd2Q4g9DEUiIQe90Ikfnu5KC86F/jW9lQRMhcdhqfAIREp7UypbwhwQZu6BWIiOdbXc9qbjMhI1F6OVwgQQ2iFlD1CtUXG21N7Ygl/UAvxdLKdHdabveH29KVkJUq70ztVG7v4KX/YhI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742549748; c=relaxed/simple;
-	bh=tBS+6PEVBdtY9VWtgRPF11Z7nG3nLPBvf1Dp/u9HPvI=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version:Content-Type; b=jAepkvopeRMRn1sdV3z2SF3KvgVzbgV8CJ/0IJC7GaZThLYbGQ/iK68acLHMkkmfnL0B+zTNuDe7Izju+1ZFemVTLrCgiI8OtM9kR6gKBOoCcZhSUc/upXQHZGX6G8YbSoGFH3xfrnjNk3DmLj62qx3tamXR1gDKHh0wY//AlAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=CWGGplMI; arc=none smtp.client-ip=203.205.221.240
+	s=arc-20240116; t=1744191925; c=relaxed/simple;
+	bh=hOcPtbjRHcM2/YOf8OvHRxELycw6xymGlBk3OGne+40=;
+	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=fTAXUbi7cl06m4b+VAMZz2K83jAtxlK7YiIwDam+NkMv2vqN/VfYecqaT28KwkpJbbqGjinVsNXB+z7/u2Hts0dRBCM/gTUGxkCsReBbzgmc80BbIzs0OHw8mBIqbu2WUVebauvA12aVTNqaaNUA44B1xhDrVjRazYJ4KanveOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=KKOKGA46; arc=none smtp.client-ip=203.205.221.240
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="CWGGplMI"
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="KKOKGA46"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1742549433; bh=B04YKQcrGYyY8xcPc6hlCNTNkZBQRqZW9qHoeOaFuHI=;
+	t=1744191612; bh=Lw2FY3NmfKLUMMxlWf994S1Rm1THYVOI7OwEQGT4NdE=;
 	h=From:To:Cc:Subject:Date;
-	b=CWGGplMIzlu8LT7WHpNwUe9Le2LevtglGNvKFuecMPhh31WmsigoxIeDOoxq+mN/+
-	 HvXZg6xYciuGAB1Ugf6Gk0vLcrD3orYL+adajQTOK5qlW1QQZjDrHt8/HoMiwzbber
-	 4yUn0Tds3oHYXAPeTsN0pVNxDhPIhkOCqypz1euY=
-Received: from localhost.localdomain ([39.144.26.45])
-	by newxmesmtplogicsvrszb16-1.qq.com (NewEsmtp) with SMTP
-	id 79F1AA0A; Fri, 21 Mar 2025 17:30:31 +0800
-X-QQ-mid: xmsmtpt1742549431tzepecz0b
-Message-ID: <tencent_1C78A90054EE27D2F0E78015402213388607@qq.com>
-X-QQ-XMAILINFO: MjZkc9TfnG+X4RvyDLFFDtzFBI1tFD3mt1Nj4GVpgmYd0EDNUUYfBtzL43P6yT
-	 E6/U6AY5ZbKiQUbKdQpchu1TE1lLR1BOyyuVYP/NEKzylBbk1bd+RyuA7OW0ZFKprYv+m7IxuJFN
-	 PcbfXoZyN9AmGN21LAQ//LIIZGhCTA5oIdaffgd3DmHIKl4lujgLO0DO24aImoKcyUTEk+EMWdVS
-	 2Jq+wZ0Q/v3g79MV7lCRHKNWdMz3o9kQRrcYdqUzx4dmWEUdiupHpZVV8IWZv3kwTlmd6ivudVyx
-	 3n3wzFHaKB+iprjIZwhwsyhJKbdWGPuIwkEMWNqw9L4RvB6KSyK389nJWQRVh8SR9RgLLUADWypz
-	 7UP3o8t3IXNoQDyjEq9cgRS+K1togvWo/Bal8UA4x5kv6VAW5sNFxJsQV6nujR+JGuCrzjusTBQN
-	 Bbgf0/W5qptVsSo3DpGeVXYC4USNGx0YIiViSiUfxz+jrrHqrKFi+2g7b/2qULKPlY7c/PU0ClAy
-	 PG/RnhJpaQ7LAU7L/YOJmypA+5spGxIq+0yUhAK9i2sfpHfKQ3I3wxDBMG3J6Gx4J3whg1iAz19V
-	 keHY56F3u7sIQJPEVF8GXMMixZ/foYuFojyHlafyYJk5Uej9Kfb9dhEWgH2mK6L82/390ed8+oG2
-	 w77MDlmqF0hV4xqRwrz0yGmzAezrH+CU3wicqGSIioi0xCoT9WnKozViRhn5gEmloLAZa3rmddKb
-	 KDM5b3wWZUCFtAUs8oEicbRsV3BkifEYp1fFpeaQtK0tePwZFUfVbQldJT41YqZFPN+PWxlg5mfV
-	 Agl8IXKAoa6fY8AI65wUGlp3i069qIgykztf6cQnLHunp0RrbXd/4f7xZHIbdZkBB2IhkLPjkSAY
-	 yHVfNmnwd2GQ8uPEob8eg3ml83Xl49aN7cR11nAL7gZ3xkNvh77yXHSL5S0sOyiw==
-X-QQ-XMRINFO: OD9hHCdaPRBwq3WW+NvGbIU=
+	b=KKOKGA46MrgPgUbUulzMCkYBOiccBe6opAJitRjnuVYOOx9fGZVU0qTj/GuRqlllR
+	 VMsQJpqnYkdDsF6ZnA82nCdPSO0NFYol9967EYpa1/boTWpmGVTFAHOLG3jiI+0E19
+	 KOFwz7mMSnMbt2qsWh/Xj31h8Bn/LbrhE7IYlUVQ=
+Received: from localhost.localdomain ([39.144.177.14])
+	by newxmesmtplogicsvrszb20-0.qq.com (NewEsmtp) with SMTP
+	id A0A9F07A; Wed, 09 Apr 2025 17:40:10 +0800
+X-QQ-mid: xmsmtpt1744191610tz5qdc2i4
+Message-ID: <tencent_82C549379F3956788830E028E3AB0394B809@qq.com>
+X-QQ-XMAILINFO: MyirvGjpKb1jNbfmyOo1xC5a+vcTdAffVQ6x2+ul0ajBycMEuPv/7cHwm/vAa9
+	 QhBuNEK3O1Z5NMlNGiaxltQhxXxdQuy5ok6iKrP94DlFLvAq1n6JXeOaowBGhItBzy77wuT8rrwy
+	 i5HGPUsM6iNEmWaC2JGhi6FfR8tKYmRCHBhRl8GuYXUpaK3l61matPLO2Xn9/O5m+nHnILNL9XJa
+	 KTDJwEBWlZn+B85BYoroBL5y2vNwbsniUzTDrr9bIDDL/NqwqkS7yX8hcSaGw9sJgAoZqIbD9bml
+	 2QVT3OfIQdCARxKaHiHXoDMq44hqq1wjNlPg9NObMyK7E8q0PDywnQw1KGoB7U21CtiyRkup8zpO
+	 tEzzDv+979K0aV8XN4bWwLAe8YX55rztki34aFx1r9BRc5OBUtkJaj6lgGmj41QgpqUlsSO0p91b
+	 ud0R7gRCZd4kdlFLY//7ZOxjE4mTQ8cUqmAPCuaBzDDV7b9Zgpp9aqst9wqvhzTwixqS4TKuVGdZ
+	 EsDcVK6rgqpG1yTZmO3K+9ek888S/8YY2N9nAGtgbNCrax8URwXn3LVFQscpCtevQYI2P/BminV7
+	 AkO5W8pMhKW6Fk0hPY7fFfnyd/i2LdyXkPAvS4IgluFFw6V8XC5LZ+Am6fgo+TW3nSXs6PP9jshz
+	 MpQWondNVhGS+CSqQKw4k7fN9CJSCVFcOBrwID2U9TE+u5kp2vxW9BrVkbQGDzmNT0aHF+85UV+9
+	 jSS4hkg8WGqqOtoOmzK5VKDE3sMnWlwj+WvdFG5erkFAccx8PKf34VZilAXBedy5Du8GafoG+rEu
+	 tl/yI+K0raf7U6iPjVj8GtRp/JYVQKAokVjPpq1+Rvz5eC4QFlYE8joDbiiIHuvj9xSCJFDOu8Zz
+	 /ceisGK0qZVCOaeUTWaonl/nrOdCMWS87OBwc6UX/J09JLfgPyvUEHK3EIrE9rg1VCbjvHl7MO
+X-QQ-XMRINFO: OWPUhxQsoeAVDbp3OJHYyFg=
 From: 303146950@qq.com
 To: linux-btrace@vger.kernel.org
 Cc: axboe@kernel.dk,
-	alan.brunelle@hp.com,
 	Kou Wenqi <kouwenqi@kylinos.cn>
-Subject: [PATCH] btt: Fix a potential coredump issue
-Date: Fri, 21 Mar 2025 03:32:01 +0800
-X-OQ-MSGID: <20250320193201.6133-1-303146950@qq.com>
+Subject: [PATCH] btt: eliminate redundant separators in btt -p display
+Date: Wed,  9 Apr 2025 17:39:30 +0800
+X-OQ-MSGID: <20250409093930.5693-1-303146950@qq.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
@@ -55,83 +54,107 @@ List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 From: Kou Wenqi <kouwenqi@kylinos.cn>
 
-Executing "btt -i sdb.blktrace.bin" may cause coredump due to
-accessing to a page of the buffer that lies beyond the end of
-the mapped file.
+8,0    1        1     0.000000000  5315  Q  WS 0 + 375 [dd]
+8,0    1        2     0.000005314  5315  X  WS 0 / 128 [dd]
+8,0    1        3     0.000012623  5315  G  WS 0 + 128 [dd]
+8,0    1        4     0.000030582  5315  I  WS 0 + 128 [dd]
+8,0    1        5     0.000046089  5315  X  WS 128 / 256 [dd]
+8,0    1        6     0.000047072  5315  G  WS 128 + 128 [dd]
+8,0    1        7     0.000047513  5315  I  WS 128 + 128 [dd]
+8,0    1        8     0.000051336  5315  G  WS 256 + 119 [dd]
+8,0    1        9     0.000051562  5315  I  WS 256 + 119 [dd]
+8,0    1       10     0.000079209   109  D  WS 0 + 128 [kworker/1:1H]
+8,0    1       11     0.000308966   109  D  WS 128 + 128 [kworker/1:1H]
+8,0    1       12     0.000467117   109  D  WS 256 + 119 [kworker/1:1H]
+8,0    2        1     0.000596478     0  C  WS 0 + 128 [0]
+8,0    2        2     0.000616049     0  C  WS 0 + 256 [0]
+8,0    2        3     0.000618701     0  C  WS 0 + 375 [0]
+8,0    1       13     0.000909790  5315  Q  WS 375 + 375 [dd]
+8,0    1       14     0.000913783  5315  X  WS 375 / 503 [dd]
+8,0    1       15     0.000918960  5315  G  WS 375 + 128 [dd]
+8,0    1       16     0.000933605  5315  I  WS 375 + 128 [dd]
+8,0    1       17     0.000945282  5315  X  WS 503 / 631 [dd]
+8,0    1       18     0.000946635  5315  G  WS 503 + 128 [dd]
+8,0    1       19     0.000947169  5315  I  WS 503 + 128 [dd]
+8,0    1       20     0.000950159  5315  G  WS 631 + 119 [dd]
+8,0    1       21     0.000950570  5315  I  WS 631 + 119 [dd]
+8,0    1       22     0.000973481   109  D  WS 375 + 128 [kworker/1:1H]
+8,0    1       23     0.001133980   109  D  WS 503 + 128 [kworker/1:1H]
+8,0    1       24     0.001228540   109  D  WS 631 + 119 [kworker/1:1H]
+8,0    2        4     0.001377897     0  C  WS 375 + 128 [0]
+8,0    2        5     0.001385818     0  C  WS 375 + 256 [0]
+8,0    2        6     0.001389308     0  C  WS 375 + 375 [0]
 
--rw-r--r-- 1 root root 177169768  3月 13 19:33 sdb.blktrace.bin
+Before this patch, the output of btt -p is as follows:
+-----------------------------------------
+-----------------------------------------
+  8,0  :     0.000000000 Q          0+375
+             0.000012623 G          0+375
+             0.000030582 I          0+375
+             0.000618701 C          0+375
 
-(gdb) b mmap.c:134 if cur >= 177169768
-Breakpoint 4, move_map () at mmap.c:88
-(gdb) l
-83              if (cur_map != MAP_FAILED)
-84                      munmap(cur_map, len);
-85
-86              cur_min = (cur & ~(pgsz-1));
-87              len = min_len(DEF_LEN, total_size - cur_min);
-88              if (len < sizeof(*next_t))
-89                      return 0;
-90
-91              cur_map = mmap(NULL, len, PROT_READ, MAP_SHARED, fd,
-92                             cur_min);
+-----------------------------------------
+-----------------------------------------
+-----------------------------------------
+  8,0  :     0.000909790 Q        375+375
+             0.000918960 G        375+375
+             0.000933605 I        375+375
+             0.001389308 C        375+375
 
-(gdb) p total_size
-$1 = 177169768
-(gdb) p cur
-$2 = 177175095
-(gdb) p cur_min
-$3 = 177172480
-(gdb) p cur_max
-$4 = 177169768
-(gdb) p len
-$5 = 16777216
+-----------------------------------------
 
-(gdb) c
-Continuing.
+After this patch, the output of btt -p is as follows:
+  8,0  :     0.000000000 Q          0+375
+             0.000012623 G          0+375
+             0.000030582 I          0+375
+             0.000618701 C          0+375
 
-Program received signal SIGBUS, Bus error.
-next_trace (t=t@entry=0x418e70, pdu=pdu@entry=0x418e18) at mmap.c:141
-(gdb) p cur
-$11 = 177175095
-(gdb) p cur_min
-$12 = 177172480
-(gdb) p total_size
-$13 = 177169768
-(gdb) l
-136                             cleanup_ifile();
-137                             return 0;
-138                     }
-139
-140             next_t = cur_map + (cur - cur_min);
-141             this_len = convert_to_cpu(next_t, t, pdu);
-142             cur += this_len;
-143
-144             return 1;
-145     }
+-----------------------------------------
+  8,0  :     0.000909790 Q        375+375
+             0.000918960 G        375+375
+             0.000933605 I        375+375
+             0.001389308 C        375+375
+
+-----------------------------------------
 
 Signed-off-by: Kou Wenqi <kouwenqi@kylinos.cn>
 ---
- btt/mmap.c | 2 ++
- 1 file changed, 2 insertions(+)
+ btt/trace_complete.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/btt/mmap.c b/btt/mmap.c
-index 9d4eb3d..1f9acbc 100644
---- a/btt/mmap.c
-+++ b/btt/mmap.c
-@@ -84,6 +84,8 @@ static int move_map(void)
- 		munmap(cur_map, len);
+diff --git a/btt/trace_complete.c b/btt/trace_complete.c
+index 44732c5..6fb2347 100644
+--- a/btt/trace_complete.c
++++ b/btt/trace_complete.c
+@@ -56,6 +56,7 @@ static void handle_complete(struct io *c_iop)
+ 	__u64 d_time = (__u64)-1;
+ 	FILE *pit_fp = c_iop->dip->pit_fp;
+ 	double cur = BIT_TIME(c_iop->t.time);
++	int q_iop_matched = 0;
  
- 	cur_min = (cur & ~(pgsz-1));
-+	if (total_size < cur_min)
-+		return 0;
- 	len = min_len(DEF_LEN, total_size - cur_min);
- 	if (len < sizeof(*next_t))
- 		return 0;
+ 	update_blks(c_iop);
+ 	update_cregion(&all_regions, c_iop->t.time);
+@@ -67,6 +68,7 @@ static void handle_complete(struct io *c_iop)
+ 
+ 	dip_foreach_list(c_iop, IOP_Q, &head);
+ 	list_for_each_safe(p, q, &head) {
++		q_iop_matched = 1;
+ 		struct io *q_iop = list_entry(p, struct io, f_head);
+ 		__u64 q2c = tdelta(q_iop->t.time, c_iop->t.time);
+ 
+@@ -103,7 +105,7 @@ static void handle_complete(struct io *c_iop)
+ 		io_release(q_iop);
+ 	}
+ 
+-	if (per_io_ofp)
++	if (per_io_ofp && q_iop_matched)
+ 		fprintf(per_io_ofp,
+ 			"-----------------------------------------\n");
+ 
 -- 
 2.43.0
 
