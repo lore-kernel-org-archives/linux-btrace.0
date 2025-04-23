@@ -1,95 +1,99 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f44.google.com (mail-io1-f44.google.com [209.85.166.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18E03276025
-	for <linux-btrace@vger.kernel.org>; Wed, 23 Apr 2025 08:29:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E23C828C5DB
+	for <linux-btrace@vger.kernel.org>; Wed, 23 Apr 2025 20:14:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745396967; cv=none; b=PZOFfnmx7JO4cBr7ZK3LbLEhFyWBL6EDKa0zffKOUcGSHFFqLHbB/8IJDYI94oDAnRLNU6Gxl7h8j9nxNnMPtc7wFtOONsYQVonOAzMgwePiCb5hednAv5vbJfhCtdxBeHJG2OP3BfsfrL7WDCfEwVNdkwDF9Y+pl6pF0SP+HZQ=
+	t=1745439283; cv=none; b=ZrUKnxPjlkicrQABpnEy1tjweG6RweWGqtyhQhqMYaDaTIZHETyRhHjcdriL2UXETfXH3WRIstT/d31+mn87DCkClt2UWnaomF1GME+KgkScZHGuvVFLRuogxDwUrZbUWkUnTSHp0sCg8y+XR9h1TUH02zfxzn1cX7tyRC0AvJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745396967; c=relaxed/simple;
-	bh=b2QAajXa09Fb7VwXufznhRnqd8zWQ8WCsh6b4gCw5mI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VoVg6WDGDr2TB/LatT5gP8uQnHtvZ+Y3s77SsdNmea12wqNBLf2FMtSkT534Z3ZAxH/yeGlNHJLkjBArb2Ue22u7iLEHIoNndoBLGy+Hyo8yeUXdzU8hE2WCQB5HsXjnzrK6nu/Ac6B1NqQGPMPYlszbv5MfK1IbTZtuQlvFJJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 0ca80ca6201d11f0a216b1d71e6e1362-20250423
-X-CTIC-Tags:
-	HR_CC_AS_FROM, HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
-	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
-	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD
-	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
-	AMN_T1, AMN_GOOD, AMN_C_TI, AMN_C_BU
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.45,REQID:68617379-4796-4a41-9959-4652385afdb0,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:5
-X-CID-INFO: VERSION:1.1.45,REQID:68617379-4796-4a41-9959-4652385afdb0,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:5
-X-CID-META: VersionHash:6493067,CLOUDID:2b9ac480e4768f8e7f4afa02d5ad8423,BulkI
-	D:250423162920LLF0C022,BulkQuantity:0,Recheck:0,SF:19|24|44|66|72|78|102,T
-	C:nil,Content:0|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:
-	nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: 0ca80ca6201d11f0a216b1d71e6e1362-20250423
-X-User: mengfanhui@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <mengfanhui@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1819596621; Wed, 23 Apr 2025 16:29:18 +0800
-From: Fanhui Meng <mengfanhui@kylinos.cn>
-To: linux-btrace@vger.kernel.org
-Cc: mengfanhui@kylinos.cn
-Subject: [PATCH] btt: use millisecond output latency time
-Date: Wed, 23 Apr 2025 16:27:29 +0800
-Message-Id: <20250423082729.520799-1-mengfanhui@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1745439283; c=relaxed/simple;
+	bh=DS3dRfQyJTaAQalriDArLERdhXrxwQmhx0/F0rldKf0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=L6s2sTbaPn43HS1YLXSC7G+9Uu/scuOfuaUD/mmb45ZvMZv2n5cNTOJ31UKC/wbzuzjnePb7VSAjGt8K6RgKb4efrPrYU2CPrJSzFiq1XjOxTdH9LyS+QLLx/nhbYvvN+57eHEC12J/xZX/VlGhlGpZoMFfEo5XplS3q5C3gDpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=hlaRK4Ni; arc=none smtp.client-ip=209.85.166.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="hlaRK4Ni"
+Received: by mail-io1-f44.google.com with SMTP id ca18e2360f4ac-85da5a3667bso10662639f.1
+        for <linux-btrace@vger.kernel.org>; Wed, 23 Apr 2025 13:14:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1745439280; x=1746044080; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=cNFI/ZpBeKbn9CVYGtNmKGTEw1IARbb1bVJxLvIvzXg=;
+        b=hlaRK4NiqW4WHhUNucKUFtcA7c4c2n739AXD+uIFGUovpNKojBTVGD9EaHed63icc/
+         9MFO89rOUmR9hiehTtd/L0SfmgZ24KG6VsO3vkjYiuiblpGpyLvOE/dV5/wjCaFzJSas
+         V7apoqk8yAr4ms7mG6omsmpZIayOwm8/Dcg5/VUYIZLh5MuaGbTCr6Pg5VMPOtqKhXpq
+         3vnJbS04lwIyljYYthsIMdqU94MvueaIIyN8O/AX7zAad7GBpC+dHN2X+sjzWYHcTJ3C
+         Y0fStrBSyPkl8Ub6vMlvdK56qpjYOhLcr8A5EPXANBWoUjn+UlV2dmLmS2jgzR1puk30
+         AVQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745439280; x=1746044080;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=cNFI/ZpBeKbn9CVYGtNmKGTEw1IARbb1bVJxLvIvzXg=;
+        b=ljn2Nn24OsI5UtD+YCKIRQ1xnIUTNwEJOlWvjWe9bm37CCYoRWXYlxKykMBYn3axu4
+         9+/wGxMNGBgJpoNqO7XyVO+hwpHUqtJ4EeYR9idWLTLrFCVEeZDgx1UjLSBXpSV1D9Oz
+         NG16Mmf0uroOB+HY/8Gc8coIBOzUTjclYqfvR5rp4hGnVn7iVHZJZ4w45XdnV0RMJ3Y4
+         ydapjFfc5ITPxgqGuY5BoWR1v4yVObNCuzzZmTKIp25kDlPpvvTpJ9r2l7DpQNn/bWvq
+         RDOBV6suowHey8UbsU0rVOd5ES6BSc7ybv1v5jOj2uIIem7dxQRJruvxY8qRdNZ93ryE
+         sysQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXAyqq0DeatxZBZSZmZQR7Gjgkae7YibfIFMjOu9HwqcLdRYLWPnZZJPD49OzWlq6kuAooJvtO4ZpR/kdU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxiUGf+1pmx7Cb1AkYvf4eida+xT/y34wMHB5mTCAc5M6jt1u9F
+	0Uw3jpw6oP/imk86POs+gFvIzB+9OXqAYgC54r1SuMqH1DKqJNd/R9VzqYS2xlGENwiSVvMZIvX
+	e
+X-Gm-Gg: ASbGnct7AQbuJvBZeVob3cUgb2Cmgjd0aX5/R9b7uPMLrJ2pkiAa2O3QLiuF6up19/u
+	g4kPOZz267koqk7dEt91dXaOPc7G1dGqK7H2MuyBXgsSSNsoOXdmBt99Ck6F23nuhxsr6mCyZeQ
+	G6T3fvFSXL4gST2R8fHWimTQghRpWCXGWnwBg1n0OcuMxWN2r1p6F8AX0ndKnqmMSpUNxa6TGO8
+	LpbSa862NZt1wzsBglzAjEkLIurAsYqTZPx14dedPJL0C7J1imtLxlgZhBZkvsJVc9yCU4tzTig
+	fBUoINRzqEStS0WNRiK8P9fVVii2EM2aiV7d
+X-Google-Smtp-Source: AGHT+IHcAwoV/Xk1Csabzuse23MyL+xUVpziubfs/+LSvyDmWLnIPhaLqfAOH4CMFTaOcRTZq3heXA==
+X-Received: by 2002:a05:6e02:1fc9:b0:3d5:8937:f419 with SMTP id e9e14a558f8ab-3d9303b356bmr97825ab.13.1745439279869;
+        Wed, 23 Apr 2025 13:14:39 -0700 (PDT)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d92759b775sm5222945ab.23.2025.04.23.13.14.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Apr 2025 13:14:39 -0700 (PDT)
+Message-ID: <686a96ef-4fa8-4a0e-af9f-f33bff60071b@kernel.dk>
+Date: Wed, 23 Apr 2025 14:14:38 -0600
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] btt: use millisecond output latency time
+To: Fanhui Meng <mengfanhui@kylinos.cn>, linux-btrace@vger.kernel.org
+References: <20250423082729.520799-1-mengfanhui@kylinos.cn>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20250423082729.520799-1-mengfanhui@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Output latency time in milliseconds to increase readability.
-as the normal time for IO requests is usually a few milliseconds.
+On 4/23/25 2:27 AM, Fanhui Meng wrote:
+> Output latency time in milliseconds to increase readability.
+> as the normal time for IO requests is usually a few milliseconds.
+> 
+> q2c.dat test output result:
+> 1.725317 0.292148
+> 1.725275 0.337183
+> 1.725326 0.288462
+> 1.725334 0.282350
+> 1.725342 0.276609
+> 2.039203 0.217158
+> 2.039463 0.123061
+> 2.039715 0.173856
+> 2.040144 0.184456
 
-q2c.dat test output result:
-1.725317 0.292148
-1.725275 0.337183
-1.725326 0.288462
-1.725334 0.282350
-1.725342 0.276609
-2.039203 0.217158
-2.039463 0.123061
-2.039715 0.173856
-2.040144 0.184456
+This will potentially break tooling. Maybe add a switch to change
+it to msec instead?
 
-Signed-off-by: Fanhui Meng <mengfanhui@kylinos.cn>
----
- btt/latency.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/btt/latency.c b/btt/latency.c
-index 51e6881..331595e 100644
---- a/btt/latency.c
-+++ b/btt/latency.c
-@@ -23,7 +23,7 @@
- static inline void latency_out(FILE *ofp, __u64 tstamp, __u64 latency)
- {
- 	if (ofp)
--		fprintf(ofp, "%lf %lf\n", TO_SEC(tstamp), TO_SEC(latency));
-+		fprintf(ofp, "%lf %lf\n", TO_SEC(tstamp), TO_MSEC(latency));
- }
- 
- FILE *latency_open(struct d_info *dip, char *name, char *post)
 -- 
-2.25.1
+Jens Axboe
 
