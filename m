@@ -1,56 +1,57 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from out203-205-221-231.mail.qq.com (out203-205-221-231.mail.qq.com [203.205.221.231])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 784441B0435
-	for <linux-btrace@vger.kernel.org>; Thu, 24 Apr 2025 07:13:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765F31CA9C
+	for <linux-btrace@vger.kernel.org>; Tue, 29 Apr 2025 01:48:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.231
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745478837; cv=none; b=ows8lCz/g3Z5OIMINdpA7MjQjOISu669bIatIBGa6BMO0QjskJ9WN8jNvlqiXTD7qvtYJm3Y2yFkOAxxtTIjJdDYLO5ZKGTcsvJFwVi+HBm1g4IbFWwiguGX6jyboAAm3zhSMgdqNWc2pR9HD5g4CmSLWcGld95Ypc6KKkDOGpk=
+	t=1745891337; cv=none; b=OYv27rZXHIolOg3w1mMwVEXb+AeOa1YYeo2bXlR9XSvqPd98om+sso5q59jgN//6cJ0tGP1tL+1curKHCe8Nb7GdRZY6i7rsPk563K7dJXfLxotQlyio/2sTqNIB2mZwduMlcj43p0n6t+MvjyF09uyH1AB7Hc1mCLv0bWH6B+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745478837; c=relaxed/simple;
-	bh=kFy2j28Ry6G5c7FjxIp6hVeUlO1T141DddvRpRC1YXE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FCp+5vBrolqbijQBCECpVldLAYfSR03yCJI7puSg00YdxFBoGxY47OL1FvhzbJuX24PFvC8vUZIMR+xVYZ7FYdtpQDWjBzcxNYmTV2xsOrGfPaz67XI10Aw0THzBJOIapOPil38+6EPQvgvL3YIGGfZ2i0tCNVUE8gBYUyTmpEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: a6d7c47420db11f0a216b1d71e6e1362-20250424
-X-CTIC-Tags:
-	HR_CC_AS_FROM, HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_T1, AMN_GOOD, AMN_C_TI, AMN_C_BU
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.45,REQID:a6e1149c-4630-454d-8a44-ed4aa8cbf29f,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:5
-X-CID-INFO: VERSION:1.1.45,REQID:a6e1149c-4630-454d-8a44-ed4aa8cbf29f,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:5
-X-CID-META: VersionHash:6493067,CLOUDID:2941fdd6cf3ea2d11702314d427408aa,BulkI
-	D:250424151344HDHUDHQD,BulkQuantity:0,Recheck:0,SF:19|24|38|44|66|72|78|10
-	2,TC:nil,Content:0|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,B
-	EC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: a6d7c47420db11f0a216b1d71e6e1362-20250424
-X-User: mengfanhui@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <mengfanhui@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 763811195; Thu, 24 Apr 2025 15:13:41 +0800
-From: Fanhui Meng <mengfanhui@kylinos.cn>
-To: axboe@kernel.dk,
+	s=arc-20240116; t=1745891337; c=relaxed/simple;
+	bh=rNFKZWp16ZQi9NXjLlJC7KOnEV1y5pPwlkM5L6Mpl/o=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=YGwCrxO+FNCnb6wPDHoNpcIKlUs+Ak/a4yE1SEBwGF8uWlBhbPzm0HwYywSzyeQ8+ERJ5DX2cT8nlvbroYorVxIV4YRF1xKYWzJg17uNLEck0metSGH+bQ0jXmhUNp5lgW3xEL2hDKSt80qv3LK8RPaG3TAHMukJMORiUSfhEXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=pGJGro5T; arc=none smtp.client-ip=203.205.221.231
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="pGJGro5T"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1745891024; bh=rNFKZWp16ZQi9NXjLlJC7KOnEV1y5pPwlkM5L6Mpl/o=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=pGJGro5TdjNrVNlFic0tGxISWIHK5UMeRJJgHLL9IMq+E6zCBCnr0NiEAvA3nodcu
+	 HO/Ppeq8YJkqfLsMREY+upzpJp9Q1xQrSpnYTBXWx7b2eZqy4c+zApGfsV/AWaUqQz
+	 u5TPTVgtBvqkMVDOUrdJ6VshVj+zSI+6378RsmMY=
+Received: from localhost.localdomain ([1.193.37.185])
+	by newxmesmtplogicsvrszb21-0.qq.com (NewEsmtp) with SMTP
+	id AE937CBA; Tue, 29 Apr 2025 09:43:41 +0800
+X-QQ-mid: xmsmtpt1745891021tr1ouvocz
+Message-ID: <tencent_0D3C718002373829DC33DCCA0A5107DC5406@qq.com>
+X-QQ-XMAILINFO: NoN45VbJ/ow6FutV+O19eqhKCXmKyFUtClVteqomVtDwfFDJl3EAfYqSlJZz8/
+	 vzrLOFy4H4mb28WsFNw0YKS1owtEhaOihk4+wrvEWjMumBdfTSrw9nNLtQNhyETc1gwvsiBTklJQ
+	 jyfrQ1BwLaiTXKnChC5swS1TXazK7aIBudjztzn2zgTyGDSFLyZne8MIxWSRC69sbX7w4iA9rhdc
+	 WaeSp9ox31sawfN6KQHvOvjecDV7m3Oheq4CRqtHUO/wTzfk7KY9y4a99h5cee5LcgWpOt22ebdt
+	 gGaOJv1mmwJvsvdgVypzbugwzmsDkeqGmCv6+4Z5TO4gJhg7oGxI0zkSAToyk+yzKu5uwe71WlTD
+	 iDbZOpRavY5A/J5McPxTbW7xMfknfamauj3o6n05G01L9MyumAxurCy2V5HD84qgSQr5IsIuXWLV
+	 sP0lXdASt+xKdBtZOsTujgMLai0uk2mz8mcgxPbsuYKIEXuJkYpW2dgyXWKk+kbWyzyKd2g6stQi
+	 LmIEeblWqS5SG3gzvy0SfjR73452HUF3jyHvHXiDaDkQkw3RfODlMFbD7VDwtsQSN9QV/LNdLU9H
+	 FlOHtdwzQVwHEdk35gL+uf87WLVuCF8u2AMJyMMzy8B7KU2fHBd9LjJSOgMHIysAiiBVVwqmc0kH
+	 4B7HO22ij2C1g+VU5238slhE05NSKkVhGTvYcCs5/psIfkq6Yg+gk7kcfLhM0E2957bV74sNwRIK
+	 N/2JS6kAiQlFD3OCNuo7f3XvRqxV3F6CSR3Vg6nzITmH22CiPGpxyQ3TZCyl7M7qSmA5fUOQBRzw
+	 j36qJPjwKmkoQ+QJ3FgBo4bDl4XZxZ+1Eds0RU0oOvf+6+tv8OUhZyQ0Vg7leSgqg0xiAChkEWhP
+	 NZ1uPnbOFy7gjYUpkhlMcKK1EiFYsEISK0QE/qWbC7whDXfu69MU9W2FGeSrZhue878RL3uN9/LV
+	 x+6sqAEfQ=
+X-QQ-XMRINFO: NI4Ajvh11aEj8Xl/2s1/T8w=
+From: 303146950@qq.com
+To: axboe@kernel.dk
+Cc: kouwenqi@kylinos.cn,
 	linux-btrace@vger.kernel.org
-Cc: mengfanhui@kylinos.cn
-Subject: [PATCH v1] btt: fix error configuration do-active parameter
-Date: Thu, 24 Apr 2025 15:12:16 +0800
-Message-Id: <20250424071216.1356183-1-mengfanhui@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+Subject: Re: [PATCH] btt: eliminate redundant separators in btt -p display
+Date: Tue, 29 Apr 2025 05:06:04 +0800
+X-OQ-MSGID: <20250428210604.5603-1-303146950@qq.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <tencent_82C549379F3956788830E028E3AB0394B809@qq.com>
+References: <tencent_82C549379F3956788830E028E3AB0394B809@qq.com>
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -59,30 +60,13 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-handle_args handle do_p_live function using Z parameter.
-Therefore, when configuring parameters, it should also be Z.
+From: Kou Wenqi <kouwenqi@kylinos.cn>
 
-The introduction of parameter help also corresponds to Z.
-"[ -Z               | --do-active\n" \
+Hi Jens Axboe,
+I would like to kindly request your review for this bugfix patch.
+Thank you for your time and guidance.
 
-Signed-off-by: Fanhui Meng <mengfanhui@kylinos.cn>
----
- btt/args.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/btt/args.c b/btt/args.c
-index ec65399..56e3f6b 100644
---- a/btt/args.c
-+++ b/btt/args.c
-@@ -191,7 +191,7 @@ static struct option l_opts[] = {
- 		.name = "do-active",
- 		.has_arg = no_argument,
- 		.flag = NULL,
--		.val = 'z'
-+		.val = 'Z'
- 	},
- 	{
- 		.name = "easy-parse-avgs",
--- 
-2.25.1
+--
+Best regards,
+Kou Wenqi
 
