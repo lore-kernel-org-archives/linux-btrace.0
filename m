@@ -1,22 +1,22 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D889726056E;
-	Fri, 19 Sep 2025 15:10:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9024926056E;
+	Fri, 19 Sep 2025 15:10:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758294613; cv=none; b=K3PmyjtNlsAt7vhwG1++8LAqhbMXGIYyNqo7rruqTRBfVVrjj5COZclSAZzKTh2Zn/im6jY2hJPASzCaWdUXgeIc9ZRnBoXnyuINGYM4cif719sSwY5y5BnII5YZ0TMIf+3/7i2ZJA+LzgqNZbPkcOmgKui5RfxSOW1hA9HfYcY=
+	t=1758294638; cv=none; b=LwqPbwXQUW47RcgzyaXTq7IaWJaUM7Dpo7RjXJi26cnCaazXDhZGlE6TAHGUIKZ1qnIx5y4LotNAQkZYcFm5UxvTbQS5YwvosrbzcNy4fhBlJUoqyfT82tC3OETqg1rpZyilbMF9vyhMrmJtIdlPvDolYEqqogP/1/cEKYT6iRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758294613; c=relaxed/simple;
-	bh=XXTPOvIUIuPAj+/e9/XGGSEtPNwzjqc9jiBMg/QJ69Y=;
+	s=arc-20240116; t=1758294638; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T0eePJImm4iKbu5IM45WB8cWBQCta82SrBip1HlB/G+sq8VIlWhVwy+RGtnwV8/vgHqDkf49pF3v3RXMuyNKv6AvV8yWlPt8VYdWdnUF8+VVEbkTmg6KGBXupt7mVudNrKZU4c7eLlcffPsU+Vj0NOiXNcxjNATS1OGkCTlEbco=
+	 Content-Type:Content-Disposition:In-Reply-To; b=KHpwf4sN8aZL+EIW5pvfc34+7xK2fTCbZZJsh+zoxFeGZRzASqq3XcxeJM2G+5oFy+ACbENHZburk2aZcojqHYOmUSmZHq3aaoqbc9tYSw4+j0rP4nJGZJp0KAeaJkBTcdHWI1PXmmw/DsvhR8mM6JhBGm9pMhSSRwzd1UFEw4k=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 6BDFC68AFE; Fri, 19 Sep 2025 17:10:08 +0200 (CEST)
-Date: Fri, 19 Sep 2025 17:10:08 +0200
+	id DD9B868AA6; Fri, 19 Sep 2025 17:10:31 +0200 (CEST)
+Date: Fri, 19 Sep 2025 17:10:31 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Steven Rostedt <rostedt@goodmis.org>,
@@ -30,9 +30,9 @@ Cc: Jens Axboe <axboe@kernel.dk>, Steven Rostedt <rostedt@goodmis.org>,
 	Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
 	Chaitanya Kulkarni <chaitanyak@nvidia.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 07/16] blktrace: split out relaying a blktrace event
-Message-ID: <20250919151008.GG28352@lst.de>
-References: <20250909110611.75559-1-johannes.thumshirn@wdc.com> <20250909110611.75559-8-johannes.thumshirn@wdc.com>
+Subject: Re: [PATCH 08/16] blktrace: change the internal action to 64bit
+Message-ID: <20250919151031.GH28352@lst.de>
+References: <20250909110611.75559-1-johannes.thumshirn@wdc.com> <20250909110611.75559-9-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -41,14 +41,8 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250909110611.75559-8-johannes.thumshirn@wdc.com>
+In-Reply-To: <20250909110611.75559-9-johannes.thumshirn@wdc.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
-
-On Tue, Sep 09, 2025 at 01:06:02PM +0200, Johannes Thumshirn wrote:
-> Split out the code relaying a blktrace event to user-space using relayfs.
-> 
-> This enables adding a second version supporting a new version of the
-> protocol.
 
 Looks good:
 
