@@ -1,47 +1,47 @@
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1F322E2EF1;
-	Thu, 25 Sep 2025 15:03:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8F142E2F1F;
+	Thu, 25 Sep 2025 15:03:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758812584; cv=none; b=oYHv6L1P0yQxWdpqFt6eFBmpcjx1VznPqo/9wKMq8smikVv7Yn0h0WI3oHdjkgYnXrM+5qnRzy6c9p44IZCgL+pX/nrCUrfcnDfoCcke9G3hlqrZJvFHkDR5lDfstJ9yGWdURIEHN8M2GkYdIJnnnI1z4lareeA8ePmc507A7dQ=
+	t=1758812588; cv=none; b=OeBJvej+ZYvR1lFN6y0fROrGTvlNyNOpdR4WefmWNOH4k7UCIIprNIdHOzMDNSdl6n4WDS7m4wEEwMLMMPsf72D7QKX7K5+JEjJ+ErbAANkTC7pT2xlLGEwvGrSeX09/fbShnTbvjF1aT6Od+Oe6c1NzoYSB6Xspxp0UWCjVkXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758812584; c=relaxed/simple;
-	bh=dSPTV7shWs8QOyqDcRIgVOAEn91OVl4zHbuoP17n3qQ=;
+	s=arc-20240116; t=1758812588; c=relaxed/simple;
+	bh=Q06ElkC1YeIS96B+gJruwG4okAMRndVsd4fhyoRMYtQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pBTxDhc64GzLVwaNHHoElXMGQ+1iLbKNG2/8AbSAEWxNl9BSJAABbe4mr66bCop0U8NM2ENxx3+OOjy3gMfi/WXXmhPR3Npq5waoFy8tJHMEo6TnS5KaYbUFQcAQghwbxiQGlicE6dgo3GCYrAia8w071m06FfvY2oq2h13ZcwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=mKU/klP0; arc=none smtp.client-ip=216.71.153.144
+	 MIME-Version; b=P6tl0PS19ehPh6zg14PwMRBPyrJQ6g673oJ+YFMzOnk8CgFflGDfVxCcz8gHxQOYsubAfm6hG+YHBX12tEvuVxgIMIU/MTG48o7yzlHL2n+6+dHfKsmWyQ9DSKfrmCRuHLGBasNDTucW/jeOlnfF3t2bZFJWqanypP1EPzKUsWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=nCImdaYo; arc=none smtp.client-ip=216.71.153.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mKU/klP0"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nCImdaYo"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1758812582; x=1790348582;
+  t=1758812586; x=1790348586;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=dSPTV7shWs8QOyqDcRIgVOAEn91OVl4zHbuoP17n3qQ=;
-  b=mKU/klP06Uew2tgRkmBRDAXS3kFs2rPGqiA0ak93VgnT9M3BgovwdbJk
-   +1zAbRADfs8VkHGRuxwp/2fYLDLRzbJseF4LrVj4dcMDryQiHfvxhfrRP
-   9+YwG25oGaJGSP7dTVzPZmP0YVJ5loEQgf6UmrmScy6B8TQBVKdud2hYR
-   8P9r5UWtHwebK+YuYMkPHSdBcBBVXjlp1l1ckyB4HKb9umgqVkW4eOJ3Y
-   vnmUzxO89bvB9QslqomZleZyZCUaznDbNCy/b1LtNi+J9j2vFFj3rdQSS
-   MEyYkVeoD/cgiQtBXQQw2WD0fgezdSQSmimp6J7GhL/54Iv88tJS8zGxu
-   Q==;
-X-CSE-ConnectionGUID: T3ZvBEkBQVWTi9kh3OrHJg==
-X-CSE-MsgGUID: dLbDBkatSGmehTBkO4IPGQ==
+  bh=Q06ElkC1YeIS96B+gJruwG4okAMRndVsd4fhyoRMYtQ=;
+  b=nCImdaYoMjPVwHwsPncd/QgmxR2yXrGTYLZnm6ArpaQs63JKicosxqEO
+   ha03hHSFxoHFDM+FMrb1yFPJXVep7OLkISmRSNXCs2iy5NUkUOTiFgLDl
+   /7SPOJ0uYeOdY0zAkgg0LkBGncdk1TQP7LrS1mvEfX1y/KalgzHdNiDQY
+   5X3usUDme/Qq7pooAilO469whI50zvzScgharKMJDrixN3Ykvq/UhyTHc
+   +neO+1Ra25dX8FgMZGTLnMmL7+Dy+ayShlFJkHGpSdn57J3omXsL2Ygq3
+   dyGTBoGPYSjcdONl2SQ7q5No0g88nXwYpjNzGgwu2zfS5aqWpYxlQSTL4
+   w==;
+X-CSE-ConnectionGUID: XcRLgXtXSk6JGNHx7C1GHw==
+X-CSE-MsgGUID: 6vjtBnesTJOsuMi1M6yD3g==
 X-IronPort-AV: E=Sophos;i="6.18,292,1751212800"; 
-   d="scan'208";a="130347848"
+   d="scan'208";a="130347914"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Sep 2025 23:03:02 +0800
-IronPort-SDR: 68d559a6_Gf46M0zg3cml6UE16hW4GjXUfa1baQqRlCOKvtCUj8mGrR/
- hvX9IMd7H1Xpm7TObmp07kThdaFIE/vU1FR/2OA==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Sep 2025 23:03:06 +0800
+IronPort-SDR: 68d559aa_at7aBV5Gs3NYa+Z20PBAqQYeTzcdHg5kIXBZ3mQ0mdbGO5c
+ EoGmM8KtRYml332OFr4vXz+4t42tnTbWpumAcSQ==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2025 08:03:02 -0700
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2025 08:03:06 -0700
 WDCIronportException: Internal
 Received: from c02g55f6ml85.ad.shared (HELO C02G55F6ML85.wdc.com) ([10.224.183.46])
-  by uls-op-cesaip02.wdc.com with ESMTP; 25 Sep 2025 08:02:59 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 25 Sep 2025 08:03:03 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Steven Rostedt <rostedt@goodmis.org>,
@@ -60,9 +60,9 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
 	Chaitanya Kulkarni <chaitanyak@nvidia.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v2 06/15] blktrace: split do_blk_trace_setup into two functions
-Date: Thu, 25 Sep 2025 17:02:22 +0200
-Message-ID: <20250925150231.67342-7-johannes.thumshirn@wdc.com>
+Subject: [PATCH v2 07/15] blktrace: add definitions for blk_user_trace_setup2
+Date: Thu, 25 Sep 2025 17:02:23 +0200
+Message-ID: <20250925150231.67342-8-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250925150231.67342-1-johannes.thumshirn@wdc.com>
 References: <20250925150231.67342-1-johannes.thumshirn@wdc.com>
@@ -74,209 +74,53 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Split do_blk_trace_setup into two functions, this is done to prepare for
-an incoming new BLKTRACESETUP2 ioctl(2) which can receive extended
-parameters form user-space.
-
-Also move the size verification logic to the callers.
+Add definitions for a version 2 of the blk_user_trace_setup ioctl. This
+new will enable a different struct layout of the binary data passed to
+user-space when using a new version of the blktrace utility requesting the
+new struct layout.
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- kernel/trace/blktrace.c | 95 ++++++++++++++++++++++++-----------------
- 1 file changed, 57 insertions(+), 38 deletions(-)
+ include/uapi/linux/blktrace_api.h | 15 +++++++++++++++
+ include/uapi/linux/fs.h           |  1 +
+ 2 files changed, 16 insertions(+)
 
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 51c001e4981c..f6a41e9510f6 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -518,9 +518,10 @@ static void blk_trace_setup_lba(struct blk_trace *bt,
- /*
-  * Setup everything required to start tracing
-  */
--static int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
--			      struct block_device *bdev,
--			      struct blk_user_trace_setup *buts)
-+static struct blk_trace *blk_trace_setup_prepare(struct request_queue *q,
-+						 char *name, dev_t dev,
-+						 u32 buf_size, u32 buf_nr,
-+						 struct block_device *bdev)
- {
- 	struct blk_trace *bt = NULL;
- 	struct dentry *dir = NULL;
-@@ -528,31 +529,19 @@ static int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
+diff --git a/include/uapi/linux/blktrace_api.h b/include/uapi/linux/blktrace_api.h
+index 1bfb635e309b..a3b1f35ac026 100644
+--- a/include/uapi/linux/blktrace_api.h
++++ b/include/uapi/linux/blktrace_api.h
+@@ -143,4 +143,19 @@ struct blk_user_trace_setup {
+ 	__u32 pid;
+ };
  
- 	lockdep_assert_held(&q->debugfs_mutex);
- 
--	if (!buts->buf_size || !buts->buf_nr)
--		return -EINVAL;
--
--	strscpy_pad(buts->name, name, BLKTRACE_BDEV_SIZE);
--
--	/*
--	 * some device names have larger paths - convert the slashes
--	 * to underscores for this to work as expected
--	 */
--	strreplace(buts->name, '/', '_');
--
- 	/*
- 	 * bdev can be NULL, as with scsi-generic, this is a helpful as
- 	 * we can be.
- 	 */
- 	if (rcu_dereference_protected(q->blk_trace,
- 				      lockdep_is_held(&q->debugfs_mutex))) {
--		pr_warn("Concurrent blktraces are not allowed on %s\n",
--			buts->name);
--		return -EBUSY;
-+		pr_warn("Concurrent blktraces are not allowed on %s\n", name);
-+		return ERR_PTR(-EBUSY);
- 	}
- 
- 	bt = kzalloc(sizeof(*bt), GFP_KERNEL);
- 	if (!bt)
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
- 
- 	ret = -ENOMEM;
- 	bt->sequence = alloc_percpu(unsigned long);
-@@ -572,7 +561,7 @@ static int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 	if (bdev && !bdev_is_partition(bdev))
- 		dir = q->debugfs_dir;
- 	else
--		bt->dir = dir = debugfs_create_dir(buts->name, blk_debugfs_root);
-+		bt->dir = dir = debugfs_create_dir(name, blk_debugfs_root);
- 
- 	/*
- 	 * As blktrace relies on debugfs for its interface the debugfs directory
-@@ -580,8 +569,7 @@ static int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 	 * files or directories.
- 	 */
- 	if (IS_ERR_OR_NULL(dir)) {
--		pr_warn("debugfs_dir not present for %s so skipping\n",
--			buts->name);
-+		pr_warn("debugfs_dir not present for %s so skipping\n", name);
- 		ret = -ENOENT;
- 		goto err;
- 	}
-@@ -593,17 +581,39 @@ static int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 	debugfs_create_file("dropped", 0444, dir, bt, &blk_dropped_fops);
- 	debugfs_create_file("msg", 0222, dir, bt, &blk_msg_fops);
- 
--	bt->rchan = relay_open("trace", dir, buts->buf_size,
--				buts->buf_nr, &blk_relay_callbacks, bt);
-+	bt->rchan = relay_open("trace", dir, buf_size, buf_nr,
-+			       &blk_relay_callbacks, bt);
- 	if (!bt->rchan)
- 		goto err;
- 
-+	blk_trace_setup_lba(bt, bdev);
++/*
++ * User setup structure passed with BLKTRACESETUP2
++ */
++struct blk_user_trace_setup2 {
++	char name[32];		/* output */
++	__u64 act_mask;		/* input */
++	__u32 buf_size;		/* input */
++	__u32 buf_nr;		/* input */
++	__u64 start_lba;
++	__u64 end_lba;
++	__u32 pid;
++	__u32 flags;		/* currently unused */
++	__u64 reserved[7];
++};
 +
-+	return bt;
-+
-+err:
-+	if (ret)
-+		blk_trace_free(q, bt);
-+
-+	return ERR_PTR(ret);
-+}
-+
-+static void blk_trace_setup_finalize(struct request_queue *q,
-+				     char *name, struct blk_trace *bt,
-+				     struct blk_user_trace_setup *buts)
-+
-+{
-+	strscpy_pad(buts->name, name, BLKTRACE_BDEV_SIZE);
-+
-+	/*
-+	 * some device names have larger paths - convert the slashes
-+	 * to underscores for this to work as expected
-+	 */
-+	strreplace(buts->name, '/', '_');
-+
- 	bt->act_mask = buts->act_mask;
- 	if (!bt->act_mask)
- 		bt->act_mask = (u16) -1;
+ #endif /* _UAPIBLKTRACE_H */
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 0bd678a4a10e..a85d0b52a3f6 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -300,6 +300,7 @@ struct file_attr {
+ #define BLKGETDISKSEQ _IOR(0x12,128,__u64)
+ /* 130-136 are used by zoned block device ioctls (uapi/linux/blkzoned.h) */
+ /* 137-141 are used by blk-crypto ioctls (uapi/linux/blk-crypto.h) */
++#define BLKTRACESETUP2 _IOWR(0x12, 142, struct blk_user_trace_setup2)
  
--	blk_trace_setup_lba(bt, bdev);
--
- 	/* overwrite with user settings */
- 	if (buts->start_lba)
- 		bt->start_lba = buts->start_lba;
-@@ -615,12 +625,6 @@ static int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 
- 	rcu_assign_pointer(q->blk_trace, bt);
- 	get_probe_ref();
--
--	ret = 0;
--err:
--	if (ret)
--		blk_trace_free(q, bt);
--	return ret;
- }
- 
- int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
-@@ -628,17 +632,25 @@ int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 		    char __user *arg)
- {
- 	struct blk_user_trace_setup buts;
-+	struct blk_trace *bt;
- 	int ret;
- 
- 	ret = copy_from_user(&buts, arg, sizeof(buts));
- 	if (ret)
- 		return -EFAULT;
- 
-+	if (!buts.buf_size || !buts.buf_nr)
-+		return -EINVAL;
-+
- 	mutex_lock(&q->debugfs_mutex);
--	ret = do_blk_trace_setup(q, name, dev, bdev, &buts);
-+	bt = blk_trace_setup_prepare(q, name, dev, buts.buf_size, buts.buf_nr,
-+				     bdev);
-+	if (IS_ERR(bt)) {
-+		mutex_unlock(&q->debugfs_mutex);
-+		return PTR_ERR(bt);
-+	}
-+	blk_trace_setup_finalize(q, name, bt, &buts);
- 	mutex_unlock(&q->debugfs_mutex);
--	if (ret)
--		return ret;
- 
- 	if (copy_to_user(arg, &buts, sizeof(buts))) {
- 		blk_trace_remove(q);
-@@ -655,11 +667,14 @@ static int compat_blk_trace_setup(struct request_queue *q, char *name,
- {
- 	struct blk_user_trace_setup buts;
- 	struct compat_blk_user_trace_setup cbuts;
--	int ret;
-+	struct blk_trace *bt;
- 
- 	if (copy_from_user(&cbuts, arg, sizeof(cbuts)))
- 		return -EFAULT;
- 
-+	if (!cbuts.buf_size || !cbuts.buf_nr)
-+		return -EINVAL;
-+
- 	buts = (struct blk_user_trace_setup) {
- 		.act_mask = cbuts.act_mask,
- 		.buf_size = cbuts.buf_size,
-@@ -670,10 +685,14 @@ static int compat_blk_trace_setup(struct request_queue *q, char *name,
- 	};
- 
- 	mutex_lock(&q->debugfs_mutex);
--	ret = do_blk_trace_setup(q, name, dev, bdev, &buts);
-+	bt = blk_trace_setup_prepare(q, name, dev, buts.buf_size, buts.buf_nr,
-+				     bdev);
-+	if (IS_ERR(bt)) {
-+		mutex_unlock(&q->debugfs_mutex);
-+		return PTR_ERR(bt);
-+	}
-+	blk_trace_setup_finalize(q, name, bt, &buts);
- 	mutex_unlock(&q->debugfs_mutex);
--	if (ret)
--		return ret;
- 
- 	if (copy_to_user(arg, &buts.name, ARRAY_SIZE(buts.name))) {
- 		blk_trace_remove(q);
+ #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
+ #define FIBMAP	   _IO(0x00,1)	/* bmap access */
 -- 
 2.51.0
 
