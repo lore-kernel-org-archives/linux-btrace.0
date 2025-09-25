@@ -1,47 +1,47 @@
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6219A315D5E;
-	Thu, 25 Sep 2025 15:05:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93D673191C8;
+	Thu, 25 Sep 2025 15:05:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758812730; cv=none; b=ksyjHfjGX0qHkrnU2BYgqBZ5HiWGnzfnsj12C17uCGT6IgNsqv613LdBiN1Nh2jwQJ9sJp2VAnydn9Jw+ZnJpa1wve5Bk2jZyj5zgdCUYSnvC+6/IogHgmiIfPilXzsQ6IAcimcXN2XBfekLQaLON3GlxEmMNOin3ea5LYFZjwg=
+	t=1758812735; cv=none; b=W3TWNA8vbN+BIHsk6Pz91kmyuwzLgbbAnLFpOxxXTXQ2FU/FKFoywSQtts+WVUzsdWKsb7XJdff8DKFI1Sbd8vyMMlISI1vRpRY4ea5IXZNbGu6kCXGqx+NFhJf1V45V5X29/7SP8qC5wlzomA6i0CRsMNGv0M1Do7G7BfU3Tvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758812730; c=relaxed/simple;
-	bh=3oS1kgcAgXjp0aHkhvXj8mPE9QIVrKKYTq1StaQgUmk=;
+	s=arc-20240116; t=1758812735; c=relaxed/simple;
+	bh=ahbQzVYzmBGcgTtig5YmAZ5t6E/5eYzq5jKvFA9hLeo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mmyU+D/EV6Dz4lidQ1fLw8MiDjRl9I3hLcnmG8QkaL/C468lB3d/f6zHLW3CI2xqrZi7QyzTIbf0wh9nVDT9rHZQne7MJHyPnnxUtHmL0y7rZFzlxunHzfidOB7lhyv14B+ydM+CbKwVVbw7qe47RqHTQhSv+1Buwt+Em5lKb+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=AmfS68eA; arc=none smtp.client-ip=216.71.153.144
+	 MIME-Version; b=EZuMzlNSDuw/Seo8L8Ks4DnAJPc/nhtnQkxnscN/CXpbfKPFG7I8sbhXV9gHFdKpE6rLxLFuMWyyhRVl/hnNvH6Fvg00J2Tu3/T6C2pWE8QpcWAi7LKClU3Q66UCValhAGlARegMM3rBl86yZ+GiaaSq/yrOmJLU4XEwCoFmQeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=gVFK/Q93; arc=none smtp.client-ip=216.71.153.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="AmfS68eA"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="gVFK/Q93"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1758812729; x=1790348729;
+  t=1758812733; x=1790348733;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=3oS1kgcAgXjp0aHkhvXj8mPE9QIVrKKYTq1StaQgUmk=;
-  b=AmfS68eAF4dpOfP0vNeWghk4+SgLVJsUa9vMddMbj01K3CeJq8DOaezT
-   vAtr3JMv0SA+JWq94mD4ZshL/b7UmiZnJzUZ/ZCLcn2nmzUePrydn9/3s
-   fH+f80fq+5zx8jF0m4C7t1Ni9Or6uYcNND2C+gsSHvqScb1kgZeDPHpcq
-   +jjuNY5+VXdTe+Bsd//6JWUxxj0St9XIhn8ErV9DvWM/6qk8W12k1e3hn
-   CAxKdiVFjn4zlzhFFM6TEoOMO4ZwOYr4KBT+lZe809EzQSzuqkGrCEt7e
-   cSPAlh16e4A1uy/ZjJGoy7IBC/K1gG50fDby6KFYfVgQmInPaSzjBuguW
-   A==;
-X-CSE-ConnectionGUID: NHC+JBhBRh2S9dzfMSLQ7g==
-X-CSE-MsgGUID: dUXlX1NMRomcVn89f1GltA==
+  bh=ahbQzVYzmBGcgTtig5YmAZ5t6E/5eYzq5jKvFA9hLeo=;
+  b=gVFK/Q938Tiwe1b/quj3kr7Qyz5tpjWjBgXGySaID4qzn49uE6k2wG09
+   bpJHQif5VRWYvvRSkfLWfalUj51EV+Ce8Kzxjc2Dkg6aduahGXmE8zB6A
+   i27z2plFi2n9qwA8UoaXrAC4BqKzeG7nxkoISIIanyzjcC7i0xGmZt/J1
+   bshjOvKh8LuVkmHKQhn21Un+9AJyyhvj5o6Z1COzz3vb7Xkx08vufjsMJ
+   op9BJ8G6VCYR83mchxN95v2+tmtnApk0MoqQsgVSKKXh0Sn3NSscxrLC7
+   mCyp5wnOK/KGj5Ah1lHm3tV7MR+dajKhJiCZqSiNTodTc/y/nyDN6M2/V
+   g==;
+X-CSE-ConnectionGUID: lBzDbOhRRrWR2VPyVh+sJg==
+X-CSE-MsgGUID: HuUgqaDyS9yIlmj3ac0NaQ==
 X-IronPort-AV: E=Sophos;i="6.18,292,1751212800"; 
-   d="scan'208";a="130349192"
+   d="scan'208";a="130349241"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Sep 2025 23:05:28 +0800
-IronPort-SDR: 68d55a39_jrFYughe2AsfsWDuucg0pGckjgxxX+/WNXHHfluxxhsDwx0
- SHQ2o5Dr9Yw/WNqtr3mvybqXruuKcELa3fKqEwA==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Sep 2025 23:05:33 +0800
+IronPort-SDR: 68d55a3d_RKXNpQoDbmUgqY3GFMi12JeErpYaS7cUQ/ljDlk7uJT3ME1
+ Hg0FQOw4CtB46sXGTqy2X6TyMJAHFQ1VZ5p0wOw==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2025 08:05:29 -0700
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2025 08:05:33 -0700
 WDCIronportException: Internal
 Received: from c02g55f6ml85.ad.shared (HELO C02G55F6ML85.wdc.com) ([10.224.183.46])
-  by uls-op-cesaip02.wdc.com with ESMTP; 25 Sep 2025 08:05:26 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 25 Sep 2025 08:05:30 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Steven Rostedt <rostedt@goodmis.org>,
@@ -60,9 +60,9 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
 	Chaitanya Kulkarni <chaitanyak@nvidia.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH blktrace v2 13/22] blktrace: pass magic to CHECK_MAGIC macro
-Date: Thu, 25 Sep 2025 17:04:18 +0200
-Message-ID: <20250925150427.67394-14-johannes.thumshirn@wdc.com>
+Subject: [PATCH blktrace v2 14/22] blktrace: pass magic to verify_trace
+Date: Thu, 25 Sep 2025 17:04:19 +0200
+Message-ID: <20250925150427.67394-15-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250925150427.67394-1-johannes.thumshirn@wdc.com>
 References: <20250925150427.67394-1-johannes.thumshirn@wdc.com>
@@ -74,51 +74,76 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Pass only the magic number itself to the CHECK_MAGIC() macro.
+Pass magic to verify_trace(), this will enable verification of multiple
+supported versions.
 
-This enables support for multiple versions.
-
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Singed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blkrawverify.c | 2 +-
- blktrace.h     | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ blkiomon.c | 2 +-
+ blkparse.c | 4 ++--
+ blktrace.h | 8 ++++----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/blkrawverify.c b/blkrawverify.c
-index 9c5d595..cc5b06e 100644
---- a/blkrawverify.c
-+++ b/blkrawverify.c
-@@ -183,7 +183,7 @@ static int process(FILE **fp, char *devname, char *file, unsigned int cpu)
+diff --git a/blkiomon.c b/blkiomon.c
+index 05f2d00..373947e 100644
+--- a/blkiomon.c
++++ b/blkiomon.c
+@@ -488,7 +488,7 @@ static int blkiomon_do_fifo(void)
  
+ 		/* endianess */
  		trace_to_cpu(bit);
- 
--		if (!CHECK_MAGIC(bit)) {
-+		if (!CHECK_MAGIC(bit->magic)) {
- 			INC_BAD("bad trace");
- 			continue;
+-		if (verify_trace(bit)) {
++		if (verify_trace(bit->magic)) {
+ 			fprintf(stderr, "blkiomon: bad trace\n");
+ 			break;
  		}
+diff --git a/blkparse.c b/blkparse.c
+index 0402e81..9065330 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -2509,7 +2509,7 @@ static int read_events(int fd, int always_block, int *fdblock)
+ 				continue;
+ 			}
+ 
+-			if (verify_trace(bit)) {
++			if (verify_trace(bit->magic)) {
+ 				bit_free(bit);
+ 				bit = NULL;
+ 				continue;
+@@ -2649,7 +2649,7 @@ static int ms_prime(struct ms_stream *msp)
+ 			if (ret)
+ 				goto err;
+ 
+-			if (verify_trace(bit))
++			if (verify_trace(bit->magic))
+ 				goto err;
+ 
+ 			if (bit->cpu != pci->cpu) {
 diff --git a/blktrace.h b/blktrace.h
-index 3305fa0..81a5b51 100644
+index 81a5b51..68c67f2 100644
 --- a/blktrace.h
 +++ b/blktrace.h
-@@ -67,7 +67,7 @@ extern FILE *ofp;
- extern int data_is_native;
- extern struct timespec abs_start_time;
+@@ -89,16 +89,16 @@ extern struct timespec abs_start_time;
+ #error "Bad arch"
+ #endif
  
--#define CHECK_MAGIC(t)		(((t)->magic & 0xffffff00) == BLK_IO_TRACE_MAGIC)
-+#define CHECK_MAGIC(magic)		(((magic) & 0xffffff00) == BLK_IO_TRACE_MAGIC)
- #define SUPPORTED_VERSION	(0x07)
- #define SUPPORTED_VERSION2	(0x08)
- 
-@@ -93,7 +93,7 @@ static inline int verify_trace(struct blk_io_trace *t)
+-static inline int verify_trace(struct blk_io_trace *t)
++static inline int verify_trace(__u32 magic)
  {
  	u8 version;
  
--	if (!CHECK_MAGIC(t)) {
-+	if (!CHECK_MAGIC(t->magic)) {
- 		fprintf(stderr, "bad trace magic %x\n", t->magic);
+-	if (!CHECK_MAGIC(t->magic)) {
+-		fprintf(stderr, "bad trace magic %x\n", t->magic);
++	if (!CHECK_MAGIC(magic)) {
++		fprintf(stderr, "bad trace magic %x\n", magic);
  		return 1;
  	}
+ 
+-	version = t->magic & 0xff;
++	version = magic & 0xff;
+ 	if (version != SUPPORTED_VERSION &&
+ 	    version != SUPPORTED_VERSION2) {
+ 		fprintf(stderr, "unsupported trace version %x\n", version);
 -- 
 2.51.0
 
