@@ -1,47 +1,47 @@
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8473019BE;
-	Thu, 25 Sep 2025 15:04:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D4A530FF3A;
+	Thu, 25 Sep 2025 15:04:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758812689; cv=none; b=lIrjp7AUcTZ0XXqAK0bmLWJUVWGY0wjCRxbFAdOgjGEmnexm4Tpb72uOQOwfL7LtzBZR2OYOFcNfqlc5ZwIvc/A0ipjfNiA0Ed4CO/xbbJwjJ0jvz92//BPhEF/0ASqUbmYn28sjU33LsWbM7qpRFlmuv/8PYr8Lvhd8Ee3YEKg=
+	t=1758812693; cv=none; b=fuzXU/PWWIUwPqT6nkO1LViymzqBttS11MGmRkGTdLrxo1udI5rPAbVqPG3lm4AyxoYMjF3DBmHa2CyXcZq4eVnVWarfav+77QsqwBLK8lBwQWmpOOghD/YyuUpa+LMg/8skqAlNwLDTQd4Dv1KTRsQLVOxwR7uV9Bm2WczPp7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758812689; c=relaxed/simple;
-	bh=f6tvFlwHmAwoccibdGr6sMVWUhdk0wCndBcjZ8yKj0Q=;
+	s=arc-20240116; t=1758812693; c=relaxed/simple;
+	bh=qtEv5uKcCuKEHByPUXcHd9IS96qiXSbnVERgrids0wI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ssogdzIfP2mX0uEvNIT2z5ub00WZUzb9QhTq75Y5nZkZ5atOT2pm9ulegZs6hz1pj/DSIs2SKSgndsvggdfIvUCOHo+DA1TPOosQUC/61ZhxtWRp+kgOc1nWu3JCOU7PY//y9WfaIph7ulTu+RKJhj7MdfARvXGp1gVeFo6Uz4w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=fBqd+pEM; arc=none smtp.client-ip=216.71.153.144
+	 MIME-Version; b=Spbgj18JdH6ohD/cTOZQ+1dznSqgh1pR4ngOk9RkkrH2WEyA0u49m+RSdu2yrfUvPY066ShGoXuLSSftfVJNJ75o95z5nrN1MgYlC3bWXB1vwetZOImHbLszqQeBxXenKtYAHSwlT0J5W2FetXZyYbinnabFw0PPacLEYF9P4/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ndmGy5M7; arc=none smtp.client-ip=216.71.153.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="fBqd+pEM"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ndmGy5M7"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1758812687; x=1790348687;
+  t=1758812691; x=1790348691;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=f6tvFlwHmAwoccibdGr6sMVWUhdk0wCndBcjZ8yKj0Q=;
-  b=fBqd+pEMn1wkdyX6qwjb1wTQcKqyIwdrFu/IpOE5fs7SOrjVlaBPmEho
-   GAu16Ot1g+cJesR21vSqw94Lyb9+LYxcB+OA28mCWFLUED4u9FoQpApXa
-   AlskXMiiH2W+SJNYEm1rrCa0vQJ3gMWrZ52zgIewxsRXhLWJdNA1zRY2Z
-   UunKws2ts2rwPmmdpd5NH+lXeYSUIxtL1f0y8YvoLr2C78oCx0unkNC0h
-   I5Xc8RL0pES5VwquYl+UBEmw2hs93utfnghmnJRcn7pbTINA3lA3iS8YQ
-   Gciz4MFoDkRqVmdcmwNNcPgOINF4dj045797OzNYNB42/7F2Q+rIIzyWJ
-   w==;
-X-CSE-ConnectionGUID: gs/8z8UGRHW91nq9EJJkiA==
-X-CSE-MsgGUID: X6GQ+6jISqmMbFffBsmFuQ==
+  bh=qtEv5uKcCuKEHByPUXcHd9IS96qiXSbnVERgrids0wI=;
+  b=ndmGy5M7AfUawwNGfbzxNZqaAY1vHvmGbZCpvTYqqe+6ZFDxEhZ+OKAA
+   W7H/uuIs0nfFW7tLge5ijbWq1Dg5VhuCJli1+RbkRL3wXsy2xKMHVWCv2
+   I9FhneAdYRrvGlgkQGkqUKIJ6vIcA6CfxkAXfjYa3ACWfS3CCjH20AaqB
+   ss62lZuS9o+MvnsjFX6oeNbdlyL7cRGB7yWysxSk/kYdsOcQ4b24+gCPx
+   iBGOIx788E9uvCymA3FA+Mfwl5lTJyIl2ISROzepuEVTiTgmuE5d5tdG5
+   VZwHkr0p/zflatAiYa3+1xK6PgSVk7/5LRlYnoiNEZ5gxw0Kj5TwyyTgS
+   A==;
+X-CSE-ConnectionGUID: OFmpIydOTZ6sOpxF4bd/QQ==
+X-CSE-MsgGUID: aJUR2dURSC29vVOZfsa4uA==
 X-IronPort-AV: E=Sophos;i="6.18,292,1751212800"; 
-   d="scan'208";a="130348756"
+   d="scan'208";a="130348817"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Sep 2025 23:04:46 +0800
-IronPort-SDR: 68d55a0e_cwzxfDJ2hXISdHrSVZr8fWhdIaQpK89taf/LW7Ej1B6vdgz
- 1Z6e0XJODOQr7hW8xuwbEBAjlBh4Sstq+wdKXAg==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Sep 2025 23:04:50 +0800
+IronPort-SDR: 68d55a13_TYmnQVZgwwBbsHJAg79IoTepjZe+X6NydRsLWgl3B2KZ0mP
+ sxQA4FjvzJesDGwyMavF4ZE97/ko/bSMmiBNk7A==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2025 08:04:47 -0700
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2025 08:04:51 -0700
 WDCIronportException: Internal
 Received: from c02g55f6ml85.ad.shared (HELO C02G55F6ML85.wdc.com) ([10.224.183.46])
-  by uls-op-cesaip02.wdc.com with ESMTP; 25 Sep 2025 08:04:44 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 25 Sep 2025 08:04:48 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Steven Rostedt <rostedt@goodmis.org>,
@@ -60,9 +60,9 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
 	Chaitanya Kulkarni <chaitanyak@nvidia.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH blktrace v2 03/22] blktrace: add definitions for BLKTRACESETUP2
-Date: Thu, 25 Sep 2025 17:04:08 +0200
-Message-ID: <20250925150427.67394-4-johannes.thumshirn@wdc.com>
+Subject: [PATCH blktrace v2 04/22] blktrace: change size of action to 64 bits
+Date: Thu, 25 Sep 2025 17:04:09 +0200
+Message-ID: <20250925150427.67394-5-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250925150427.67394-1-johannes.thumshirn@wdc.com>
 References: <20250925150427.67394-1-johannes.thumshirn@wdc.com>
@@ -74,46 +74,129 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add definitions for a new BLKTRACESETUP2 ioctl(2).
-
-This new ioctl(2) will request a new, updated structure layout from the
-kernel which enhances the storage size of the 'action' field in order to
-store additional tracepoints.
+In order to add the zoned commands to blktrace's actions, the storage size
+needs to be increased to 64bits.
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blktrace_api.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ act_mask.c     |  4 ++--
+ blkparse.c     |  2 +-
+ blkparse_fmt.c | 15 ++++++++-------
+ blkrawverify.c | 10 +++++-----
+ blktrace.h     |  2 +-
+ 5 files changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/blktrace_api.h b/blktrace_api.h
-index 172b4c2..9f435a5 100644
---- a/blktrace_api.h
-+++ b/blktrace_api.h
-@@ -139,9 +139,24 @@ struct blk_user_trace_setup {
- 	__u32 pid;
+diff --git a/act_mask.c b/act_mask.c
+index 8f1b8d7..510c7e0 100644
+--- a/act_mask.c
++++ b/act_mask.c
+@@ -42,7 +42,7 @@ int find_mask_map(char *string)
+ 	return -1;
+ }
+ 
+-int valid_act_opt(int x)
++unsigned long long valid_act_opt(unsigned long long x)
+ {
+-	return (1 <= x) && (x < (1 << BLK_TC_SHIFT));
++	return (1ull <= x) && (x < (1ull << BLK_TC_SHIFT));
+ }
+diff --git a/blkparse.c b/blkparse.c
+index 3f4d827..512a2d2 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -299,7 +299,7 @@ static int per_device_and_cpu_stats = 1;
+ static int track_ios;
+ static int ppi_hash_by_pid = 1;
+ static int verbose;
+-static unsigned int act_mask = -1U;
++static unsigned long long act_mask = -1U;
+ static int stats_printed;
+ static int bin_output_msgs = 1;
+ int data_is_native = -1;
+diff --git a/blkparse_fmt.c b/blkparse_fmt.c
+index 9b83d1d..02c5a3c 100644
+--- a/blkparse_fmt.c
++++ b/blkparse_fmt.c
+@@ -8,6 +8,7 @@
+ #include <unistd.h>
+ #include <ctype.h>
+ #include <time.h>
++#include <stdbool.h>
+ 
+ #include "blktrace.h"
+ 
+@@ -52,13 +53,13 @@ int add_format_spec(char *option)
+ 
+ static inline void fill_rwbs(char *rwbs, struct blk_io_trace *t)
+ {
+-	int w = t->action & BLK_TC_ACT(BLK_TC_WRITE);
+-	int a = t->action & BLK_TC_ACT(BLK_TC_AHEAD);
+-	int s = t->action & BLK_TC_ACT(BLK_TC_SYNC);
+-	int m = t->action & BLK_TC_ACT(BLK_TC_META);
+-	int d = t->action & BLK_TC_ACT(BLK_TC_DISCARD);
+-	int f = t->action & BLK_TC_ACT(BLK_TC_FLUSH);
+-	int u = t->action & BLK_TC_ACT(BLK_TC_FUA);
++	bool w = !!(t->action & BLK_TC_ACT(BLK_TC_WRITE));
++	bool a = !!(t->action & BLK_TC_ACT(BLK_TC_AHEAD));
++	bool s = !!(t->action & BLK_TC_ACT(BLK_TC_SYNC));
++	bool m = !!(t->action & BLK_TC_ACT(BLK_TC_META));
++	bool d = !!(t->action & BLK_TC_ACT(BLK_TC_DISCARD));
++	bool f = !!(t->action & BLK_TC_ACT(BLK_TC_FLUSH));
++	bool u = !!(t->action & BLK_TC_ACT(BLK_TC_FUA));
+ 	int i = 0;
+ 
+ 	if (f)
+diff --git a/blkrawverify.c b/blkrawverify.c
+index ed5d258..9c5d595 100644
+--- a/blkrawverify.c
++++ b/blkrawverify.c
+@@ -55,7 +55,7 @@ static struct trace_info traces[] = {
+ #define N_TRACES (sizeof(traces) / sizeof(struct trace_info))
+ 
+ struct act_info {
+-	__u32 val;
++	__u64 val;
+ 	char *string;
  };
  
-+/*
-+ * User setup structure passed with BLKTRACESETUP2
-+ */
-+struct blk_user_trace_setup2 {
-+	char name[32];			/* output */
-+	__u64 act_mask;			/* input */
-+	__u32 buf_size;			/* input */
-+	__u32 buf_nr;			/* input */
-+	__u64 start_lba;
-+	__u64 end_lba;
-+	__u32 pid;
-+	__u32 reserved;			/* for futute use */
-+};
-+
- #define BLKTRACESETUP _IOWR(0x12,115,struct blk_user_trace_setup)
- #define BLKTRACESTART _IO(0x12,116)
- #define BLKTRACESTOP _IO(0x12,117)
- #define BLKTRACETEARDOWN _IO(0x12,118)
-+#define BLKTRACESETUP2 _IOWR(0x12, 142, struct blk_user_trace_setup2)
+@@ -80,12 +80,12 @@ static struct act_info acts[] = {
+ };
+ #define N_ACTS (sizeof(acts) / sizeof(struct act_info))
  
- #endif
+-static char *act_to_str(__u32 action)
++static char *act_to_str(__u64 action)
+ {
+ 	static char buf[1024];
+ 	unsigned int i;
+-	unsigned int act = action & 0xffff;
+-	unsigned int trace = (action >> BLK_TC_SHIFT) & 0xffff;
++	unsigned long long act = action & 0xffffffff;
++	unsigned long long trace = (action >> BLK_TC_SHIFT) & 0xffffffff;
+ 
+ 	if (act < N_ACTS) {
+ 		sprintf(buf, "%s ", acts[act].string);
+@@ -97,7 +97,7 @@ static char *act_to_str(__u32 action)
+ 			}
+ 	}
+ 	else
+-		sprintf(buf, "Invalid action=%08x", action);
++		sprintf(buf, "Invalid action=%016llx", action);
+ 
+ 	return buf;
+ }
+diff --git a/blktrace.h b/blktrace.h
+index 944fc08..74dfb48 100644
+--- a/blktrace.h
++++ b/blktrace.h
+@@ -144,7 +144,7 @@ extern void set_all_format_specs(char *);
+ extern int add_format_spec(char *);
+ extern void process_fmt(char *, struct per_cpu_info *, struct blk_io_trace *,
+ 			unsigned long long, int, unsigned char *);
+-extern int valid_act_opt(int);
++extern unsigned long long valid_act_opt(unsigned long long);
+ extern int find_mask_map(char *);
+ extern char *find_process_name(pid_t);
+ 
 -- 
 2.51.0
 
