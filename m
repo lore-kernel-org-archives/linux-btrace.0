@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1060D258ED2;
-	Wed,  1 Oct 2025 06:37:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81902032D;
+	Wed,  1 Oct 2025 07:21:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759300637; cv=none; b=KMaUhivQYSKBFak139dPjqYcM9/SHX6azAa+naWRB+4PJlqmLfIR0Sa0+stCJxB7g7HYhzcAH/G7htrLlRbRV4t1BDa3lig3gWtPbCk2nyfTK+cC6+CvLspD8lbKK/AXTfjPdvW0SH0jGOS8jcrmIKCLyHlExEoR1XfD4zGyUOk=
+	t=1759303302; cv=none; b=H+8qgMgjH/8bI0x89pExDmt6cgZB1GWXervpDIwrdFT9SULn59EboE4iUYEKSRvj5Ww05k5nymYS/X8GgSc8zzX8s0gsKMkb0fSeWk3zWzdKQe5G7J/rno3ecBWHaVGfJ3+5FqCa7UUdKE2AWYDzTVBcWUeiYgYY4x8Yf+euK6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759300637; c=relaxed/simple;
-	bh=MFt/DOSbolMTzbPZDX6+CtzfqaXSvRmbS6OfTX0PMhw=;
+	s=arc-20240116; t=1759303302; c=relaxed/simple;
+	bh=pVCkq0cOU9uMswaWSGzBbKzSOe8kNSiOJonYeo+DTcA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gTmQvUlqnkVUUDonuuYsK+XVhfBD4OsHn7IitfkrhGT8y8CAycOP6ArjsJP5/JLj44ACieoWo0zWvPFVL4ZnBLlZtiyo2Aw+K1vR8p1aHNyeQw4MOS+eYsORhlL6wNl58Pm/aCPpcfE4nq1wy1ni1Fd/7vzE7hW5sN1Vq/gQqGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZlLDobO1; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=XX6w6MBTReMW3eJ3ExBPTLG64ath3lMyDLei8Ehk31qLw4MpHZqIiDfa47hO+gzS0P9rsyPnOjykS3c9G7d1HOeCaq+7rGCRFvEXInLzLXySQN77922f41mWRrLQXMqN/Wrg1+aZeon1mHRTuYiuZwZd3l0Q/RKy5VL9SYly2IE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NskOD8Cl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZlLDobO1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CFBEC4CEF4;
-	Wed,  1 Oct 2025 06:37:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NskOD8Cl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7C1CC4CEF4;
+	Wed,  1 Oct 2025 07:21:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759300636;
-	bh=MFt/DOSbolMTzbPZDX6+CtzfqaXSvRmbS6OfTX0PMhw=;
+	s=k20201202; t=1759303302;
+	bh=pVCkq0cOU9uMswaWSGzBbKzSOe8kNSiOJonYeo+DTcA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZlLDobO16k9jgOQPGvnroZDaSJV7m+bdNHF5dT24W846vxI/aQWNQmEQHNqOvu3Vo
-	 4GqPW8eFbdf5YPoOBENzK2E6P177a998kwMQLJwlcAMooR1mmiYZ7JwnPh72IQxgtT
-	 TYPc+LXrcAdpL1Y1rWSGePxRHA0LE7BJMIDPJ49RXvz259FZUaDdTAriXNGt+vKhxF
-	 YpTgS5wtB7KfDkoT6Y0aVeBgprzqjx/ZTHRMPZzi9yoBIIp4gAz1makUTQtLb++udx
-	 /QY//AgqDwz2irshY+gHM0lYz/qvI0xBCbNXVMgwyGWIbi1UNILwLY0dl0sJ8HkX23
-	 kQ6vPap13hVaw==
-Message-ID: <92fc6fcb-3604-43b2-b66a-7f2a9edc16b4@kernel.org>
-Date: Wed, 1 Oct 2025 15:37:08 +0900
+	b=NskOD8ClyhTNSVxRWvQvv+1tM6GrmwchY1xUsazScQx3IoP8YeGetatku2o20fjXK
+	 6hUnRnGmTudS0Ie6TE/+symbedE9jCnDgcYcFxZ7TJiFh/iRAlFrg1vFRtipY2zyon
+	 pQWiILo9NIXL9idVLJyV0WUoIoWbd57e6zXSLz2BsGSNVg9nPxu2WGegzq61dxo6VN
+	 edDKYMQx/iJdLyk8okRlw7/x261PtKzrqL3kxdjLYjOOYyoNF81eJDE4+3us7aS+/H
+	 7UWnK2wSCCRKvRRvT9X8b48iVKcsNhEi3KgDYLLqThILMNzikWuq1LOqsKq9Ee5U0a
+	 HgO60cDmS+Cqw==
+Message-ID: <16684b73-7659-49e9-82db-cdd54bf0d2cd@kernel.org>
+Date: Wed, 1 Oct 2025 16:21:34 +0900
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 09/15] blktrace: add definitions for struct
- blk_io_trace2
+Subject: Re: [PATCH v2 10/15] blktrace: differentiate between blk_io_trace
+ versions
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
  Jens Axboe <axboe@kernel.dk>
 Cc: Steven Rostedt <rostedt@goodmis.org>,
@@ -50,61 +50,130 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
  Chaitanya Kulkarni <chaitanyak@nvidia.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20250925150231.67342-1-johannes.thumshirn@wdc.com>
- <20250925150231.67342-10-johannes.thumshirn@wdc.com>
+ <20250925150231.67342-11-johannes.thumshirn@wdc.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250925150231.67342-10-johannes.thumshirn@wdc.com>
+In-Reply-To: <20250925150231.67342-11-johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/26/25 00:02, Johannes Thumshirn wrote:
-> Add definitions for the extended version of the blktrace protocol using a
-> wider action type to be able to record new actions in the kernel.
+> Differentiate between blk_io_trace and blk_io_trace2 when relaying to
+> user-space depending on which version has been requested by the blktrace
+> utility.
 > 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  include/uapi/linux/blktrace_api.h | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
+>  kernel/trace/blktrace.c | 62 +++++++++++++++++++++++++++++++++++++----
+>  1 file changed, 57 insertions(+), 5 deletions(-)
 > 
-> diff --git a/include/uapi/linux/blktrace_api.h b/include/uapi/linux/blktrace_api.h
-> index a3b1f35ac026..d58ef484de49 100644
-> --- a/include/uapi/linux/blktrace_api.h
-> +++ b/include/uapi/linux/blktrace_api.h
-> @@ -94,6 +94,7 @@ enum blktrace_notify {
+> diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+> index 9cd8eb9e7b4b..82ad626d6202 100644
+> --- a/kernel/trace/blktrace.c
+> +++ b/kernel/trace/blktrace.c
+> @@ -91,6 +91,29 @@ static void record_blktrace_event(struct blk_io_trace *t, pid_t pid, int cpu,
+>  		memcpy((void *)t + sizeof(*t) + cgid_len, pdu_data, pdu_len);
+>  }
 >  
->  #define BLK_IO_TRACE_MAGIC	0x65617400
->  #define BLK_IO_TRACE_VERSION	0x07
-> +#define BLK_IO_TRACE2_VERSION	0x08
->  
->  /*
->   * The trace itself
-> @@ -113,6 +114,21 @@ struct blk_io_trace {
->  	/* cgroup id will be stored here if exists */
->  };
->  
-> +struct blk_io_trace2 {
-> +	__u32 magic;		/* MAGIC << 8 | BLK_IO_TRACE2_VERSION */
-> +	__u32 sequence;		/* event number */
-> +	__u64 time;		/* in nanoseconds */
-> +	__u64 sector;		/* disk offset */
-> +	__u32 bytes;		/* transfer length */
-> +	__u32 pid;		/* who did it */
-> +	__u64 action;		/* what happened */
-> +	__u32 device;		/* device number */
-> +	__u32 cpu;		/* on what cpu did it happen */
-> +	__u16 error;		/* completion error */
-> +	__u16 pdu_len;		/* length of data after this trace */
-> +	__u8 pad[8];
+> +static void record_blktrace_event2(struct blk_io_trace2 *t2, pid_t pid, int cpu,
+> +				   sector_t sector, int bytes, u64 what,
+> +				   dev_t dev, int error, u64 cgid,
+> +				   ssize_t cgid_len, void *pdu_data,
+> +				   int pdu_len)
+> +
 
-Why 8 ? that makes the structure 4B 60 B. Padding to 12 would make it nicely
-aligned to 64B...
+Extra blank line not needed.
 
-> +	/* cgroup id will be stored here if exists */
-> +};
+> +{
+> +	t2->pid = pid;
+> +	t2->cpu = cpu;
+> +
+> +	t2->sector = sector;
+> +	t2->bytes = bytes;
+> +	t2->action = what;
+> +	t2->device = dev;
+> +	t2->error = error;
+> +	t2->pdu_len = pdu_len + cgid_len;
+> +
+> +	if (cgid_len)
+> +		memcpy((void *)t2 + sizeof(*t2), &cgid, cgid_len);
+> +	if (pdu_len)
+> +		memcpy((void *)t2 + sizeof(*t2) + cgid_len, pdu_data, pdu_len);
+> +}
+> +
+>  static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
+>  				 pid_t pid, int cpu, sector_t sector, int bytes,
+>  				 u32 what, int error, u64 cgid,
+> @@ -111,6 +134,26 @@ static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
+>  			      cgid, cgid_len, pdu_data, pdu_len);
+>  }
+>  
+> +static void relay_blktrace_event2(struct blk_trace *bt, unsigned long sequence,
+> +				  pid_t pid, int cpu, sector_t sector,
+> +				  int bytes, u64 what, int error, u64 cgid,
+> +				  ssize_t cgid_len, void *pdu_data, int pdu_len)
+> +{
+> +	struct blk_io_trace2 *t;
+> +	size_t trace_len = sizeof(struct blk_io_trace2) + pdu_len + cgid_len;
+> +
+> +	t = relay_reserve(bt->rchan, trace_len);
+> +	if (!t)
+> +		return;
+> +
+> +	t->magic = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE2_VERSION;
+> +	t->sequence = sequence;
+> +	t->time = ktime_to_ns(ktime_get());
+> +
+> +	record_blktrace_event2(t, pid, cpu, sector, bytes, what, bt->dev, error,
+> +			       cgid, cgid_len, pdu_data, pdu_len);
+> +}
+
+See below.
+
+> +
 >  /*
->   * The remap event
+>   * Send out a notify message.
 >   */
+> @@ -146,8 +189,12 @@ static void trace_note(struct blk_trace *bt, pid_t pid, int action,
+>  	if (!bt->rchan)
+>  		return;
+>  
+> -	relay_blktrace_event(bt, 0, pid, cpu, 0, 0, action, 0, cgid,
+> -			     cgid_len, (void *)data, len);
+> +	if (bt->version == 1)
+> +		relay_blktrace_event(bt, 0, pid, cpu, 0, 0, action, 0, cgid,
+> +				     cgid_len, (void *)data, len);
+> +	else
+> +		relay_blktrace_event2(bt, 0, pid, cpu, 0, 0, action, 0, cgid,
+> +				      cgid_len, (void *)data, len);
+
+Since you pass bt pointer to the relay function, the version is known in that
+function and this could be done inside it, no ?
+That would avoid this if repetition.
+
+>  }
+>  
+>  /*
+> @@ -329,9 +376,14 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+>  	local_irq_save(flags);
+>  	sequence = per_cpu_ptr(bt->sequence, cpu);
+>  	(*sequence)++;
+> -	relay_blktrace_event(bt, *sequence, pid, cpu, sector, bytes,
+> -			     lower_32_bits(what), error, cgid, cgid_len,
+> -			     pdu_data, pdu_len);
+> +	if (bt->version == 1)
+> +		relay_blktrace_event(bt, *sequence, pid, cpu, sector, bytes,
+> +				     lower_32_bits(what), error, cgid,
+> +				     cgid_len, pdu_data, pdu_len);
+> +	else
+> +		relay_blktrace_event2(bt, *sequence, pid, cpu, sector, bytes,
+> +				      what, error, cgid, cgid_len, pdu_data,
+> +				      pdu_len);
+>  	local_irq_restore(flags);
+>  }
+>  
 
 
 -- 
