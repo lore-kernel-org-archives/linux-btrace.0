@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0AF624167F;
-	Wed,  1 Oct 2025 06:34:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1060D258ED2;
+	Wed,  1 Oct 2025 06:37:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759300451; cv=none; b=bAZ0lbQwtkcvTkESmhMKdylw3NOl7Af8RTyjI5O5l9wz0rNz1NerEWkwmTZ2G/jNzXHQ+fS/LowLvK4yuiAOCQyF4Ws7pJteQSCy4z8+kgUeCEz7E+/B59zid17MsSoi/TarU7eSHxkOX7Z5CCre/82gTk1Pqcv9TK1CpSDpsVk=
+	t=1759300637; cv=none; b=KMaUhivQYSKBFak139dPjqYcM9/SHX6azAa+naWRB+4PJlqmLfIR0Sa0+stCJxB7g7HYhzcAH/G7htrLlRbRV4t1BDa3lig3gWtPbCk2nyfTK+cC6+CvLspD8lbKK/AXTfjPdvW0SH0jGOS8jcrmIKCLyHlExEoR1XfD4zGyUOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759300451; c=relaxed/simple;
-	bh=doL4hlKEEJBH/OIEfDpzlTKt1iwH4N4QUC4nzD6TOB0=;
+	s=arc-20240116; t=1759300637; c=relaxed/simple;
+	bh=MFt/DOSbolMTzbPZDX6+CtzfqaXSvRmbS6OfTX0PMhw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IzEmywgpyod263HnotLDDEKWE3NrLfELvk2vsCHn9UInA8t4cq+DBwn/l8/kTFgzgiObgVXdfOpCOscgruFsLbLvdwM+KepAj9nQw7HbCRra+R5KdEeVoc2URXFqKU5/ATd9xCKVJmgKUiezeC1IWfnlUY1ynk1sRYEKk30jAAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LHIYwXza; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=gTmQvUlqnkVUUDonuuYsK+XVhfBD4OsHn7IitfkrhGT8y8CAycOP6ArjsJP5/JLj44ACieoWo0zWvPFVL4ZnBLlZtiyo2Aw+K1vR8p1aHNyeQw4MOS+eYsORhlL6wNl58Pm/aCPpcfE4nq1wy1ni1Fd/7vzE7hW5sN1Vq/gQqGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZlLDobO1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LHIYwXza"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07075C4CEF4;
-	Wed,  1 Oct 2025 06:34:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZlLDobO1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CFBEC4CEF4;
+	Wed,  1 Oct 2025 06:37:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759300450;
-	bh=doL4hlKEEJBH/OIEfDpzlTKt1iwH4N4QUC4nzD6TOB0=;
+	s=k20201202; t=1759300636;
+	bh=MFt/DOSbolMTzbPZDX6+CtzfqaXSvRmbS6OfTX0PMhw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=LHIYwXzaIMpTCPguBQSwYDe7HYi99HLeijDmb/jk2IJEInmnFg2d7UbC5RMmb6nsg
-	 PIXj/i0GIfGTD0tiRiWNjoBgtHxZn1qdj2QBFeQ3EbGlPpJygcnTca1iIyEtMUYZ+K
-	 uO4n+U49ukHYgJ0yHmZq9al52DXdP+zkKgAoqFOT82mb9FtTFrB3uVVr2t4VwS35Nr
-	 XlqmPL8VXe7xzSNWEsafBAhP7UrUfMnLJHo/PTF6jCU0eRCmJJoTmOIqej64L/eb7q
-	 pDuaI2KZapqK3to5+Fwd/N8ZMauJiageKASuXuHHC3S8cJ50aBRcf72yd43rBwhlnQ
-	 4HdoMKtNpKgqw==
-Message-ID: <468e3652-2540-42ec-bd2a-af76bbbc5684@kernel.org>
-Date: Wed, 1 Oct 2025 15:34:02 +0900
+	b=ZlLDobO16k9jgOQPGvnroZDaSJV7m+bdNHF5dT24W846vxI/aQWNQmEQHNqOvu3Vo
+	 4GqPW8eFbdf5YPoOBENzK2E6P177a998kwMQLJwlcAMooR1mmiYZ7JwnPh72IQxgtT
+	 TYPc+LXrcAdpL1Y1rWSGePxRHA0LE7BJMIDPJ49RXvz259FZUaDdTAriXNGt+vKhxF
+	 YpTgS5wtB7KfDkoT6Y0aVeBgprzqjx/ZTHRMPZzi9yoBIIp4gAz1makUTQtLb++udx
+	 /QY//AgqDwz2irshY+gHM0lYz/qvI0xBCbNXVMgwyGWIbi1UNILwLY0dl0sJ8HkX23
+	 kQ6vPap13hVaw==
+Message-ID: <92fc6fcb-3604-43b2-b66a-7f2a9edc16b4@kernel.org>
+Date: Wed, 1 Oct 2025 15:37:08 +0900
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 08/15] blktrace: pass blk_user_trace2 to setup
- functions
+Subject: Re: [PATCH v2 09/15] blktrace: add definitions for struct
+ blk_io_trace2
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
  Jens Axboe <axboe@kernel.dk>
 Cc: Steven Rostedt <rostedt@goodmis.org>,
@@ -50,81 +50,61 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
  Chaitanya Kulkarni <chaitanyak@nvidia.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20250925150231.67342-1-johannes.thumshirn@wdc.com>
- <20250925150231.67342-9-johannes.thumshirn@wdc.com>
+ <20250925150231.67342-10-johannes.thumshirn@wdc.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250925150231.67342-9-johannes.thumshirn@wdc.com>
+In-Reply-To: <20250925150231.67342-10-johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/26/25 00:02, Johannes Thumshirn wrote:
-> Pass struct blk_user_trace_setup2 to blktrace_setup_finalize(). This
-> prepares for the incoming extension of the blktrace protocol with a 64bit
-> act_mask.
+> Add definitions for the extended version of the blktrace protocol using a
+> wider action type to be able to record new actions in the kernel.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-One nit below.
-
-> @@ -649,7 +659,9 @@ int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
->  		mutex_unlock(&q->debugfs_mutex);
->  		return PTR_ERR(bt);
->  	}
-> -	blk_trace_setup_finalize(q, name, bt, &buts);
-> +	bt->version = 1;
-> +	blk_trace_setup_finalize(q, name, bt, &buts2);
-
-I wonder if it may not be cleaner to pass the version number to
-blk_trace_setup_finalize() and have that function do "bt->version = version;" ?
-
-
-> +	strcpy(buts.name, buts2.name);
->  	mutex_unlock(&q->debugfs_mutex);
+> ---
+>  include/uapi/linux/blktrace_api.h | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/include/uapi/linux/blktrace_api.h b/include/uapi/linux/blktrace_api.h
+> index a3b1f35ac026..d58ef484de49 100644
+> --- a/include/uapi/linux/blktrace_api.h
+> +++ b/include/uapi/linux/blktrace_api.h
+> @@ -94,6 +94,7 @@ enum blktrace_notify {
 >  
->  	if (copy_to_user(arg, &buts, sizeof(buts))) {
-> @@ -665,7 +677,7 @@ static int compat_blk_trace_setup(struct request_queue *q, char *name,
->  				  dev_t dev, struct block_device *bdev,
->  				  char __user *arg)
->  {
-> -	struct blk_user_trace_setup buts;
-> +	struct blk_user_trace_setup2 buts2;
->  	struct compat_blk_user_trace_setup cbuts;
->  	struct blk_trace *bt;
+>  #define BLK_IO_TRACE_MAGIC	0x65617400
+>  #define BLK_IO_TRACE_VERSION	0x07
+> +#define BLK_IO_TRACE2_VERSION	0x08
 >  
-> @@ -675,7 +687,7 @@ static int compat_blk_trace_setup(struct request_queue *q, char *name,
->  	if (!cbuts.buf_size || !cbuts.buf_nr)
->  		return -EINVAL;
+>  /*
+>   * The trace itself
+> @@ -113,6 +114,21 @@ struct blk_io_trace {
+>  	/* cgroup id will be stored here if exists */
+>  };
 >  
-> -	buts = (struct blk_user_trace_setup) {
-> +	buts2 = (struct blk_user_trace_setup2) {
->  		.act_mask = cbuts.act_mask,
->  		.buf_size = cbuts.buf_size,
->  		.buf_nr = cbuts.buf_nr,
-> @@ -685,16 +697,17 @@ static int compat_blk_trace_setup(struct request_queue *q, char *name,
->  	};
->  
->  	mutex_lock(&q->debugfs_mutex);
-> -	bt = blk_trace_setup_prepare(q, name, dev, buts.buf_size, buts.buf_nr,
-> +	bt = blk_trace_setup_prepare(q, name, dev, buts2.buf_size, buts2.buf_nr,
->  				     bdev);
->  	if (IS_ERR(bt)) {
->  		mutex_unlock(&q->debugfs_mutex);
->  		return PTR_ERR(bt);
->  	}
-> -	blk_trace_setup_finalize(q, name, bt, &buts);
-> +	bt->version = 1;
-> +	blk_trace_setup_finalize(q, name, bt, &buts2);
->  	mutex_unlock(&q->debugfs_mutex);
->  
-> -	if (copy_to_user(arg, &buts.name, ARRAY_SIZE(buts.name))) {
-> +	if (copy_to_user(arg, &buts2.name, ARRAY_SIZE(buts2.name))) {
->  		blk_trace_remove(q);
->  		return -EFAULT;
->  	}
+> +struct blk_io_trace2 {
+> +	__u32 magic;		/* MAGIC << 8 | BLK_IO_TRACE2_VERSION */
+> +	__u32 sequence;		/* event number */
+> +	__u64 time;		/* in nanoseconds */
+> +	__u64 sector;		/* disk offset */
+> +	__u32 bytes;		/* transfer length */
+> +	__u32 pid;		/* who did it */
+> +	__u64 action;		/* what happened */
+> +	__u32 device;		/* device number */
+> +	__u32 cpu;		/* on what cpu did it happen */
+> +	__u16 error;		/* completion error */
+> +	__u16 pdu_len;		/* length of data after this trace */
+> +	__u8 pad[8];
+
+Why 8 ? that makes the structure 4B 60 B. Padding to 12 would make it nicely
+aligned to 64B...
+
+> +	/* cgroup id will be stored here if exists */
+> +};
+>  /*
+>   * The remap event
+>   */
 
 
 -- 
