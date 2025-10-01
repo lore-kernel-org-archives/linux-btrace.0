@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6201547CC;
-	Wed,  1 Oct 2025 06:21:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 687AC1547CC;
+	Wed,  1 Oct 2025 06:25:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759299687; cv=none; b=NhIF2VKKIAOfCHG8nz2LaId1nus+91T5X9QkSp+tQixti179oRE7DnzDaevB9rQGNVa2wanPH+k+iH5ayVIPmLphx0XO5I/bny8SJ//jmC/Oa8LDlXlB62zeU7dW8QKS+cHpuZZGe0dP6k58z3r1aRWnKxNn/B7CcadJU7J0jz8=
+	t=1759299930; cv=none; b=UjDS3TCqUz+WuAcQHmJ0/FRJxOPqyairMMeA7n63sO+UQ60AtZVQEMzE8+vGPMd1A+1PjeTICDvniPLZHPELfDYPdOuCfoTcWx1IrBuSQqp9c3wDgVrrdAQ0w9qX2duDcn01oxfBz78X7P+bbgxd/3HTZIoNbKk94lmAu8qMy8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759299687; c=relaxed/simple;
-	bh=2JTb6KrNO0HqxgdAu+4TdlUiI91ZOMArJz8lZ8ZV4cU=;
+	s=arc-20240116; t=1759299930; c=relaxed/simple;
+	bh=/J/2bX7aEzcIPmPq+XxSl2EF1EXZeFlQ1d6ME70Ff4c=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J1IRveOVRHxYbiS9toxnNt3GHyuIjix1iPHhjmGl214QKd6NJQyxtnfj6lgo8MKdynl6Jk6vGGOQh6kPoruQ8H15Z2tH6ZgsoDIkhCX/XFEwnoiYaRAJyDlX3jJMEFHTHehmZkNNnsx58cXZYnztwwNup0lYZyowkkGlfAPtir0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ewjfZxYs; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=QQpyjAQny5TEYr76lqUgoqQ4wOV9SMCze5wJWJuu/O/AWNoOK+8PV8MEMmbq7SR039gBY8xKbzVhLrd8yIyliFxz6OHDuY+mUvx3Qe7loZfLnZyKW+aI/jANHZCFoI7duYZ2GWeUvbIalqrYnnAVRIGSZ0DKuhwMXMfP3nl3k1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F7D44XTS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ewjfZxYs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C95A9C4CEF4;
-	Wed,  1 Oct 2025 06:21:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F7D44XTS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3240C4CEF4;
+	Wed,  1 Oct 2025 06:25:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759299686;
-	bh=2JTb6KrNO0HqxgdAu+4TdlUiI91ZOMArJz8lZ8ZV4cU=;
+	s=k20201202; t=1759299929;
+	bh=/J/2bX7aEzcIPmPq+XxSl2EF1EXZeFlQ1d6ME70Ff4c=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ewjfZxYsFBoZZL7QWYFh5Q9OeFZceRVN9GfEMe1P93RnEuiV9m3zjASxsJzwtEK5J
-	 yy9PNV5PkwvUCz0l3m7Fyn4vAhbJfl6hfGkNO+eGN36FN2vWY2EZethwSwszuNJG8B
-	 FFYVWIp8BfITgLKeUehp9h0N9010UBjpdEhUOvEP6deKBGMmbw/E/a+F6dilBcRAGH
-	 /eIFvubxQdpQf8FMg0gMax3eIWVkEZHtvHmR+QZp4F6f8NZXIuYwcB6Y4xL9J+9wOx
-	 9iWZ1ISWfusrXmaAcy4aI6YpeGuOu+0mq8elDlOy8U/xS95KmHUDdK0hZ4kD3St3oj
-	 xwDFBIeEFE81g==
-Message-ID: <9f4761db-7638-4697-ba5c-c454964c69d1@kernel.org>
-Date: Wed, 1 Oct 2025 15:21:19 +0900
+	b=F7D44XTSOEZZgbF+pNfhKskgouj8f+vvXtQJRJPIMnymnnyKDWqP1oPMjAp/iAvgA
+	 gvl3ioZtbNJr9mpn+PsdUE+Pe3fLTnc5tihS3uT1AeBFbIR4s+B+PVxEeR034JW3T5
+	 8kfThQOXRU6OBIaWBH0n6Cg2s+Bh5U974diLqMNqUw7cRpA2F1UkAaJgM/WeHRGThi
+	 nevUK4Laon3OogpJj8Cs4Yde7w1i+l8VsZe+1Y01O+7I5HB+XKFj2Hp4X/xaz8JHSc
+	 ON2MR/5ET085jfHMMjGNPfjKGC+Be0ZeEZ9TgyJyO3MT1g3qcaq9vjf1gFIqeyNpVQ
+	 KJGKuFtwVHwMQ==
+Message-ID: <4085c078-20a5-4ba0-9017-85051c91bf3b@kernel.org>
+Date: Wed, 1 Oct 2025 15:25:22 +0900
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 05/15] blktrace: change the internal action to 64bit
+Subject: Re: [PATCH v2 06/15] blktrace: split do_blk_trace_setup into two
+ functions
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
  Jens Axboe <axboe@kernel.dk>
 Cc: Steven Rostedt <rostedt@goodmis.org>,
@@ -49,26 +50,55 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
  Chaitanya Kulkarni <chaitanyak@nvidia.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20250925150231.67342-1-johannes.thumshirn@wdc.com>
- <20250925150231.67342-6-johannes.thumshirn@wdc.com>
+ <20250925150231.67342-7-johannes.thumshirn@wdc.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250925150231.67342-6-johannes.thumshirn@wdc.com>
+In-Reply-To: <20250925150231.67342-7-johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/26/25 00:02, Johannes Thumshirn wrote:
-> Change the internal use of the action in blktrace to 64bit. Although for
-> now only the lower 32bits will be used.
+> Split do_blk_trace_setup into two functions, this is done to prepare for
+> an incoming new BLKTRACESETUP2 ioctl(2) which can receive extended
+> parameters form user-space.
+
+s/form/from
+
 > 
-> With the upcoming version 2 of the blktrace user-space protocol the upper
-> 32bit will also be utilized.
+> Also move the size verification logic to the callers.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
+> @@ -593,17 +581,39 @@ static int do_blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
+>  	debugfs_create_file("dropped", 0444, dir, bt, &blk_dropped_fops);
+>  	debugfs_create_file("msg", 0222, dir, bt, &blk_msg_fops);
+>  
+> -	bt->rchan = relay_open("trace", dir, buts->buf_size,
+> -				buts->buf_nr, &blk_relay_callbacks, bt);
+> +	bt->rchan = relay_open("trace", dir, buf_size, buf_nr,
+> +			       &blk_relay_callbacks, bt);
+>  	if (!bt->rchan)
+>  		goto err;
+>  
+> +	blk_trace_setup_lba(bt, bdev);
+> +
+> +	return bt;
+> +
+> +err:
+> +	if (ret)
+> +		blk_trace_free(q, bt);
+
+I do not think that the "if (ret)" is needed here.
+
+> +
+> +	return ERR_PTR(ret);
+> +}
+
+With that fixed,
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
