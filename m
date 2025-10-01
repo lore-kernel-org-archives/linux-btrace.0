@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BEAA2701B6;
-	Wed,  1 Oct 2025 07:48:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8721B22126D;
+	Wed,  1 Oct 2025 07:51:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759304900; cv=none; b=E5C7wp0BvXA4BzxZEThw6XVLGHVYJdMshTo3+c3zAhgB3/O0bIoG/o/hzy3YU2+g9D0L29OMnvq9GsD6eWsxXz2xwRfynBsEeoYIX5RslpzVRfqGONSEWfDGEK4Mia17Aa5yiBxLBtyFAy5mpnFOkl0nno25zUIC5x47uao7/I4=
+	t=1759305084; cv=none; b=GbzZEUZEkToV4/SFyMkvOMxp5+j/j/s/QAS7m+EfTQ5o9kLOPk0UIAQddbiss9p+QhGRKGq2tU5pckDkUYzDSNOFCLB1fwqhNmdnr50/v+NjrG9keF488KycWBwSwlUT322yaZXyoC7hydV4WzrNorctr4QAQoer21zQmn/58Xg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759304900; c=relaxed/simple;
-	bh=rWPGsQN+XNq2hfe7G3UjPeCAighM6a5T/THiWLH/wVs=;
+	s=arc-20240116; t=1759305084; c=relaxed/simple;
+	bh=HPlNQpm3q59ud1FcRXdqzcKTsXSJCFFLkoeCUZee9M0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SAk05/dW3Fst80PX8L45lyyDp8nz85Ac+FUzgHJbRqVGn/vgvUOrOAq7kM2bf5XeipKy34fRHPOhDEyOH1E4CAAo2KSFyUCh4HNECWFT87EZ4EAf61rW8V82sIwNXdvjoJ5u2VvnRyHQhAW3HqnLeHTKX67KtZJAtPiK++r5974=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h+C8Rr4Z; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=mB//RMClVUBBDHdKWY1Lw0xJRv6NtteuAJIFO5z2m8G01InMuTzB3LyKLVWvKyWFJ9sIFoyevO1P+cfkbZLSJt2o5JRNwNz/CtP8tDgr9hfrZ4l4HcV9G332kdDyqul6MP3hIrEXzbhAFrm2XlDS8xlvViPE/gkYxGlxDEC5Xts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pi0UWxq2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h+C8Rr4Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32DEBC4CEF4;
-	Wed,  1 Oct 2025 07:48:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pi0UWxq2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A709DC4CEF4;
+	Wed,  1 Oct 2025 07:51:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759304898;
-	bh=rWPGsQN+XNq2hfe7G3UjPeCAighM6a5T/THiWLH/wVs=;
+	s=k20201202; t=1759305084;
+	bh=HPlNQpm3q59ud1FcRXdqzcKTsXSJCFFLkoeCUZee9M0=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=h+C8Rr4ZbzOuqCKBO54f2SxgEjjfGFF8Dnz5M51GzJYh27lleyo7vGlaHklFCl3wo
-	 n1+tnjKYzd3v99oL9a1SbSpvr4YgtL9IFrQL++YimIAsY/MYR5FVu/XoZVmxeGzGcr
-	 /J6HKb1yLbdoRi5j2jyEoI7zUUHHjiDpR/DRupiqncLLjtuOi8ML+tPR7pLKp/2EmS
-	 FYFdF7iGAzqiVEc62vWQornfH2251xcBW7H3CPGg4j70W2v1NuHgtVRogsGcV+Seap
-	 3P7spLgEDxZW1TkuA75yao8i1U3cB1wo1uiBojfgShoe9UhvdTP9HT4cgalPE/91+U
-	 i0oh1pCQwBVWA==
-Message-ID: <fb62594c-d881-4f06-9cf0-ca44968e5d3b@kernel.org>
-Date: Wed, 1 Oct 2025 16:48:10 +0900
+	b=pi0UWxq2tg9tD/tqPWO8M+KlKHMdA5YKNkSV3BTmvoyxi7IJ/RblZrRRAlxUV6jXU
+	 no/Sn4gdBdxZq5JWXgJvXytpcs8Pr/YaHE0xmurpKrDxqio88mVxhh3Esv2Ts7wWcl
+	 k6zDrqzHR7W5xgiRK4crA/s4wAHQWf+SZUGszs4MiAVsg2Q3xSBK6stgWMBFEktgMV
+	 tBKhbsNYlODqX7685K6Cdt59XRAdMRF2soqbKSLJGYt/uUTLuijbJF2gQqhnJN8fm3
+	 gss7PViT2cZzOrSnioukfacPKQO+wGaHiLk0bRe4Fy7aIZrTfjH3xQBzgEpIRxtyKs
+	 OSK1TDFt/Na2g==
+Message-ID: <5f8bb74c-46c6-4462-86fe-4defe25328f0@kernel.org>
+Date: Wed, 1 Oct 2025 16:51:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH blktrace v2 03/22] blktrace: add definitions for
- BLKTRACESETUP2
+Subject: Re: [PATCH blktrace v2 04/22] blktrace: change size of action to 64
+ bits
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
  Jens Axboe <axboe@kernel.dk>
 Cc: Steven Rostedt <rostedt@goodmis.org>,
@@ -50,77 +50,46 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
  Chaitanya Kulkarni <chaitanyak@nvidia.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20250925150427.67394-1-johannes.thumshirn@wdc.com>
- <20250925150427.67394-4-johannes.thumshirn@wdc.com>
+ <20250925150427.67394-5-johannes.thumshirn@wdc.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250925150427.67394-4-johannes.thumshirn@wdc.com>
+In-Reply-To: <20250925150427.67394-5-johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/26/25 00:04, Johannes Thumshirn wrote:
-> Add definitions for a new BLKTRACESETUP2 ioctl(2).
-> 
-> This new ioctl(2) will request a new, updated structure layout from the
-> kernel which enhances the storage size of the 'action' field in order to
-> store additional tracepoints.
+> In order to add the zoned commands to blktrace's actions, the storage size
+> needs to be increased to 64bits.
 > 
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> ---
->  blktrace_api.h | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/blktrace_api.h b/blktrace_api.h
-> index 172b4c2..9f435a5 100644
-> --- a/blktrace_api.h
-> +++ b/blktrace_api.h
-> @@ -139,9 +139,24 @@ struct blk_user_trace_setup {
->  	__u32 pid;
->  };
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+One nit below.
+
+> @@ -52,13 +53,13 @@ int add_format_spec(char *option)
 >  
-> +/*
-> + * User setup structure passed with BLKTRACESETUP2
-> + */
-> +struct blk_user_trace_setup2 {
-> +	char name[32];			/* output */
-> +	__u64 act_mask;			/* input */
-> +	__u32 buf_size;			/* input */
-> +	__u32 buf_nr;			/* input */
-> +	__u64 start_lba;
-> +	__u64 end_lba;
-> +	__u32 pid;
-> +	__u32 reserved;			/* for futute use */
-> +};
+>  static inline void fill_rwbs(char *rwbs, struct blk_io_trace *t)
+>  {
+> -	int w = t->action & BLK_TC_ACT(BLK_TC_WRITE);
+> -	int a = t->action & BLK_TC_ACT(BLK_TC_AHEAD);
+> -	int s = t->action & BLK_TC_ACT(BLK_TC_SYNC);
+> -	int m = t->action & BLK_TC_ACT(BLK_TC_META);
+> -	int d = t->action & BLK_TC_ACT(BLK_TC_DISCARD);
+> -	int f = t->action & BLK_TC_ACT(BLK_TC_FLUSH);
+> -	int u = t->action & BLK_TC_ACT(BLK_TC_FUA);
+> +	bool w = !!(t->action & BLK_TC_ACT(BLK_TC_WRITE));
+> +	bool a = !!(t->action & BLK_TC_ACT(BLK_TC_AHEAD));
+> +	bool s = !!(t->action & BLK_TC_ACT(BLK_TC_SYNC));
+> +	bool m = !!(t->action & BLK_TC_ACT(BLK_TC_META));
+> +	bool d = !!(t->action & BLK_TC_ACT(BLK_TC_DISCARD));
+> +	bool f = !!(t->action & BLK_TC_ACT(BLK_TC_FLUSH));
+> +	bool u = !!(t->action & BLK_TC_ACT(BLK_TC_FUA));
+>  	int i = 0;
 
-Kernel side defined:
-
-+struct blk_user_trace_setup2 {
-+	char name[32];		/* output */
-+	__u64 act_mask;		/* input */
-+	__u32 buf_size;		/* input */
-+	__u32 buf_nr;		/* input */
-+	__u64 start_lba;
-+	__u64 end_lba;
-+	__u32 pid;
-+	__u32 flags;		/* currently unused */
-+	__u64 reserved[7];
-+};
-
-So not the same struct fields and size...
-
-Why not use the definition in include/uapi/linux/blktrace_api.h ?
-
-> +
->  #define BLKTRACESETUP _IOWR(0x12,115,struct blk_user_trace_setup)
->  #define BLKTRACESTART _IO(0x12,116)
->  #define BLKTRACESTOP _IO(0x12,117)
->  #define BLKTRACETEARDOWN _IO(0x12,118)
-> +#define BLKTRACESETUP2 _IOWR(0x12, 142, struct blk_user_trace_setup2)
-
-Same here. This is in include/uapi/linux/fs.h, so why duplicate it ?
-
->  
->  #endif
+It looks like this should be a different patch. Also, I do not think that the
+!!() is needed.
 
 
 -- 
