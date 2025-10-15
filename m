@@ -1,47 +1,47 @@
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC44322DCC;
-	Wed, 15 Oct 2025 10:58:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E17DD3233E8;
+	Wed, 15 Oct 2025 10:58:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760525915; cv=none; b=gssVUsvb5p22yv53xkucCXLQI4h8h+lZRgVZQtDO9xEekM2ln998FnIApWjJZrCtJ+Bb4aEXURph2OhXeJ0LlwPq0lgkoDgZn30lTJ36sTkpm3miHYCnNxwud6tDqu4MxkixI2HUYGokMvkCcXqOMeO/zMPCZO5khAQNwiRMJCQ=
+	t=1760525919; cv=none; b=Xf5qSdcaHRUsl3NrmbMGZG1Vyu8Sq9hZOX/ExQ2LPNi+LuWIh+PvUvcVWuB4Gdu36M00rRDpFdYk9CGJba9QlaMed2cOIsHtI7z2oJNGMiGkGTfVU32H9L9z0qap6dGshLKD57/KKsfRKXCM1CU6n29BFSTRMkpjGoYQNc+Mlno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760525915; c=relaxed/simple;
-	bh=9eWf6LzUuJXvhDm0lpvATvyVyg+h/0pKgJdDvYpoMAg=;
+	s=arc-20240116; t=1760525919; c=relaxed/simple;
+	bh=2H5LFMNPaYyglNMEHb+f7AgkaPYbc1RUaom07P26U+A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MrQHSIAggCbiMVUg511dUxn3nOc57JTlCIQ/3v/1DLBGGadcHWkTmPG4cHqJarNG8tK+pD6P/pC1qTP9g3fAWM6XfC8ebXxE5oSVScEb+ZL8EKSEaQLyxzzd0W3H9IHMlZc2HSRNd2zwcI19f6+cwNgtX4K/QB0dJzZ34XTqxxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=HzhYBvSG; arc=none smtp.client-ip=216.71.154.45
+	 MIME-Version; b=EP50M9vqCNOPIJQOnUlJKjwdyulw87DwUPP2qZ1DMGnQJ/s96t+8lfaxNNbHoU4ZqL7mO/2Kg4wVjFWezuMCQdV25XDif3hMhygef6CMqX5icJqYFRmQgO1xeSJN6CXkwWkgGX5wIGlKz0sCKq0BIrSSoEiZ3CKvHJ0tedzsN88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=rCG6bhFc; arc=none smtp.client-ip=216.71.154.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="HzhYBvSG"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="rCG6bhFc"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1760525913; x=1792061913;
+  t=1760525917; x=1792061917;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9eWf6LzUuJXvhDm0lpvATvyVyg+h/0pKgJdDvYpoMAg=;
-  b=HzhYBvSG5NxleXYEUnmP9Z7cDwEYxqPvglHWC9HOHBsW9ikaIRQ/85O+
-   X/xfrw9FeBP8isr2PChvdbbwy6BkcmPwV1VK/P5SbsH2BQL95KP25f5Qe
-   MfIGW3lBG0QkOAOorjcG4zGxztxf3G9OQEqJ96EwJmJ1sb6+HYuTKAAtq
-   ZhmiEjED2JB5elfw6OJQMiaGvQwnLiIagvlT2hUE9rI4PVDWOSz3vAZ1z
-   6lwQLc2GhhtUJTLHRiRZBNOfzSSuaxbfRGUMkVDqJ1Je//ZU1HoA/rArq
-   SgxEThDuc6ciz2dh5mdVVzDoli4q1r8IEk5b54revRA13Xc5RX6HsFm9h
+  bh=2H5LFMNPaYyglNMEHb+f7AgkaPYbc1RUaom07P26U+A=;
+  b=rCG6bhFcA7DW2cU/gAFQy7+iMMLBlaSrpcOzE4l3pVWb/ATVP1szFxXP
+   DmJh+OQRz/xNNoOgmjh7E0B6D7JlmGEwXBePUS7aMGwdJo8TLHgDVwzGu
+   Z/to9Adf7gnGQ3K4PeXY32dZ/5J+siy5PIowW+vPXXx/VeCUtfTNGcH9S
+   HtXeCmnyek4VErsHisfnauVyWROZf+NdKQ9W8R1NNrDqHkuEhx3TH+g8S
+   gU2ujxWOHo5OTITF7bG7ara70dUjX/FdEGuTwMy1Jy87EKyEWXYsjMHJm
+   PvR6s7uq6fBqu721yI5RWGp2i3VaaEwYru6kncadyL11DWTbLgc0qHAev
    g==;
-X-CSE-ConnectionGUID: kIxDOlhlQnmQwUthdvmiEw==
-X-CSE-MsgGUID: LNKx9vQ6S1CpdzggW1tO9g==
+X-CSE-ConnectionGUID: FAeD6Hi4Rae0JDcgS6++AQ==
+X-CSE-MsgGUID: OKXP52c2RkqiqSkjqx2xkA==
 X-IronPort-AV: E=Sophos;i="6.19,231,1754928000"; 
-   d="scan'208";a="132935426"
+   d="scan'208";a="132935428"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Oct 2025 18:58:33 +0800
-IronPort-SDR: 68ef7e59_6TBLIkUU/iOsIBrEHMZbL38UQShSfEVbDLn0zzzZ5Fxs+OM
- 8ioBlxBlzNQxo2OWIg+IuWmuqBm1GJxtNg6AEsw==
+  by ob1.hgst.iphmx.com with ESMTP; 15 Oct 2025 18:58:37 +0800
+IronPort-SDR: 68ef7e5d_v4mgOAv+euj3JcQIQsuWloXTgmJUG2dtPDUj8kf4Co1Madu
+ 9FujGPt8xkSR1Mv5pe6+YIfyO8Zo8HA2S9WQY/g==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Oct 2025 03:58:33 -0700
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Oct 2025 03:58:37 -0700
 WDCIronportException: Internal
 Received: from unknown (HELO neo.fritz.box) ([10.224.28.35])
-  by uls-op-cesaip02.wdc.com with ESMTP; 15 Oct 2025 03:58:30 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 15 Oct 2025 03:58:34 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: axboe@kernel.dk
 Cc: chaitanyak@nvidia.com,
@@ -60,9 +60,9 @@ Cc: chaitanyak@nvidia.com,
 	rostedt@goodmis.org,
 	shinichiro.kawasaki@wdc.com,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH blktrace v3 19/20] blkparse: add zoned commands to fill_rwbs()
-Date: Wed, 15 Oct 2025 12:56:57 +0200
-Message-ID: <20251015105658.527262-20-johannes.thumshirn@wdc.com>
+Subject: [PATCH blktrace v3 20/20] blktrace: call BLKTRACESETUP2 ioctl per default to setup a trace
+Date: Wed, 15 Oct 2025 12:56:58 +0200
+Message-ID: <20251015105658.527262-21-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251015105658.527262-1-johannes.thumshirn@wdc.com>
 References: <20251015105658.527262-1-johannes.thumshirn@wdc.com>
@@ -74,67 +74,79 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Parse zoned commands in blkparse.
+Call BLKTRACESETUP2 ioctl per default and if the kernel does not support
+this ioctl because it is too old, fall back to calling BLKTRACESETUP.
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blkparse_fmt.c | 34 ++++++++++++++++++++++++++++++----
- 1 file changed, 30 insertions(+), 4 deletions(-)
+ blktrace.c | 40 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 36 insertions(+), 4 deletions(-)
 
-diff --git a/blkparse_fmt.c b/blkparse_fmt.c
-index 80e02fc..06b055b 100644
---- a/blkparse_fmt.c
-+++ b/blkparse_fmt.c
-@@ -60,19 +60,45 @@ static inline void fill_rwbs(char *rwbs, struct blk_io_trace2 *t)
- 	bool d = !!(t->action & BLK_TC_ACT(BLK_TC_DISCARD));
- 	bool f = !!(t->action & BLK_TC_ACT(BLK_TC_FLUSH));
- 	bool u = !!(t->action & BLK_TC_ACT(BLK_TC_FUA));
-+	bool za = !!(t->action & BLK_TC_ACT(BLK_TC_ZONE_APPEND));
-+	bool zr = !!(t->action & BLK_TC_ACT(BLK_TC_ZONE_RESET));
-+	bool zra = !!(t->action & BLK_TC_ACT(BLK_TC_ZONE_RESET_ALL));
-+	bool zf = !!(t->action & BLK_TC_ACT(BLK_TC_ZONE_FINISH));
-+	bool zo = !!(t->action & BLK_TC_ACT(BLK_TC_ZONE_OPEN));
-+	bool zc = !!(t->action & BLK_TC_ACT(BLK_TC_ZONE_CLOSE));
- 	int i = 0;
+diff --git a/blktrace.c b/blktrace.c
+index 038b2cb..72562fd 100644
+--- a/blktrace.c
++++ b/blktrace.c
+@@ -279,7 +279,7 @@ static int max_cpus;
+ static int ncpus;
+ static cpu_set_t *online_cpus;
+ static int pagesize;
+-static int act_mask = ~0U;
++static unsigned long long act_mask = ~0U;
+ static int kill_running_trace;
+ static int stop_watch;
+ static int piped_output;
+@@ -1067,6 +1067,36 @@ static void close_client_connections(void)
+ 	}
+ }
  
- 	if (f)
- 		rwbs[i++] = 'F'; /* flush */
- 
--	if (d)
-+	if (d) {
- 		rwbs[i++] = 'D';
--	else if (w)
-+	} else if (za) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'A';
-+	} else if (zr) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'R';
-+	} else if (zra) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'R';
-+		rwbs[i++] = 'A';
-+	} else if (zf) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'F';
-+	} else if (zo) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'O';
-+	} else if (zc) {
-+		rwbs[i++] = 'Z';
-+		rwbs[i++] = 'C';
-+	} else if (w) {
- 		rwbs[i++] = 'W';
--	else if (t->bytes)
-+	} else if (t->bytes) {
- 		rwbs[i++] = 'R';
--	else
-+	} else {
- 		rwbs[i++] = 'N';
++static int setup_buts2(void)
++{
++	struct list_head *p;
++	int ret = 0;
++
++	__list_for_each(p, &devpaths) {
++		struct blk_user_trace_setup2 buts2;
++		struct devpath *dpp = list_entry(p, struct devpath, head);
++
++		memset(&buts2, 0, sizeof(buts2));
++		buts2.buf_size = buf_size;
++		buts2.buf_nr = buf_nr;
++		buts2.act_mask = act_mask;
++
++		if (ioctl(dpp->fd, BLKTRACESETUP2, &buts2) >= 0) {
++			dpp->ncpus = max_cpus;
++			dpp->buts_name = strdup(buts2.name);
++			dpp->setup_done = 1;
++			if (dpp->stats)
++				free(dpp->stats);
++			dpp->stats = calloc(dpp->ncpus, sizeof(*dpp->stats));
++			memset(dpp->stats, 0, dpp->ncpus * sizeof(*dpp->stats));
++		} else {
++			ret++;
++		}
 +	}
++
++	return ret;
++}
++
+ static int setup_buts(void)
+ {
+ 	struct list_head *p;
+@@ -2684,9 +2714,11 @@ static int run_tracers(void)
+ 	if (net_mode == Net_client)
+ 		printf("blktrace: connecting to %s\n", hostname);
  
- 	if (u)
- 		rwbs[i++] = 'F'; /* fua */
+-	if (setup_buts()) {
+-		done = 1;
+-		return 1;
++	if (setup_buts2()) {
++		if (setup_buts()) {
++			done = 1;
++			return 1;
++		}
+ 	}
+ 
+ 	if (use_tracer_devpaths()) {
 -- 
 2.51.0
 
