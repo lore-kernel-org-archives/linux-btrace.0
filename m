@@ -1,47 +1,47 @@
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1369328B57;
-	Mon, 20 Oct 2025 13:42:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AF27328B7B;
+	Mon, 20 Oct 2025 13:42:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760967745; cv=none; b=ApnNSWdIbjaz12YxpZ2LFYsDb/vBuNCR1gOdKlLLHx75I0+ezhyYnN7C0JGyuk/kP5qIOGYqAZ7GbUFQWToaHIZKYAORPqKa8fwnznQo2afrL4ish7rcorMMp5N79i/lgzef2+MYUZfO0zQZd4KiZDWE4JXbs6MJxs7L8Z2/QSc=
+	t=1760967749; cv=none; b=gCXEODx9rN1YYYbge9pmdofL43Wx3amvICfz1negTRMXvTlztDM9SQp2MWjk5elbm3B9e5TZCmwZYwGHFWdVaZH0jvaYG27VIVw532IGAqlqulO0Bcg3K+yAYuu2TwaXX+aKEJZ9DwIw9yPbr4/kLvr7HGhIk3xoJTlIzNJcPIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760967745; c=relaxed/simple;
-	bh=9fyo4x15I5nOU+yV4Ur/7W1Z4uAKxE2toCSFZxXkOwA=;
+	s=arc-20240116; t=1760967749; c=relaxed/simple;
+	bh=4Vc1bqhgksAhocQcTB57MIcEHnq1YQ2loxnl4lmFJ8w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JM47N8S9Pz+SJnNQVMaGwVNI0gYZds3u9ujWy8HgL0dCJl4qwC2H0xKQfoyB4bEQZd62yzBmIW0kTWKM6G7jxhVyi19p8IeZ4aJJkcm6y1WHOImA3gz8L+T+nJekI9E+GY3ImWjvsZGaIej5OQWK4qdC8d9rydg3jo2EMzCCoCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=IEnVSMco; arc=none smtp.client-ip=216.71.153.141
+	 MIME-Version; b=hAZXjKYmYNrz/dtTdBe8FHUCItXgeVH/g9hlM/RGVQfXLMy9uYKXa9iwflODEZM/dtWtlG6M2AUAL3sjEzDYdpW1pZKxyAVB7v8Y4Jb/ZbDKCBN09aSN0pJXt2j3ximFFozfY6Xo5zKCPQoM+A0kOg9cvTJW2s3/LFLEFH6ioZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=p65y8kcE; arc=none smtp.client-ip=216.71.153.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="IEnVSMco"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="p65y8kcE"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1760967744; x=1792503744;
+  t=1760967749; x=1792503749;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9fyo4x15I5nOU+yV4Ur/7W1Z4uAKxE2toCSFZxXkOwA=;
-  b=IEnVSMcoOZRG6xixNJgJST+WVafdcmFF20zB2BIK7+B/Z8PJl2XnQChM
-   b1ruamuU9NC5JXhh4gp8C6tQ4Si/fGyw6ELbJHJOsz60VmKj6swNnLRPD
-   /Nc7Dd0r42XhBL9K0/AjCgI30iFYOo7i90DIh34hBZX2r9nLTT8gTvF6W
-   wqFl6R5wNCqweJn3ihlenC6oow0Z6No2ulsuOS1k53L2/70gxs1Kgadi9
-   MGJ3SU+OD4MYNsl757w8mye4+Wq6zxE4dggkSx9yJ6Zls0YoZNMm8NQe9
-   34Aej5gHw/zNdvNwsgskRBOmWRLtCE0B8ydyRTG1f+nyDLB0AShwCfGaf
-   w==;
-X-CSE-ConnectionGUID: d2BqNXT3T1iOmjAP1yfjIA==
-X-CSE-MsgGUID: f0rrhf6cRieKacebQ4z36A==
+  bh=4Vc1bqhgksAhocQcTB57MIcEHnq1YQ2loxnl4lmFJ8w=;
+  b=p65y8kcEBZdIkKAuSsyS7QVPXEuj/aAqAnC2T9A7KJ1zrBY+httd/8rF
+   FsbpbxU0DcwqKKcB+Mm8x5LIJ5eSIXWeL7nYLsWAOs4tilGTwYCwBkr7Z
+   KplW0lzfzrND6dMObPcvg6LFAPV2TkDRneK9TRfiHhAQiAvnyilhILDHV
+   q8ekemslMVuy3D/r+lE3SwGZLN2T+vjrpChtXkIAWQzALRoXGp7IV5ZLV
+   Nt5eJdEnlcqDXHVeX1fAiQij8QYjMTMLQKMWh2Cb1O0X7mXyWvBjmyKjE
+   zP+31/LUHiwMKyKOKeyubYP+Yl3e9f36vR/oLLlKP3gvT4ErOHi1Neh1f
+   A==;
+X-CSE-ConnectionGUID: Hg11s+NgRMS49x85/gX4Lg==
+X-CSE-MsgGUID: Kw3W6No8TUa5xD9hlwbqrA==
 X-IronPort-AV: E=Sophos;i="6.19,242,1754928000"; 
-   d="scan'208";a="134518665"
+   d="scan'208";a="134518672"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Oct 2025 21:42:24 +0800
-IronPort-SDR: 68f63c3f_IoIeyfsA9whCqSWs6KqBXC4VHa9t6mpHRqE64J0z2rSALIQ
- L88+bcNzMOTQcVFH9A4yGxMKx+uw02og9fWdgwQ==
+  by ob1.hgst.iphmx.com with ESMTP; 20 Oct 2025 21:42:28 +0800
+IronPort-SDR: 68f63c44_H9yFNYC5hvEFdW4d9qvUU4MiYWFwnw1aq3m/s9RbSvMwe9b
+ dxaot4t8laAKNtpZIqS4DXo05ad++YgvX9hvurA==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Oct 2025 06:42:23 -0700
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Oct 2025 06:42:28 -0700
 WDCIronportException: Internal
 Received: from 1pgdl13.ad.shared (HELO neo.fritz.box) ([10.224.28.46])
-  by uls-op-cesaip02.wdc.com with ESMTP; 20 Oct 2025 06:42:20 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Oct 2025 06:42:24 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: axboe@kernel.dk
 Cc: chaitanyak@nvidia.com,
@@ -60,9 +60,9 @@ Cc: chaitanyak@nvidia.com,
 	rostedt@goodmis.org,
 	shinichiro.kawasaki@wdc.com,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 12/16] blktrace: move ftrace blk_io_tracer to blk_io_trace2
-Date: Mon, 20 Oct 2025 15:41:19 +0200
-Message-ID: <20251020134123.119058-13-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 13/16] blktrace: add block trace commands for zone operations
+Date: Mon, 20 Oct 2025 15:41:20 +0200
+Message-ID: <20251020134123.119058-14-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251020134123.119058-1-johannes.thumshirn@wdc.com>
 References: <20251020134123.119058-1-johannes.thumshirn@wdc.com>
@@ -74,77 +74,101 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Move ftrace's blk_io_tracer to the new blk_io_trace2 infrastructure.
+Add block trace commands for zone operations. These commands can only be
+handled with version 2 of the blktrace protocol. For version 1, warn if a
+command that does not fit into the 16 bits reserved for the command in
+this version is passed in.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- kernel/trace/blktrace.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ include/uapi/linux/blktrace_api.h | 13 +++++++++++--
+ kernel/trace/blktrace.c           | 28 ++++++++++++++++++++++++----
+ 2 files changed, 35 insertions(+), 6 deletions(-)
 
+diff --git a/include/uapi/linux/blktrace_api.h b/include/uapi/linux/blktrace_api.h
+index 3a771b9802aa..925f78af939e 100644
+--- a/include/uapi/linux/blktrace_api.h
++++ b/include/uapi/linux/blktrace_api.h
+@@ -26,11 +26,20 @@ enum blktrace_cat {
+ 	BLK_TC_DRV_DATA	= 1 << 14,	/* binary per-driver data */
+ 	BLK_TC_FUA	= 1 << 15,	/* fua requests */
+ 
+-	BLK_TC_END	= 1 << 15,	/* we've run out of bits! */
++	BLK_TC_END_V1	= 1 << 15,	/* we've run out of bits! */
++
++	BLK_TC_ZONE_APPEND	= 1ull << 16,  	/* zone append */
++	BLK_TC_ZONE_RESET	= 1ull << 17,	/* zone reset */
++	BLK_TC_ZONE_RESET_ALL	= 1ull << 18,	/* zone reset all */
++	BLK_TC_ZONE_FINISH	= 1ull << 19,	/* zone finish */
++	BLK_TC_ZONE_OPEN	= 1ull << 20,	/* zone open */
++	BLK_TC_ZONE_CLOSE	= 1ull << 21,	/* zone close */
++
++	BLK_TC_END_V2		= 1ull << 21,
+ };
+ 
+ #define BLK_TC_SHIFT		(16)
+-#define BLK_TC_ACT(act)		((act) << BLK_TC_SHIFT)
++#define BLK_TC_ACT(act)		((u64)(act) << BLK_TC_SHIFT)
+ 
+ /*
+  * Basic trace actions
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 756d2c7dfdf2..8ffb218e9fb7 100644
+index 8ffb218e9fb7..e8effb6cb393 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -1224,7 +1224,7 @@ static void blk_unregister_tracepoints(void)
-  * struct blk_io_tracer formatting routines
-  */
- 
--static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
-+static void fill_rwbs(char *rwbs, const struct blk_io_trace2 *t)
- {
- 	int i = 0;
- 	int tc = t->action >> BLK_TC_SHIFT;
-@@ -1259,9 +1259,9 @@ static void fill_rwbs(char *rwbs, const struct blk_io_trace *t)
+@@ -163,8 +163,8 @@ static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
+ 					     bytes, what, error, cgid, cgid_len,
+ 					     pdu_data, pdu_len);
+ 	return relay_blktrace_event1(bt, sequence, pid, cpu, sector, bytes,
+-				     lower_32_bits(what), error, cgid, cgid_len,
+-				     pdu_data, pdu_len);
++				     what, error, cgid, cgid_len, pdu_data,
++				     pdu_len);
  }
  
- static inline
--const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
-+const struct blk_io_trace2 *te_blk_io_trace(const struct trace_entry *ent)
- {
--	return (const struct blk_io_trace *)ent;
-+	return (const struct blk_io_trace2 *)ent;
+ /*
+@@ -342,10 +342,31 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	case REQ_OP_FLUSH:
+ 		what |= BLK_TC_ACT(BLK_TC_FLUSH);
+ 		break;
++	case REQ_OP_ZONE_APPEND:
++		what |= BLK_TC_ACT(BLK_TC_ZONE_APPEND);
++		break;
++	case REQ_OP_ZONE_RESET:
++		what |= BLK_TC_ACT(BLK_TC_ZONE_RESET);
++		break;
++	case REQ_OP_ZONE_RESET_ALL:
++		what |= BLK_TC_ACT(BLK_TC_ZONE_RESET_ALL);
++		break;
++	case REQ_OP_ZONE_FINISH:
++		what |= BLK_TC_ACT(BLK_TC_ZONE_FINISH);
++		break;
++	case REQ_OP_ZONE_OPEN:
++		what |= BLK_TC_ACT(BLK_TC_ZONE_OPEN);
++		break;
++	case REQ_OP_ZONE_CLOSE:
++		what |= BLK_TC_ACT(BLK_TC_ZONE_CLOSE);
++		break;
+ 	default:
+ 		break;
+ 	}
+ 
++	WARN_ON_ONCE(bt->version == 1 &&
++		     (what >> BLK_TC_SHIFT) > BLK_TC_END_V1);
++
+ 	if (cgid)
+ 		what |= __BLK_TA_CGROUP;
+ 
+@@ -386,8 +407,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	sequence = per_cpu_ptr(bt->sequence, cpu);
+ 	(*sequence)++;
+ 	relay_blktrace_event(bt, *sequence, pid, cpu, sector, bytes,
+-			     lower_32_bits(what), error, cgid, cgid_len,
+-			     pdu_data, pdu_len);
++			     what, error, cgid, cgid_len, pdu_data, pdu_len);
+ 	local_irq_restore(flags);
  }
  
- static inline const void *pdu_start(const struct trace_entry *ent, bool has_cg)
-@@ -1320,7 +1320,7 @@ static void blk_log_action_classic(struct trace_iterator *iter, const char *act,
- 	unsigned long long ts  = iter->ts;
- 	unsigned long nsec_rem = do_div(ts, NSEC_PER_SEC);
- 	unsigned secs	       = (unsigned long)ts;
--	const struct blk_io_trace *t = te_blk_io_trace(iter->ent);
-+	const struct blk_io_trace2 *t = te_blk_io_trace(iter->ent);
- 
- 	fill_rwbs(rwbs, t);
- 
-@@ -1334,7 +1334,7 @@ static void blk_log_action(struct trace_iterator *iter, const char *act,
- 	bool has_cg)
- {
- 	char rwbs[RWBS_LEN];
--	const struct blk_io_trace *t = te_blk_io_trace(iter->ent);
-+	const struct blk_io_trace2 *t = te_blk_io_trace(iter->ent);
- 
- 	fill_rwbs(rwbs, t);
- 	if (has_cg) {
-@@ -1555,7 +1555,7 @@ static enum print_line_t print_one_line(struct trace_iterator *iter,
- {
- 	struct trace_array *tr = iter->tr;
- 	struct trace_seq *s = &iter->seq;
--	const struct blk_io_trace *t;
-+	const struct blk_io_trace2 *t;
- 	u16 what;
- 	bool long_act;
- 	blk_log_action_t *log_action;
-@@ -1592,8 +1592,8 @@ static enum print_line_t blk_trace_event_print(struct trace_iterator *iter,
- static void blk_trace_synthesize_old_trace(struct trace_iterator *iter)
- {
- 	struct trace_seq *s = &iter->seq;
--	struct blk_io_trace *t = (struct blk_io_trace *)iter->ent;
--	const int offset = offsetof(struct blk_io_trace, sector);
-+	struct blk_io_trace2 *t = (struct blk_io_trace2 *)iter->ent;
-+	const int offset = offsetof(struct blk_io_trace2, sector);
- 	struct blk_io_trace old = {
- 		.magic	  = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION,
- 		.time     = iter->ts,
 -- 
 2.51.0
 
