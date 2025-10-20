@@ -1,46 +1,47 @@
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 175502D593E;
-	Mon, 20 Oct 2025 13:41:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE35931A57C;
+	Mon, 20 Oct 2025 13:41:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760967693; cv=none; b=NJvVBG1rRDO1R8XuArJgE+SS6HCntLCuv6I/ao8WI+dcmkgP5StQs8muQU5d9z0fO2GkUdGtoGfOpFRNsU7SQEoZ2nen2PiAKKlZm1bNR9zXmwTZ+pKr3GL2yIhNN8/JOasdFGClF7HnQUq7vCbX8v230t/uczRb+pOb4VG34qI=
+	t=1760967696; cv=none; b=CFb+4bMhoc4zr+WPF18cFd5eN5A0ELgW0Ktr/CGkDYlWd/Nyohz93D2Ie9O0tj8spklXqwbEaeoBX94KLJE6E4u5hvppVmis3z/DdabLE+KIXRoU0AciSmFHJXN6MZa79IWTWyTsEIA1aDYfaj8XYVU0+gY6XyOjwIFDwbWSnsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760967693; c=relaxed/simple;
-	bh=FM+4CKgTqEHgRlGR+4+oa8m0FN4419G5jVgSyaZsHYs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rNFZ2t9YrHcp90gjPW1CG7PHFXmk+W++VueNOLW4lcnoOnTeTervRL6rwRGEOaccZ4Aa35g13n1x+gKYDoLNlVar2vjW7pNk+/hjct5n8SeK8f/SeRBGE4DUXbyBq6gRG6iJ8zxXxWiOiZq77buqhq4nhWK4VdcHZGz5PiAystk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=I4ISK769; arc=none smtp.client-ip=216.71.153.141
+	s=arc-20240116; t=1760967696; c=relaxed/simple;
+	bh=ksy8BgshONcRNaaYPA2330I5SQCjqAYhB28T8Qj0gmc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ZeEfn1lNUMgVDuTE8j7x48+QlAL4Di2hejW3Zrh4dlNQ6sktKs4qcfm0BPFs90Kj5rUBPm3Ncqx368x0Qq7+x2VLB6FqgNfDDQZSxf7orfyahjo9FdmlwBgdoK/gJagauW/OFhCbEDjSqKR7EDchR7sOrz2K6VQ4POZ7Fd7jQMw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=a9XTaoR/; arc=none smtp.client-ip=216.71.153.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="I4ISK769"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="a9XTaoR/"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1760967691; x=1792503691;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=FM+4CKgTqEHgRlGR+4+oa8m0FN4419G5jVgSyaZsHYs=;
-  b=I4ISK769rsobIuUzBImx6VMH7OEig23aoFYlFRkM4yQe40spDMc/OpUu
-   hnaRkX8rSToQHnemfvdD+NG19WlAIAyAWf7N+uxRbm2JATwP6ua/tCdRk
-   ZyODzpN83+Vd5WrwEF6H+Jov1Vu4U+9DAFPiTpMdGWN+lytO6AW3AuzIk
-   BV5I7FEIadZmR6updM4R0mhzfgZ9LF7sM09Hej7jqWqU2VaRUrlvbplSB
-   4kCCypid05EmyrpZ9tKYAxIuz2ImuTssFy80a4zGauyfoHAiH4MusVj4F
-   5FD+ked9RG9eBv0tfjEQoxfY2O3yPb2/BFSElsbBNmWWOV0cTEIN1BoHN
-   w==;
-X-CSE-ConnectionGUID: Sb/BBNxbTFG2ZT2YFUXHfQ==
-X-CSE-MsgGUID: cnXYDQm2TUWVsenM5wIZQQ==
+  t=1760967695; x=1792503695;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ksy8BgshONcRNaaYPA2330I5SQCjqAYhB28T8Qj0gmc=;
+  b=a9XTaoR/BUHIBVx1zYcmHRrzVkt4B8mVX+KquJYOHdG2lfHbgS7o3t0n
+   68I+3KMRH4yO9pklE+KCGKqAZlr35GDNwV5AUCHZwN/orUu7dhobsqusv
+   l/fROLzQMAAMTSUUc0XiJlvNXe3w5WsAtpu+sPUl/Jaw7R157PK145hFW
+   c2L1zfkfZsJ/pPpYWv6xnv51WbFLVVbPXxBzMfYoz1yPShiwvZb3RIY8X
+   E+WiNxUwDYjRIFcgCwBD+UUSyh9rQHgJ/uT4q/4+fPBCpDeVYjDdY2cHJ
+   bVxMT2iT1w7uVAU3yNLtXPWk0P38clLBF6DJaKuFgecgnykQInvLYeYRy
+   A==;
+X-CSE-ConnectionGUID: PDYYkpruTS6tohk+tbh3Xg==
+X-CSE-MsgGUID: vF/NfaegRsW5hyANDUqJ/w==
 X-IronPort-AV: E=Sophos;i="6.19,242,1754928000"; 
-   d="scan'208";a="134518608"
+   d="scan'208";a="134518614"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Oct 2025 21:41:31 +0800
-IronPort-SDR: 68f63c0a_IoWQddeiqbDJaFXlc8AbWPq7TqIbb9ZZ5mJAvL8pTnxYTDe
- RW86HDyxiGF6yj5k7X8PnLs2HW2gUSS3sepaqCQ==
+  by ob1.hgst.iphmx.com with ESMTP; 20 Oct 2025 21:41:35 +0800
+IronPort-SDR: 68f63c0e_iCvjtP4832ENZ134+DLFEMn6UwBG/bPKtW/uUPDhXkmvxXN
+ +NnFAa+YlVberqSeQTNINcw987HoTnkWgsxmbkg==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Oct 2025 06:41:30 -0700
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Oct 2025 06:41:34 -0700
 WDCIronportException: Internal
 Received: from 1pgdl13.ad.shared (HELO neo.fritz.box) ([10.224.28.46])
-  by uls-op-cesaip02.wdc.com with ESMTP; 20 Oct 2025 06:41:26 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Oct 2025 06:41:30 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: axboe@kernel.dk
 Cc: chaitanyak@nvidia.com,
@@ -59,10 +60,12 @@ Cc: chaitanyak@nvidia.com,
 	rostedt@goodmis.org,
 	shinichiro.kawasaki@wdc.com,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 00/16]  block: add blktrace support for zoned block devies
-Date: Mon, 20 Oct 2025 15:41:07 +0200
-Message-ID: <20251020134123.119058-1-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 01/16] blktrace: only calculate trace length once
+Date: Mon, 20 Oct 2025 15:41:08 +0200
+Message-ID: <20251020134123.119058-2-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20251020134123.119058-1-johannes.thumshirn@wdc.com>
+References: <20251020134123.119058-1-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -71,80 +74,81 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This patch series extends the kernel blktrace infrastructure to support
-tracing zoned block device commands. Zoned block devices (e.g., ZAC/ZBC and
-ZNS) introduce command types such as zone open, close, reset, finish, and zone
-append. These are currently not visible in blktrace, making it difficult to
-debug and analyze I/O workloads on zoned devices.
+De-duplicate the calculation of the trace length instead of doing the
+calculation twice, once for calling trace_buffer_lock_reserve() and once
+for calling relay_reserve().
 
-The patches in this series utilize the new trace points for these zone
-management operations, and propagate the necessary context to the blktrace
-logging path. These additions are designed to be backward-compatible, and are
-only active when zoned devices are in use.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ kernel/trace/blktrace.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-In order to not break the user-space ABI, a new ioctl was introduced to
-request the new version of the blk_io_trace with extended 'action' field.
-
-The user-space tools in the blktrace suite are updated in a separate patch
-series to interpret and display the new trace events.This patch series extends
-the kernel blktrace infrastructure to support tracing zoned block device
-commands. Zoned block devices (e.g., ZAC/ZBC and ZNS) introduce command types
-such as zone open, close, reset, finish, and zone append. These are currently
-not visible in blktrace, making it difficult to debug and analyze I/O
-workloads on zoned devices.
-
-The patches in this series utilize the new trace points for these zone
-management operations, and propagate the necessary context to the blktrace
-logging path. These additions are designed to be backward-compatible, and are
-only active when zoned devices are in use.
-
-In order to not break the user-space ABI, a new ioctl was introduced to
-request the new version of the blk_io_trace with extended 'action' field.
-
-The user-space tools in the blktrace suite are updated in a separate patch
-series to interpret and display the new trace events.
-
-I've tested on SMR drives, TCMU emulated SMR drives and zloop, with both XFS
-and BTRFS as filesystems on top of the hardwdare. Testing of different
-hardware/setups is highly encouraged.
-
-Changes to v3:
-- Collect Reviewed-bys
-- Add WARN_ON_ONCE() in case a too big command is passed in v1
-- Use 'if (copy_from_user())'
-
-Changes to v2:
-- Collect Reviewed-bys
-- Convert trace_note and ftrace's blk_io_tracer to blk_io_trace2
-- Don't play games with the layout of the 'action' field
-- Fix structure alignments
-- Drop Zone Management trace action, it's a command not an action
-
-Johannes Thumshirn (16):
-  blktrace: only calculate trace length once
-  blktrace: factor out recording a blktrace event
-  blktrace: split out relaying a blktrace event
-  blktrace: untangle if/else sequence in __blk_add_trace
-  blktrace: change the internal action to 64bit
-  blktrace: split do_blk_trace_setup into two functions
-  blktrace: add definitions for blk_user_trace_setup2
-  blktrace: pass blk_user_trace2 to setup functions
-  blktrace: add definitions for struct blk_io_trace2
-  blktrace: differentiate between blk_io_trace versions
-  blktrace: move trace_note to blk_io_trace2
-  blktrace: move ftrace blk_io_tracer to blk_io_trace2
-  blktrace: add block trace commands for zone operations
-  blktrace: expose ZONE APPEND completions to blktrace
-  blktrace: trace zone write plugging operations
-  blktrace: handle BLKTRACESETUP2 ioctl
-
- block/ioctl.c                     |   1 +
- include/linux/blktrace_api.h      |   3 +-
- include/uapi/linux/blktrace_api.h |  53 +++-
- include/uapi/linux/fs.h           |   1 +
- kernel/trace/blktrace.c           | 467 ++++++++++++++++++++++--------
- 5 files changed, 404 insertions(+), 121 deletions(-)
-
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 6941145b5058..bc4b885f2cec 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -76,13 +76,14 @@ static void trace_note(struct blk_trace *bt, pid_t pid, int action,
+ 	int cpu = smp_processor_id();
+ 	bool blk_tracer = blk_tracer_enabled;
+ 	ssize_t cgid_len = cgid ? sizeof(cgid) : 0;
++	size_t trace_len;
+ 
++	trace_len = sizeof(*t) + cgid_len + len;
+ 	if (blk_tracer) {
+ 		buffer = blk_tr->array_buffer.buffer;
+ 		trace_ctx = tracing_gen_ctx_flags(0);
+ 		event = trace_buffer_lock_reserve(buffer, TRACE_BLK,
+-						  sizeof(*t) + len + cgid_len,
+-						  trace_ctx);
++						  trace_len, trace_ctx);
+ 		if (!event)
+ 			return;
+ 		t = ring_buffer_event_data(event);
+@@ -92,7 +93,7 @@ static void trace_note(struct blk_trace *bt, pid_t pid, int action,
+ 	if (!bt->rchan)
+ 		return;
+ 
+-	t = relay_reserve(bt->rchan, sizeof(*t) + len + cgid_len);
++	t = relay_reserve(bt->rchan, trace_len);
+ 	if (t) {
+ 		t->magic = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION;
+ 		t->time = ktime_to_ns(ktime_get());
+@@ -228,6 +229,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	bool blk_tracer = blk_tracer_enabled;
+ 	ssize_t cgid_len = cgid ? sizeof(cgid) : 0;
+ 	const enum req_op op = opf & REQ_OP_MASK;
++	size_t trace_len;
+ 
+ 	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
+ 		return;
+@@ -250,14 +252,14 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 		return;
+ 	cpu = raw_smp_processor_id();
+ 
++	trace_len = sizeof(*t) + pdu_len + cgid_len;
+ 	if (blk_tracer) {
+ 		tracing_record_cmdline(current);
+ 
+ 		buffer = blk_tr->array_buffer.buffer;
+ 		trace_ctx = tracing_gen_ctx_flags(0);
+ 		event = trace_buffer_lock_reserve(buffer, TRACE_BLK,
+-						  sizeof(*t) + pdu_len + cgid_len,
+-						  trace_ctx);
++						  trace_len, trace_ctx);
+ 		if (!event)
+ 			return;
+ 		t = ring_buffer_event_data(event);
+@@ -273,7 +275,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	 * from coming in and stepping on our toes.
+ 	 */
+ 	local_irq_save(flags);
+-	t = relay_reserve(bt->rchan, sizeof(*t) + pdu_len + cgid_len);
++	t = relay_reserve(bt->rchan, trace_len);
+ 	if (t) {
+ 		sequence = per_cpu_ptr(bt->sequence, cpu);
+ 
 -- 
 2.51.0
 
