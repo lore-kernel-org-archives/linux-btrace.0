@@ -1,159 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7B402848A0;
-	Tue, 21 Oct 2025 20:58:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9AE933EB01;
+	Wed, 22 Oct 2025 11:41:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761080280; cv=none; b=G1XcxRAAZM3b1GbSGpsuVYLM5L05JbTpH44NopB7uebT1EAgr7h1HfvOcT9SRqekmOhegz9LWmF1HNTK0eEaFMI0eu2EyImdPAsXYYf1VrSuiQkrg/MzIJ+yKq5tSLBfGIO8eTRpZxGk45ffQ4N1FVxOqAC1xfWES+NsoglRrMQ=
+	t=1761133286; cv=none; b=ggDo9lqTk0WoiaQWvZ+xQDdrkdOKEf7VU1LpbHrlEhnYV4KU1Afpw9A+EW+j8zomanxiMu0lcolc5buXLWGwP1C3q+Nb8dWfcvJRHYecJ+EeXnIr2vFiPjtg/2DzxDlbEXgUHFr3OAgOt043Vk/So7u6wLNiOYdyP74V6sHZNu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761080280; c=relaxed/simple;
-	bh=Vhn4F7seFPjyyQ1YTdO1XOJMZPnKBBBpIfyFDjuBGPs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BUHrFYE9ufw1dhQKpZuOVQNagBnpn0pDgt7li3ns1luM0r2eyEuM1IzCwKLmFVT+b+GWfAvmNQFaKmN8gHLBSbUn1USnjXNqzCav8aIomd/9Jhd6C3AZ6gMrvzh9oSp+4xROYvjuEyrfss00LDy95mJvZ0gjd8tx+S0/TqtaFKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+mP1zT9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761133286; c=relaxed/simple;
+	bh=Pycf+qTTqYqWAPp5ojlxbydUTMBdFmouHwknGtVpqS0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OZKA6WE5b9AA0bC3No9U4hkW2oMxuU2xjsYn1UO+uXZ1/3XJVLqxe11ZZJSdToM+iNVES1pArP5tnAN/Odp8kd9Xxjd90H9ycQqAHm4fd6od2CgVMNvuHJMjsTh3iB3n4WDx+itcVORHmgFho5GhCP5we4M/q1DI2mawoAOzbFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=GgOcD8lP; arc=none smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+mP1zT9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D25ABC4CEF7;
-	Tue, 21 Oct 2025 20:57:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761080280;
-	bh=Vhn4F7seFPjyyQ1YTdO1XOJMZPnKBBBpIfyFDjuBGPs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=a+mP1zT9T4vUkaMyA3dfabnk54wBMqRK+xfwukEKC4AjoWuE+oczt7MF7k4PAYokg
-	 loBSw05Bb+x7+FwAM6tLwjea8mPpOTs6an5oIXAFyowTU4g26yUSsjMxCuh99iGy+U
-	 dT1RJx7EMqUiSFHn1q/mOlXz8YY6EKazYP37CsmLw4x4LyIyF7KnQnFsYaZ0rD33TW
-	 FwsyIgLsEC3Q5L7UVvufnTo/crTjQhzB9MskkRsY5xyxTNUdVGEEua0R1XNIDkkoob
-	 ly7D+TGj1vQofN7D3MjPWCSVuD43aAJE3WyZDpGLPYCWHraSvrm+awt/6A4S3vYCIX
-	 U8EKyVBl87IOA==
-Message-ID: <cc2b4fda-9e7c-4b97-b83b-1297ea931aea@kernel.org>
-Date: Wed, 22 Oct 2025 05:57:59 +0900
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="GgOcD8lP"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1761133284; x=1792669284;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Pycf+qTTqYqWAPp5ojlxbydUTMBdFmouHwknGtVpqS0=;
+  b=GgOcD8lPr58rf9PjWEu0p6GVPBMkGy0u8N2htglpoRVxe06IpgHlPqlb
+   yhiVACIol7o6LUvw18eAKvR3Ft1BM+K8FH9L6mzFBTnvvak8KM2voTw+G
+   zvkkMQ1aBqu9WdXSb8DJ9STfiJyZG8gI45ySS0LT+V2l5xdKR4ZDI2WcF
+   HhXXrNp4tVTktoEy8DjMvh6zyUlZCRS16Hd9nxFKuuTtfwCGFrr12o2EO
+   p+o/YJeLjxYHQh9BftKZRf6OczTO39GTFRy5DKcCiI/03B8KTfLDhHrTH
+   X/Anyq2POWFOqR5XtyKO6Al1k06u+LlgBIKTRQqkisCPpPO1YGGXcJ0v1
+   w==;
+X-CSE-ConnectionGUID: kGA3FXepSF+L8FdELoJ/+Q==
+X-CSE-MsgGUID: ph3o0JYPQ/aXxSsHJQ+Udw==
+X-IronPort-AV: E=Sophos;i="6.19,247,1754928000"; 
+   d="scan'208";a="133361397"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2025 19:41:23 +0800
+IronPort-SDR: 68f8c2e3_Rc2zOgfTVJFx4Alp5viqMbE+RyL0a0cB6IBLRlulGRRqIua
+ QrUiz2ufY/w0SEU1qgnXpZeGxQVBQhYGGbpqzfA==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Oct 2025 04:41:24 -0700
+WDCIronportException: Internal
+Received: from unknown (HELO neo.wdc.com) ([10.224.28.49])
+  by uls-op-cesaip02.wdc.com with ESMTP; 22 Oct 2025 04:41:18 -0700
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To: axboe@kernel.dk
+Cc: chaitanyak@nvidia.com,
+	dlemoal@kernel.org,
+	hare@suse.de,
+	hch@lst.de,
+	john.g.garry@oracle.com,
+	linux-block@vger.kernel.org,
+	linux-btrace@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	martin.petersen@oracle.com,
+	mathieu.desnoyers@efficios.com,
+	mhiramat@kernel.org,
+	naohiro.aota@wdc.com,
+	rostedt@goodmis.org,
+	shinichiro.kawasaki@wdc.com,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v5 00/16] block: add blktrace support for zoned block devies
+Date: Wed, 22 Oct 2025 13:40:59 +0200
+Message-ID: <20251022114115.213865-1-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
 List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 13/16] blktrace: add block trace commands for zone
- operations
-To: Johannes Thumshirn <johannes.thumshirn@wdc.com>, axboe@kernel.dk
-Cc: chaitanyak@nvidia.com, hare@suse.de, hch@lst.de, john.g.garry@oracle.com,
- linux-block@vger.kernel.org, linux-btrace@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
- martin.petersen@oracle.com, mathieu.desnoyers@efficios.com,
- mhiramat@kernel.org, naohiro.aota@wdc.com, rostedt@goodmis.org,
- shinichiro.kawasaki@wdc.com
-References: <20251020134123.119058-1-johannes.thumshirn@wdc.com>
- <20251020134123.119058-14-johannes.thumshirn@wdc.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20251020134123.119058-14-johannes.thumshirn@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 10/20/25 22:41, Johannes Thumshirn wrote:
-> Add block trace commands for zone operations. These commands can only be
-> handled with version 2 of the blktrace protocol. For version 1, warn if a
-> command that does not fit into the 16 bits reserved for the command in
-> this version is passed in.
-> 
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> ---
->  include/uapi/linux/blktrace_api.h | 13 +++++++++++--
->  kernel/trace/blktrace.c           | 28 ++++++++++++++++++++++++----
->  2 files changed, 35 insertions(+), 6 deletions(-)
-> 
-> diff --git a/include/uapi/linux/blktrace_api.h b/include/uapi/linux/blktrace_api.h
-> index 3a771b9802aa..925f78af939e 100644
-> --- a/include/uapi/linux/blktrace_api.h
-> +++ b/include/uapi/linux/blktrace_api.h
-> @@ -26,11 +26,20 @@ enum blktrace_cat {
->  	BLK_TC_DRV_DATA	= 1 << 14,	/* binary per-driver data */
->  	BLK_TC_FUA	= 1 << 15,	/* fua requests */
->  
-> -	BLK_TC_END	= 1 << 15,	/* we've run out of bits! */
-> +	BLK_TC_END_V1	= 1 << 15,	/* we've run out of bits! */
-> +
-> +	BLK_TC_ZONE_APPEND	= 1ull << 16,  	/* zone append */
-> +	BLK_TC_ZONE_RESET	= 1ull << 17,	/* zone reset */
-> +	BLK_TC_ZONE_RESET_ALL	= 1ull << 18,	/* zone reset all */
-> +	BLK_TC_ZONE_FINISH	= 1ull << 19,	/* zone finish */
-> +	BLK_TC_ZONE_OPEN	= 1ull << 20,	/* zone open */
-> +	BLK_TC_ZONE_CLOSE	= 1ull << 21,	/* zone close */
-> +
-> +	BLK_TC_END_V2		= 1ull << 21,
->  };
->  
->  #define BLK_TC_SHIFT		(16)
-> -#define BLK_TC_ACT(act)		((act) << BLK_TC_SHIFT)
-> +#define BLK_TC_ACT(act)		((u64)(act) << BLK_TC_SHIFT)
->  
->  /*
->   * Basic trace actions
-> diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-> index 8ffb218e9fb7..e8effb6cb393 100644
-> --- a/kernel/trace/blktrace.c
-> +++ b/kernel/trace/blktrace.c
-> @@ -163,8 +163,8 @@ static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
->  					     bytes, what, error, cgid, cgid_len,
->  					     pdu_data, pdu_len);
->  	return relay_blktrace_event1(bt, sequence, pid, cpu, sector, bytes,
-> -				     lower_32_bits(what), error, cgid, cgid_len,
-> -				     pdu_data, pdu_len);
-> +				     what, error, cgid, cgid_len, pdu_data,
-> +				     pdu_len);
->  }
->  
->  /*
-> @@ -342,10 +342,31 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
->  	case REQ_OP_FLUSH:
->  		what |= BLK_TC_ACT(BLK_TC_FLUSH);
->  		break;
-> +	case REQ_OP_ZONE_APPEND:
-> +		what |= BLK_TC_ACT(BLK_TC_ZONE_APPEND);
-> +		break;
-> +	case REQ_OP_ZONE_RESET:
-> +		what |= BLK_TC_ACT(BLK_TC_ZONE_RESET);
-> +		break;
-> +	case REQ_OP_ZONE_RESET_ALL:
-> +		what |= BLK_TC_ACT(BLK_TC_ZONE_RESET_ALL);
-> +		break;
-> +	case REQ_OP_ZONE_FINISH:
-> +		what |= BLK_TC_ACT(BLK_TC_ZONE_FINISH);
-> +		break;
-> +	case REQ_OP_ZONE_OPEN:
-> +		what |= BLK_TC_ACT(BLK_TC_ZONE_OPEN);
-> +		break;
-> +	case REQ_OP_ZONE_CLOSE:
-> +		what |= BLK_TC_ACT(BLK_TC_ZONE_CLOSE);
-> +		break;
->  	default:
->  		break;
->  	}
->  
-> +	WARN_ON_ONCE(bt->version == 1 &&
-> +		     (what >> BLK_TC_SHIFT) > BLK_TC_END_V1);
+This patch series extends the kernel blktrace infrastructure to support
+tracing zoned block device commands. Zoned block devices (e.g., ZAC/ZBC and
+ZNS) introduce command types such as zone open, close, reset, finish, and zone
+append. These are currently not visible in blktrace, making it difficult to
+debug and analyze I/O workloads on zoned devices.
 
-Shouldn't this be a "if (WARN_ON_ONCE())" and return doing nothing if true ?
+The patches in this series utilize the new trace points for these zone
+management operations, and propagate the necessary context to the blktrace
+logging path. These additions are designed to be backward-compatible, and are
+only active when zoned devices are in use.
 
-> +
->  	if (cgid)
->  		what |= __BLK_TA_CGROUP;
->  
-> @@ -386,8 +407,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
->  	sequence = per_cpu_ptr(bt->sequence, cpu);
->  	(*sequence)++;
->  	relay_blktrace_event(bt, *sequence, pid, cpu, sector, bytes,
-> -			     lower_32_bits(what), error, cgid, cgid_len,
-> -			     pdu_data, pdu_len);
-> +			     what, error, cgid, cgid_len, pdu_data, pdu_len);
->  	local_irq_restore(flags);
->  }
->  
+In order to not break the user-space ABI, a new ioctl was introduced to
+request the new version of the blk_io_trace with extended 'action' field.
 
+The user-space tools in the blktrace suite are updated in a separate patch
+series to interpret and display the new trace events.This patch series extends
+the kernel blktrace infrastructure to support tracing zoned block device
+commands. Zoned block devices (e.g., ZAC/ZBC and ZNS) introduce command types
+such as zone open, close, reset, finish, and zone append. These are currently
+not visible in blktrace, making it difficult to debug and analyze I/O
+workloads on zoned devices.
+
+The patches in this series utilize the new trace points for these zone
+management operations, and propagate the necessary context to the blktrace
+logging path. These additions are designed to be backward-compatible, and are
+only active when zoned devices are in use.
+
+In order to not break the user-space ABI, a new ioctl was introduced to
+request the new version of the blk_io_trace with extended 'action' field.
+
+The user-space tools in the blktrace suite are updated in a separate patch
+series to interpret and display the new trace events.
+
+I've tested on SMR drives, TCMU emulated SMR drives and zloop, with both XFS
+and BTRFS as filesystems on top of the hardwdare. Testing of different
+hardware/setups is highly encouraged.
+
+Changes to v4:
+- Fix grammar mistake in comment
+- Remove unneeded formating churn in trace_note()
+- Return after WARN_ON_ONCE()
+
+Changes to v3:
+- Collect Reviewed-bys
+- Add WARN_ON_ONCE() in case a too big command is passed in v1
+- Use 'if (copy_from_user())'
+
+Changes to v2:
+- Collect Reviewed-bys
+- Convert trace_note and ftrace's blk_io_tracer to blk_io_trace2
+- Don't play games with the layout of the 'action' field
+- Fix structure alignments
+- Drop Zone Management trace action, it's a command not an action
+
+Johannes Thumshirn (16):
+  blktrace: only calculate trace length once
+  blktrace: factor out recording a blktrace event
+  blktrace: split out relaying a blktrace event
+  blktrace: untangle if/else sequence in __blk_add_trace
+  blktrace: change the internal action to 64bit
+  blktrace: split do_blk_trace_setup into two functions
+  blktrace: add definitions for blk_user_trace_setup2
+  blktrace: pass blk_user_trace2 to setup functions
+  blktrace: add definitions for struct blk_io_trace2
+  blktrace: differentiate between blk_io_trace versions
+  blktrace: move trace_note to blk_io_trace2
+  blktrace: move ftrace blk_io_tracer to blk_io_trace2
+  blktrace: add block trace commands for zone operations
+  blktrace: expose ZONE APPEND completions to blktrace
+  blktrace: trace zone write plugging operations
+  blktrace: handle BLKTRACESETUP2 ioctl
+
+ block/ioctl.c                     |   1 +
+ include/linux/blktrace_api.h      |   3 +-
+ include/uapi/linux/blktrace_api.h |  53 +++-
+ include/uapi/linux/fs.h           |   1 +
+ kernel/trace/blktrace.c           | 468 ++++++++++++++++++++++--------
+ 5 files changed, 405 insertions(+), 121 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.51.0
+
