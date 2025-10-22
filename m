@@ -1,47 +1,47 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5960133EB1A;
-	Wed, 22 Oct 2025 11:42:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D8D733EB1A;
+	Wed, 22 Oct 2025 11:42:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761133349; cv=none; b=UUb9f5c20lqbEzzScdTjRReswwx+K9conEjjf2b0707tukLufJ2KmgGSQOTczPh5knQzAwKoUs4h7nGphVc3IVpK3XIu1AuQAcDmnXHPfn36bhjuUE4YuTbkVSZgyphG62Ukj5q1O8aCHG0I0GR7S/FjCwGBs88hXE1DKRqyOjo=
+	t=1761133355; cv=none; b=aNcVEbHPDYjHTiRejg3UGH+gJmSpPzCSw7JHeM7qF+wlg039G8E/R5liZ+jpk41QVpS46HIINki42/eYb74SWZwyDumcxF1YEzBxmDIcDZfASpzas5PX/npvhth7gc0CV1S+LSPUNfooktT7cFJnydCz9sE/2CF8aTmZ0e9hSqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761133349; c=relaxed/simple;
-	bh=037FbZQmDVubQU4lKjBcgHnjO77xnBw5gmh0v/JuuxI=;
+	s=arc-20240116; t=1761133355; c=relaxed/simple;
+	bh=Tg+InoiUkixMTHRjKqO+3LE4IbRDh+1Zw8VhpQekT20=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uiwgz9yLayBj8p632SNHpN8JAwzG+iIgkuTYHe/EXqZWkWfIc5czb138jBVDGuGu24E9ftxzh+G0U+uBoCPo9tF9LRxpM8CUhM9OmdJ/lmUFVau5Dc+muy1111pmoG9EzmubcPGvQfjAoxytmWmY47sZzD47+Qw9Gnc1H1FtL+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=kdx6LKwK; arc=none smtp.client-ip=216.71.153.141
+	 MIME-Version; b=rb3dgRsg1Q/qY246Jx/WCfsJvMkyDM8g9wOmQKDoIMYTfb2EIot9E0xLWqYD0NSRwLNZMp2k7PV7XGpEw3UbxJozpnvTmbtK5lAJYHM3TodKODL9u5pGfFGM4PZWzZMY7+/48OgGHfEslznl5uE0xFysvKwmAC+omEZK51BKZ2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=gHnbhSC8; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="kdx6LKwK"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="gHnbhSC8"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1761133348; x=1792669348;
+  t=1761133353; x=1792669353;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=037FbZQmDVubQU4lKjBcgHnjO77xnBw5gmh0v/JuuxI=;
-  b=kdx6LKwKLPuLfnhm8X2Q1/Dia4gQMdMX48egOYPjfbkIJ/lBLV91K5x6
-   EMdVNwiD/KPZ1JQXgwEmJt+/SnhOn4LRY3/ODrVJ5qAI2WcTNo8uAYsHK
-   ebUJNKE+CM0QJbJTtLzBHMY0TzQh9DiaSYC9Ob7Z8ZS2v4hSojgTi9fN+
-   C/q6OzkW8Ej3Lq5JPoykbJz4cBCk/rtf/r+C+WnQoQVhgcWHGUc/yos+h
-   OHH2Z56JzbRGmKP/PYLKJ5ZxPCf35NyYNfoMhPd4mxAC7J1kfm391cMaY
-   cYME/DBE5iHtu5AiyEZGTqDkI/nck0LQRzGdZhz+E050ykXVTmQI0+ehJ
-   w==;
-X-CSE-ConnectionGUID: RgQB2KMhQ1+K5fhHR3+zew==
-X-CSE-MsgGUID: OnpNB9Q4RyKvf14aiIAVFQ==
+  bh=Tg+InoiUkixMTHRjKqO+3LE4IbRDh+1Zw8VhpQekT20=;
+  b=gHnbhSC8iVPeRKFxloCickHG7Vs53KMSlvurQamWVytKLmbk4jrsMP53
+   Wq5gn9nU8r5Hk/twcMqbMFpJTpt3jvp1HpASeFnqZJOwRn4K47Fs5yBBn
+   7LYpgBz4p7l3nQ97wL4aGZFFVxEGsI5uuNJvr1jJ2x4zDhwyqEw4iPvQF
+   g+o8GJYyB5F1cvhR78DTzStOSOnuxbIgNpkYKqGPFmcB+mRegINoQ8wYi
+   bxmXXrZvVese3Qkzh7M0JTyeTCJc37YUovgM2SfK6D0Ab71t4LZIzJvkD
+   b8DoiSYgCzo5hFQrgH7jzDOUrDze25N0Lo0L9n1eO5xZq7lxy7HUqla69
+   A==;
+X-CSE-ConnectionGUID: j6t1p72fRS+p2e4ReBqImQ==
+X-CSE-MsgGUID: l4LFWQDVT3ehXxIHnbSTew==
 X-IronPort-AV: E=Sophos;i="6.19,247,1754928000"; 
-   d="scan'208";a="134645063"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2025 19:42:27 +0800
-IronPort-SDR: 68f8c322_+XAqUIoGQQDrbz8X3tKKNlwqqU0p4Mb7/hBdUft2SFNwttH
- TcrVTU+inse3Lpo0eL/DIIneoNl1UTGdKfwFJKw==
+   d="scan'208";a="133602971"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2025 19:42:32 +0800
+IronPort-SDR: 68f8c328_JjQpdq0BI8qfTDBgrZOvMLqw94bT0V61Scd27TnviZQvSHO
+ +5onhUwG0/oVhO8Oj89aFmKAAINPhL0r9ltMQeQ==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Oct 2025 04:42:26 -0700
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Oct 2025 04:42:32 -0700
 WDCIronportException: Internal
 Received: from unknown (HELO neo.wdc.com) ([10.224.28.49])
-  by uls-op-cesaip02.wdc.com with ESMTP; 22 Oct 2025 04:42:21 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 22 Oct 2025 04:42:27 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: axboe@kernel.dk
 Cc: chaitanyak@nvidia.com,
@@ -60,9 +60,9 @@ Cc: chaitanyak@nvidia.com,
 	rostedt@goodmis.org,
 	shinichiro.kawasaki@wdc.com,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v5 10/16] blktrace: differentiate between blk_io_trace versions
-Date: Wed, 22 Oct 2025 13:41:09 +0200
-Message-ID: <20251022114115.213865-11-johannes.thumshirn@wdc.com>
+Subject: [PATCH v5 11/16] blktrace: move trace_note to blk_io_trace2
+Date: Wed, 22 Oct 2025 13:41:10 +0200
+Message-ID: <20251022114115.213865-12-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251022114115.213865-1-johannes.thumshirn@wdc.com>
 References: <20251022114115.213865-1-johannes.thumshirn@wdc.com>
@@ -74,94 +74,64 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Differentiate between blk_io_trace and blk_io_trace2 when relaying to
-user-space depending on which version has been requested by the blktrace
-utility.
+Move trace_note() to the new blk_io_trace2 infrastructure.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- kernel/trace/blktrace.c | 58 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 57 insertions(+), 1 deletion(-)
+ kernel/trace/blktrace.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 185f19c9f772..5f8ecf88a196 100644
+index 5f8ecf88a196..08c7be671c47 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -91,7 +91,29 @@ static void record_blktrace_event(struct blk_io_trace *t, pid_t pid, int cpu,
- 		memcpy((void *)t + sizeof(*t) + cgid_len, pdu_data, pdu_len);
- }
+@@ -173,18 +173,18 @@ static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
+ static void trace_note(struct blk_trace *bt, pid_t pid, u64 action,
+ 		       const void *data, size_t len, u64 cgid)
+ {
+-	struct blk_io_trace *t;
+ 	struct ring_buffer_event *event = NULL;
+ 	struct trace_buffer *buffer = NULL;
+ 	unsigned int trace_ctx = 0;
+ 	int cpu = smp_processor_id();
+ 	bool blk_tracer = blk_tracer_enabled;
+ 	ssize_t cgid_len = cgid ? sizeof(cgid) : 0;
+-	size_t trace_len;
  
--static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
-+static void record_blktrace_event2(struct blk_io_trace2 *t2, pid_t pid, int cpu,
-+				   sector_t sector, int bytes, u64 what,
-+				   dev_t dev, int error, u64 cgid,
-+				   ssize_t cgid_len, void *pdu_data,
-+				   int pdu_len)
-+{
-+	t2->pid = pid;
-+	t2->cpu = cpu;
+-	trace_len = sizeof(*t) + cgid_len + len;
+ 	action = lower_32_bits(action | (cgid ? __BLK_TN_CGROUP : 0));
+ 	if (blk_tracer) {
++		struct blk_io_trace2 *t;
++		size_t trace_len = sizeof(*t) + cgid_len + len;
 +
-+	t2->sector = sector;
-+	t2->bytes = bytes;
-+	t2->action = what;
-+	t2->device = dev;
-+	t2->error = error;
-+	t2->pdu_len = pdu_len + cgid_len;
-+
-+	if (cgid_len)
-+		memcpy((void *)t2 + sizeof(*t2), &cgid, cgid_len);
-+	if (pdu_len)
-+		memcpy((void *)t2 + sizeof(*t2) + cgid_len, pdu_data, pdu_len);
-+}
-+
-+static void relay_blktrace_event1(struct blk_trace *bt, unsigned long sequence,
- 				 pid_t pid, int cpu, sector_t sector, int bytes,
- 				 u64 what, int error, u64 cgid,
- 				 ssize_t cgid_len, void *pdu_data, int pdu_len)
-@@ -111,6 +133,40 @@ static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
- 			      cgid, cgid_len, pdu_data, pdu_len);
- }
+ 		buffer = blk_tr->array_buffer.buffer;
+ 		trace_ctx = tracing_gen_ctx_flags(0);
+ 		event = trace_buffer_lock_reserve(buffer, TRACE_BLK,
+@@ -192,9 +192,9 @@ static void trace_note(struct blk_trace *bt, pid_t pid, u64 action,
+ 		if (!event)
+ 			return;
+ 		t = ring_buffer_event_data(event);
+-		record_blktrace_event(t, pid, cpu, 0, 0,
+-				      action, bt->dev, 0, cgid, cgid_len,
+-				      (void *)data, len);
++		record_blktrace_event2(t, pid, cpu, 0, 0,
++				       action, bt->dev, 0, cgid, cgid_len,
++				       (void *)data, len);
+ 		trace_buffer_unlock_commit(blk_tr, buffer, event, trace_ctx);
+ 		return;
+ 	}
+@@ -359,7 +359,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
  
-+static void relay_blktrace_event2(struct blk_trace *bt, unsigned long sequence,
-+				  pid_t pid, int cpu, sector_t sector,
-+				  int bytes, u64 what, int error, u64 cgid,
-+				  ssize_t cgid_len, void *pdu_data, int pdu_len)
-+{
-+	struct blk_io_trace2 *t;
-+	size_t trace_len = sizeof(struct blk_io_trace2) + pdu_len + cgid_len;
-+
-+	t = relay_reserve(bt->rchan, trace_len);
-+	if (!t)
-+		return;
-+
-+	t->magic = BLK_IO_TRACE_MAGIC | BLK_IO_TRACE2_VERSION;
-+	t->sequence = sequence;
-+	t->time = ktime_to_ns(ktime_get());
-+
-+	record_blktrace_event2(t, pid, cpu, sector, bytes, what, bt->dev, error,
-+			       cgid, cgid_len, pdu_data, pdu_len);
-+}
-+
-+static void relay_blktrace_event(struct blk_trace *bt, unsigned long sequence,
-+				 pid_t pid, int cpu, sector_t sector, int bytes,
-+				 u64 what, int error, u64 cgid,
-+				 ssize_t cgid_len, void *pdu_data, int pdu_len)
-+{
-+	if (bt->version == 2)
-+		return relay_blktrace_event2(bt, sequence, pid, cpu, sector,
-+					     bytes, what, error, cgid, cgid_len,
-+					     pdu_data, pdu_len);
-+	return relay_blktrace_event1(bt, sequence, pid, cpu, sector, bytes,
-+				     lower_32_bits(what), error, cgid, cgid_len,
-+				     pdu_data, pdu_len);
-+}
-+
- /*
-  * Send out a notify message.
-  */
+ 		buffer = blk_tr->array_buffer.buffer;
+ 		trace_ctx = tracing_gen_ctx_flags(0);
+-		trace_len = sizeof(struct blk_io_trace) + pdu_len + cgid_len;
++		trace_len = sizeof(struct blk_io_trace2) + pdu_len + cgid_len;
+ 		event = trace_buffer_lock_reserve(buffer, TRACE_BLK,
+ 						  trace_len, trace_ctx);
+ 		if (!event)
 -- 
 2.51.0
 
