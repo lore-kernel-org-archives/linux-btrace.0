@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E233C2F12B2;
-	Mon, 24 Nov 2025 08:57:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5011096F;
+	Mon, 24 Nov 2025 09:00:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763974666; cv=none; b=je43V7ep1IRUMaZckXXTFUwmMpB36kdAmReHDVOy3jrJojIgyJXPiA037rVe0gCSRDc6VQaWz+z1ILFu35pU8HxxFd9i7s3n0jUdmye4t6mdBzVIlbaEwdLiwZx8aVdKsKN3COYK+HqAo+fgxEYAh2MHbVBLoG9+ep2mssSviUc=
+	t=1763974835; cv=none; b=P1O+SxRxlCAk1Uug2+59rOukmVyEOJ8AADmEAwpzPIDSGiM86T/E6MhmkT7MAZH/TCDCf99sMILgeKOLOt/e+JgypCgHwZQuxvAzW0jsS8OWnV1562iJrgtowXYDhr5bVCRfMRzpxfPKCy6/j6pzWckuLlxsXBkpXaNF2IQgoZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763974666; c=relaxed/simple;
-	bh=QegpaO11GCZwLyZUCLWpPq4lqTvaN3NAgvqh9JCiPAo=;
+	s=arc-20240116; t=1763974835; c=relaxed/simple;
+	bh=1wZ44cBGOZO5B7hRVudqOYwGtUjIMysz77RVZEDwZTM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QTx8Qizxu8HLniHVMednpCOph6hxdrdgemtXYERMtGalnwN+nQLeSBlUAFQN6NXM+vPVaaySu8+txBDsrAKtHkVxZZyclcmd85WS2pRsnAZ5EFCE9FwuqN5tHRcxaKo3MP0KS6R1dV5IwmJLrvdDNPxx8hUSo2LFLNelTxAr9zs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N6/GBmOz; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=oYpzenjqIoIJjRfkOMpyKiETNsl2Cc/PSIk8PMdw/h3aSDJ9e+J5lIejwNj7O4YO1sAbIRtxjaEXFidPj2o0Dn+VvAybK6UscLFP79dMSuXqGQrXftX08w2UnVgMd92aZkeZ35W/4u1UO+3qYw5SjLxGJJH79Hut8rdKvEQR4KA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnYLBfjz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N6/GBmOz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08C7CC4CEF1;
-	Mon, 24 Nov 2025 08:57:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnYLBfjz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4D9CC4CEF1;
+	Mon, 24 Nov 2025 09:00:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763974665;
-	bh=QegpaO11GCZwLyZUCLWpPq4lqTvaN3NAgvqh9JCiPAo=;
+	s=k20201202; t=1763974834;
+	bh=1wZ44cBGOZO5B7hRVudqOYwGtUjIMysz77RVZEDwZTM=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=N6/GBmOzkkwJr8NviB2gRdtRZU+EGGIPsnZiAITn1Z5Brsjb4MPZKsGOnGasIHEkj
-	 EZE4u6WndqnR6Qws7wD3MJXmYu1fJ5FWuWlyeeFYGUmm3nT01ZK80QnVJe9ZeNQ824
-	 lrDC2qJ203CpW5QtzKPx8DEk10nGkUae1eDyjny8l68iDFMTIhUgH0QFQPBdVxpRdZ
-	 6+KiasxPe+MCwA0B4uj9DZY+6UgtrLiHbBKwzhwfB9gQ09TJCGyCLi8rTu5IV5uL5P
-	 T9aJfgiJ4TFvEDGxVH51Dzhgw1dGUNe+hzi4os05Tnh5krz5MWsV0LtAXDLksmzK5+
-	 qcapMl2y+CB2w==
-Message-ID: <daa2dfb3-91f6-413e-af38-2998d3a96806@kernel.org>
-Date: Mon, 24 Nov 2025 17:57:42 +0900
+	b=RnYLBfjz/y0aY4kKTKbU7RMEs6C73jlmACxqHAuvf9lNsTyRNZg9FWWJt5pTiU9w9
+	 qyPtb/UPWG6UgbxrzjhUj/L0ecWlht0gKLVmAEHDSr/ZJ1pN/QhtiC120S6rql0ZBG
+	 7D/BLOftO6eYsvkdOK2PVFku/pg52S6sjmanE2o1K5lNGZF8pgIy1/EGPhwfJVzNNh
+	 Gh6pJ39fgR8mvM9HsLqMRvDm7GD7sL4uRP/xHBVv3WyR6VMve5D0MhTqSdx6CdPf5B
+	 ZCUEtIkSLa9bcpGl8ulWybDSjZ/eti05hE1X/l3epJNDrntUS/J+qv7itvO3vFEBB5
+	 L7xFWdIFOARIA==
+Message-ID: <62285a77-2bd2-4357-b2fa-443eea262f1b@kernel.org>
+Date: Mon, 24 Nov 2025 18:00:31 +0900
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RESEND PATCH blktrace v3 03/20] blktrace: add definitions for
- BLKTRACESETUP2
+Subject: Re: [RESEND PATCH blktrace v3 06/20] blktrace: support protocol
+ version 8
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
  "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, Chaitanya Kulkarni <chaitanyak@nvidia.com>,
@@ -45,60 +45,59 @@ Cc: linux-block@vger.kernel.org, Chaitanya Kulkarni <chaitanyak@nvidia.com>,
  Naohiro Aota <naohiro.aota@wdc.com>, Niklas Cassel <cassel@kernel.org>,
  linux-btrace@vger.kernel.org
 References: <20251124073739.513212-1-johannes.thumshirn@wdc.com>
- <20251124073739.513212-4-johannes.thumshirn@wdc.com>
+ <20251124073739.513212-7-johannes.thumshirn@wdc.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20251124073739.513212-4-johannes.thumshirn@wdc.com>
+In-Reply-To: <20251124073739.513212-7-johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 2025/11/24 16:37, Johannes Thumshirn wrote:
-> Add definitions for a new BLKTRACESETUP2 ioctl(2).
-> 
-> This new ioctl(2) will request a new, updated structure layout from the
-> kernel which enhances the storage size of the 'action' field in order to
-> store additional tracepoints.
+> Also support protocol version 8 in conjunction with protocol version 7.
+
+Shouldn't this go last in the series, after enabling the code that deal with
+this new version ?
+
 > 
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  blktrace_api.h | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
+>  blktrace.h | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
 > 
-> diff --git a/blktrace_api.h b/blktrace_api.h
-> index 172b4c2..ecffe6e 100644
-> --- a/blktrace_api.h
-> +++ b/blktrace_api.h
-> @@ -139,9 +139,25 @@ struct blk_user_trace_setup {
->  	__u32 pid;
->  };
+> diff --git a/blktrace.h b/blktrace.h
+> index 74dfb48..3305fa0 100644
+> --- a/blktrace.h
+> +++ b/blktrace.h
+> @@ -69,6 +69,7 @@ extern struct timespec abs_start_time;
 >  
-> +/*
-> + * User setup structure passed with BLKTRACESETUP2
-> + */
-> +struct blk_user_trace_setup2 {
-> +	char name[64];			/* output */
-> +	__u64 act_mask;			/* input */
-> +	__u32 buf_size;			/* input */
-> +	__u32 buf_nr;			/* input */
-> +	__u64 start_lba;
-> +	__u64 end_lba;
-> +	__u32 pid;
-> +	__u32 flags;			/* currently unused */
-> +	__u64 reserved[11];
-> +};
-
-Any particular reason to go for 192B ? Why not 128B with a __u64 reserved[3] at
-the end ? Not enough to future proof it ?
-
+>  #define CHECK_MAGIC(t)		(((t)->magic & 0xffffff00) == BLK_IO_TRACE_MAGIC)
+>  #define SUPPORTED_VERSION	(0x07)
+> +#define SUPPORTED_VERSION2	(0x08)
+>  
+>  #if __BYTE_ORDER == __LITTLE_ENDIAN
+>  #define be16_to_cpu(x)		__bswap_16(x)
+> @@ -90,13 +91,17 @@ extern struct timespec abs_start_time;
+>  
+>  static inline int verify_trace(struct blk_io_trace *t)
+>  {
+> +	u8 version;
 > +
->  #define BLKTRACESETUP _IOWR(0x12,115,struct blk_user_trace_setup)
->  #define BLKTRACESTART _IO(0x12,116)
->  #define BLKTRACESTOP _IO(0x12,117)
->  #define BLKTRACETEARDOWN _IO(0x12,118)
-> +#define BLKTRACESETUP2 _IOWR(0x12, 142, struct blk_user_trace_setup2)
+>  	if (!CHECK_MAGIC(t)) {
+>  		fprintf(stderr, "bad trace magic %x\n", t->magic);
+>  		return 1;
+>  	}
+> -	if ((t->magic & 0xff) != SUPPORTED_VERSION) {
+> -		fprintf(stderr, "unsupported trace version %x\n", 
+> -			t->magic & 0xff);
+> +
+> +	version = t->magic & 0xff;
+> +	if (version != SUPPORTED_VERSION &&
+> +	    version != SUPPORTED_VERSION2) {
+> +		fprintf(stderr, "unsupported trace version %x\n", version);
+>  		return 1;
+>  	}
 >  
->  #endif
 
 
 -- 
