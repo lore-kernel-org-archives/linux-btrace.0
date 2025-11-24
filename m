@@ -1,47 +1,47 @@
 Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA30E2E8882;
-	Mon, 24 Nov 2025 07:38:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564522E8B84;
+	Mon, 24 Nov 2025 07:38:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763969886; cv=none; b=TD6XeXxzx3K+YSUADJAH0lpRVcIzw+BLuOfVgIevQKtDnFGeZOKf9A1ua4TM9ajATyAS+hEPTSZ3I5NgeYnJraBrg/HJoXMomKHeTJyGJuxVtJbu1jUyOl2E2W01pDFFZnNjOxQbQgoXGUoGWrSkHEBCITN36dcoT4vEL9Wigxo=
+	t=1763969889; cv=none; b=PxBmn2z2JJIvFhhe41/yOytrsDhPVha054Pl5gZYBvhJR10dkjgqjqyjKSMckg3dQDqDb5JP7VVuEgP8jIy27WBtxup+vKfXk1NxBZWGzjd7PgnTGEMwV6WnST49A1nC9X7ao5/qsenSdpEOQkz7q2f3u4Nkr0BIQ1tlf6XqJpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763969886; c=relaxed/simple;
-	bh=OHO0PZMEV04mH6ZwDWXnqB/zzMaDZanQ5BQfINKFFrw=;
+	s=arc-20240116; t=1763969889; c=relaxed/simple;
+	bh=mPQj5kqwyRWqC+fMnaW0oDN1trAQZBc40cPOBN7KYso=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TgpYDIRzxVtiCwPk2csJfsZBDE65/XxgO8yBZWtAPl8dXPT4JQ+sGqxHCZK1Beuc6Zm14iGTZvv2Mcd15BrdeApNgIRKJMk/dr7e6RrHF8LhOgQ8pZb/B8bkiGqjUXJmEWXKiv7nGB4KJKaviyvbClpPDaMmHl8vyfm/7P1x45w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=FamWuWnZ; arc=none smtp.client-ip=216.71.154.42
+	 MIME-Version; b=glq2Hq9p4oAUi5QRJmV0pupgYN7V0mKDOk5fPIOkC/iUKFDRl9t3I2zJwbsBjg2Y0pznYr96eE3lTSn2k79TizcROes2ljD/+FGTmZjiDfRxuGtXo4fiSG3a9nJtvau1uzfQnRXmf4tR0VFoMpNlrm3jRrrNgjfXGb1uJ0S62BE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=a5CpxFbA; arc=none smtp.client-ip=216.71.154.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="FamWuWnZ"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="a5CpxFbA"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1763969885; x=1795505885;
+  t=1763969888; x=1795505888;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=OHO0PZMEV04mH6ZwDWXnqB/zzMaDZanQ5BQfINKFFrw=;
-  b=FamWuWnZTUrkGqjU/044m+97UKcN5fQjTGVPId/e0YbrV9IF3FlqYSJJ
-   h85TBJ/eU7neRWr5tS33k3pGwHYcFvdhGoqlyXUpHG4klmqGoREC9eFJk
-   0zjJqLj6CcnRFB/iAchAZQGtSGpkloXbTH5G/69FzA3Tb9vMgg2EG5VHW
-   IiF+LsabBLomaEy4g2609qkftuIWgvkMJii64QW7gI4uur/Pz0pdnAZAA
-   262NoWCQ6k83gsDEhCk5o7K+pFmigFcNVU9wbsUp5XtC9PAtO68Qyfjbv
-   dkZr8Pzgp/istWok8V1xCg+3+N5jFRsJ2u8zHu1kbhTa+qiiTQ/c2X+s1
-   A==;
-X-CSE-ConnectionGUID: R4PfK004Thid/jSavUorzQ==
-X-CSE-MsgGUID: muEkCZaVQoif6rDFYcc51A==
+  bh=mPQj5kqwyRWqC+fMnaW0oDN1trAQZBc40cPOBN7KYso=;
+  b=a5CpxFbAk/1K/f6uoi/YlK7rMHfVzt0GTjBoR12sKADevi8sX0WMMUg6
+   NWEG70bdyEXh1scF1y3OazgI6o2iC7rGlHPud0tdE5SS3Ukev4scplKMx
+   5H38fBlx0qLJ/c5DenOH7VbwVAtZ10+MoRudWgbDTnxH6fXR0tX5k4D/M
+   BVH1K+4x8yBUK2UOGMZykYtb8CguJ9AzMR4WZ0s1hf7hJE5/P6iyoaS2B
+   CQd3JFa1PdKN/RyNOcXg2HoIv6ty4dc8ca8rIW8XX65HU1m3yg42Pvp2a
+   ihWkeG9kYvBQdMFxgs7fcuE0Aclyp1Dbf7/1pHGlzTg5eDzABUvoEOND4
+   w==;
+X-CSE-ConnectionGUID: ne0ScTuMTymF1w3qDaTFyw==
+X-CSE-MsgGUID: vH0KbMl7Q1+UCaUjPGrQuw==
 X-IronPort-AV: E=Sophos;i="6.20,222,1758556800"; 
-   d="scan'208";a="132619342"
+   d="scan'208";a="132619352"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Nov 2025 15:38:04 +0800
-IronPort-SDR: 69240b5c_ehy2CzpRpG9LV301e969KzTRc3TStJb3z+dFPtxmZUdCbLt
- 4FgbmL8Ec2E6E+6oQYz1SeLgorFtI3Ta3AMH6hA==
+  by ob1.hgst.iphmx.com with ESMTP; 24 Nov 2025 15:38:08 +0800
+IronPort-SDR: 69240b60_biHUhUaihgYkTw44Y3Gzpo900UHk+ZFc+2UAzC7IcYGiy5S
+ xK+FFho9Z+TPyW/yfaS/zqToi/rgMZJeyoCDNAQ==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2025 23:38:05 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2025 23:38:08 -0800
 WDCIronportException: Internal
 Received: from unknown (HELO neo.fritz.box) ([10.224.28.65])
-  by uls-op-cesaip01.wdc.com with ESMTP; 23 Nov 2025 23:38:01 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 23 Nov 2025 23:38:05 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -53,9 +53,9 @@ Cc: linux-block@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-btrace@vger.kernel.org,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [RESEND PATCH blktrace v3 05/20] blktrace: add definitions for blk_io_trace2
-Date: Mon, 24 Nov 2025 08:37:24 +0100
-Message-ID: <20251124073739.513212-6-johannes.thumshirn@wdc.com>
+Subject: [RESEND PATCH blktrace v3 06/20] blktrace: support protocol version 8
+Date: Mon, 24 Nov 2025 08:37:25 +0100
+Message-ID: <20251124073739.513212-7-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20251124073739.513212-1-johannes.thumshirn@wdc.com>
 References: <20251124073739.513212-1-johannes.thumshirn@wdc.com>
@@ -67,93 +67,46 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add 'struct blk_io_trace2' which represents the extended version of the
-blktrace protocol.
+Also support protocol version 8 in conjunction with protocol version 7.
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blktrace_api.h | 38 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 36 insertions(+), 2 deletions(-)
+ blktrace.h | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/blktrace_api.h b/blktrace_api.h
-index ecffe6e..04e81de 100644
---- a/blktrace_api.h
-+++ b/blktrace_api.h
-@@ -24,11 +24,20 @@ enum {
- 	BLK_TC_DRV_DATA	= 1 << 14,	/* binary driver data */
- 	BLK_TC_FUA	= 1 << 15,	/* fua requests */
+diff --git a/blktrace.h b/blktrace.h
+index 74dfb48..3305fa0 100644
+--- a/blktrace.h
++++ b/blktrace.h
+@@ -69,6 +69,7 @@ extern struct timespec abs_start_time;
  
--	BLK_TC_END	= 1 << 15,	/* we've run out of bits! */
-+	BLK_TC_END_V1	= 1 << 15,	/* we've run out of bits! */
+ #define CHECK_MAGIC(t)		(((t)->magic & 0xffffff00) == BLK_IO_TRACE_MAGIC)
+ #define SUPPORTED_VERSION	(0x07)
++#define SUPPORTED_VERSION2	(0x08)
+ 
+ #if __BYTE_ORDER == __LITTLE_ENDIAN
+ #define be16_to_cpu(x)		__bswap_16(x)
+@@ -90,13 +91,17 @@ extern struct timespec abs_start_time;
+ 
+ static inline int verify_trace(struct blk_io_trace *t)
+ {
++	u8 version;
 +
-+	BLK_TC_ZONE_APPEND      = 1ull << 16,   /* zone append */
-+        BLK_TC_ZONE_RESET       = 1ull << 17,   /* zone reset */
-+        BLK_TC_ZONE_RESET_ALL   = 1ull << 18,   /* zone reset all */
-+        BLK_TC_ZONE_FINISH      = 1ull << 19,   /* zone finish */
-+        BLK_TC_ZONE_OPEN        = 1ull << 20,   /* zone open */
-+        BLK_TC_ZONE_CLOSE       = 1ull << 21,   /* zone close */
+ 	if (!CHECK_MAGIC(t)) {
+ 		fprintf(stderr, "bad trace magic %x\n", t->magic);
+ 		return 1;
+ 	}
+-	if ((t->magic & 0xff) != SUPPORTED_VERSION) {
+-		fprintf(stderr, "unsupported trace version %x\n", 
+-			t->magic & 0xff);
 +
-+        BLK_TC_END_V2           = 1ull << 21,
- };
++	version = t->magic & 0xff;
++	if (version != SUPPORTED_VERSION &&
++	    version != SUPPORTED_VERSION2) {
++		fprintf(stderr, "unsupported trace version %x\n", version);
+ 		return 1;
+ 	}
  
- #define BLK_TC_SHIFT		(16)
--#define BLK_TC_ACT(act)		((act) << BLK_TC_SHIFT)
-+#define BLK_TC_ACT(act)        ((__u64)(act) << BLK_TC_SHIFT)
- 
- /*
-  * Basic trace actions
-@@ -51,6 +60,7 @@ enum {
- 	__BLK_TA_REMAP,			/* bio was remapped */
- 	__BLK_TA_ABORT,			/* request aborted */
- 	__BLK_TA_DRV_DATA,		/* binary driver data */
-+	__BLK_TA_ZONE_MGMT,		/* zone management command was issued */
- 	__BLK_TA_CGROUP = 1 << 8,
- };
- 
-@@ -85,12 +95,20 @@ enum blktrace_notify {
- #define BLK_TA_ABORT		(__BLK_TA_ABORT | BLK_TC_ACT(BLK_TC_QUEUE))
- #define BLK_TA_DRV_DATA		(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
- 
-+#define BLK_TA_ZONE_APPEND      (__BLK_TA_COMPLETE |\
-+				 BLK_TC_ACT2(BLK_TC_ZONE_APPEND))
-+#define BLK_TA_ZONE_MGMT        __BLK_TA_ZONE_MGMT
-+#define BLK_TA_ZONE_PLUG        (__BLK_TA_ZONE_PLUG | BLK_TC_ACT(BLK_TC_QUEUE))
-+#define BLK_TA_ZONE_UNPLUG      (__BLK_TA_ZONE_UNPLUG |\
-+				 BLK_TC_ACT(BLK_TC_QUEUE))
-+
- #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_TIMESTAMP	(__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_MESSAGE		(__BLK_TN_MESSAGE | BLK_TC_ACT(BLK_TC_NOTIFY))
- 
- #define BLK_IO_TRACE_MAGIC	0x65617400
- #define BLK_IO_TRACE_VERSION	0x07
-+#define BLK_IO_TRACE2_VERSION	0x08
- 
- /*
-  * The trace itself
-@@ -118,6 +136,22 @@ struct blk_io_trace_remap {
- 	__u64 sector_from;
- };
- 
-+struct blk_io_trace2 {
-+	__u32 magic;            /* MAGIC << 8 | BLK_IO_TRACE2_VERSION */
-+	__u32 sequence;         /* event number */
-+	__u64 time;             /* in nanoseconds */
-+	__u64 sector;           /* disk offset */
-+	__u32 bytes;            /* transfer length */
-+	__u32 pid;              /* who did it */
-+	__u64 action;           /* what happened */
-+	__u32 device;           /* device number */
-+	__u32 cpu;              /* on what cpu did it happen */
-+	__u16 error;            /* completion error */
-+	__u16 pdu_len;          /* length of data after this trace */
-+	__u8 pad[12];
-+	/* cgroup id will be stored here if exists */
-+};
-+
- /*
-  * Payload with originating cgroup info
-  */
 -- 
 2.51.0
 
