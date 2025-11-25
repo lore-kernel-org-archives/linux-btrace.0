@@ -1,47 +1,47 @@
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AFF42D4816;
-	Tue, 25 Nov 2025 07:27:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6696B2D3A96;
+	Tue, 25 Nov 2025 07:27:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764055674; cv=none; b=SyrrGBreGShd3x0Huarlz9kdDsLM25m2MGh4izyL8Io0+DP/xgaIuAekCmRyF585LlnyCKZv/FE9mROfOmVCx02NRBhQQs0odIoadRU8qILbsPxrWRQ752A/ciLdKWwPdvQrpuBsFj8d3kmBLZWN5RnXu0YQmx1Sghh5UNLPNbQ=
+	t=1764055678; cv=none; b=ibmJ2lTBdT5cczQu8GRl8sSS2m3f0+rpsljHiKGhaU2JxWLw1TB3aHPnCXhmZEoa9ap3NBf3JnWmVo0lW/fXqfz9tdcIlXOJZHBMcEqvIBCwt0iCUYRhvQ+4G2jzXvFFA1rQIjzeLvzbqy88G1nYRM9eum0BKExNOfMyeG2YDPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764055674; c=relaxed/simple;
-	bh=6ciFPCT9OFL/mupgPfnetxUX1J52Y/KZ8Q9RWgSdDow=;
+	s=arc-20240116; t=1764055678; c=relaxed/simple;
+	bh=G3WmpyGCEpDpjNEcl5YKSsBhtGJWNglKA7+YSCF9QIM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WC0s4z/fbBZON2E9YM4SUfhsBTm2a1RzxD10VvhbZ/amTV2fCR2sHZA2hgLkxslt1LEwCEdLKUKhjzAVKZW2Nudn3sjR1vI9lnmZ3anI6hT18z4B9xf/Tf880L2YQfbY07CLBFOCPMyJz8X6PTcE3M+FfnUOW0MdshPrenlhLms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=F9wVF4s+; arc=none smtp.client-ip=216.71.154.45
+	 MIME-Version; b=hCgRSNyestOYUEBbClSfPSKigMT+xVqvko9NW3c1M83KmCTl0cF45Iq4qKJlY0PH30wClGluIM4WCrEYfJCSIaedLacltG/M/ruN6tt/w5ddNHG9QZLWmSk0j831Kl4jV0Ta9dYv1mgtyxcHYeuV+vKhVUgn9EauxGBcrQNQwhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=oeKTRS3R; arc=none smtp.client-ip=216.71.154.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="F9wVF4s+"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="oeKTRS3R"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1764055673; x=1795591673;
+  t=1764055677; x=1795591677;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=6ciFPCT9OFL/mupgPfnetxUX1J52Y/KZ8Q9RWgSdDow=;
-  b=F9wVF4s+Uk3gKe/LfKWazQBrw/FVxORpyW+5ciKGtwQN9+p6SdIgAiGv
-   Yh/+OIpLz67tmLkWl6T90WoHfZOuhC5cB0goLqTTlcKRedmungDHoZe0E
-   X4ld9zQq2K8n6cwCIV5RgzYoiWiV1TuG1uvhWoJmOIpC0kfFd+1z4lRE+
-   bWa0vMhmRYx0n1+oYNkwYKWuCc4YoO7tSUbLX45TuckJtMiYHXTbhCyKG
-   R//W8s6hX32mMo34rsoQ4zu/Uv5MVJAgPhW6JciqpHIduyAqq4NI+pKqW
-   QprPJVtJ7OgJ5kk80JtPG5Qp0xsAMg/WfQq7I2rLchxOU+NvEQ/X/cO+U
+  bh=G3WmpyGCEpDpjNEcl5YKSsBhtGJWNglKA7+YSCF9QIM=;
+  b=oeKTRS3R/YruAiNfS+UX2zSAnIv7MkpTN9xYQ9oykYDNM07deHcNi61Z
+   8OiHlZhkDtHwEBaK7eGRBGw6VV4U0dfLgdBZVb5ZARxdniiAGOd2aIT00
+   Q3E4Lao/CwhziLy7ePkBUliUFG6jKnpeMzSRWCObJ8Xo7aRaXW7SBb+p7
+   /5U7ZsCYZ+xiZPhaIFFuVEnxPx+hsBXQU1mDWpHbxgdje7agjS5DqwIxh
+   krenDUpl141XPgZxwAuwUxI09X9AkafQ3zGQKvcR9i0yuxREGN+l7j5jy
+   J/y1Zt6gW49OoyQMcwhYX7Ndzm+ScQH1qxL0zP43dokd8sE1lhrLv+cXq
    w==;
-X-CSE-ConnectionGUID: t/X602CgTYmusatijE9WJw==
-X-CSE-MsgGUID: 7UH1A/CJSP2gVHLxRm2Fwg==
+X-CSE-ConnectionGUID: lxHKCGcPRyK4lYTyEmC6iA==
+X-CSE-MsgGUID: aA6PcxSdRtikpolHCT0OFA==
 X-IronPort-AV: E=Sophos;i="6.20,224,1758556800"; 
-   d="scan'208";a="135337528"
+   d="scan'208";a="135337535"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:27:53 +0800
-IronPort-SDR: 69255a79_sWVHZMuCrBE8SBHy1ya+tETj2TSfGZ7eNTdU9w9GmB1lUVz
- gZIEx0ZiLloeK5QZIHK8iVp6HYL3YenjY6glCBg==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:27:57 +0800
+IronPort-SDR: 69255a7d_AVXJnBfInKzxUfRTYyw9qQZgkEVFRVketkWD64iksrIpxEQ
+ vieJ71I9wjt2kFVM5u6Npg/hkZEttqXRe84+6ww==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:27:53 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:27:57 -0800
 WDCIronportException: Internal
 Received: from ft4m3x2.ad.shared (HELO neo.wdc.com) ([10.224.28.72])
-  by uls-op-cesaip01.wdc.com with ESMTP; 24 Nov 2025 23:27:50 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 24 Nov 2025 23:27:53 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -54,9 +54,9 @@ Cc: linux-block@vger.kernel.org,
 	linux-btrace@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 05/20] blktrace: add definitions for blk_io_trace2
-Date: Tue, 25 Nov 2025 08:27:15 +0100
-Message-ID: <20251125072730.39196-6-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 06/20] blkparse: pass magic to get_magic
+Date: Tue, 25 Nov 2025 08:27:16 +0100
+Message-ID: <20251125072730.39196-7-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20251125072730.39196-1-johannes.thumshirn@wdc.com>
 References: <20251125072730.39196-1-johannes.thumshirn@wdc.com>
@@ -68,95 +68,57 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add 'struct blk_io_trace2' which represents the extended version of the
-blktrace protocol.
+Pass the magic value to get_magic() instead of the whole 'struct
+blk_io_trace'.
+
+This is a preparation for distinguishing between two different types of
+blktrace protocol versions in blkparse.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blktrace_api.h | 38 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 36 insertions(+), 2 deletions(-)
+ blkparse.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/blktrace_api.h b/blktrace_api.h
-index ecffe6e..04e81de 100644
---- a/blktrace_api.h
-+++ b/blktrace_api.h
-@@ -24,11 +24,20 @@ enum {
- 	BLK_TC_DRV_DATA	= 1 << 14,	/* binary driver data */
- 	BLK_TC_FUA	= 1 << 15,	/* fua requests */
+diff --git a/blkparse.c b/blkparse.c
+index 512a2d2..d58322c 100644
+--- a/blkparse.c
++++ b/blkparse.c
+@@ -2420,12 +2420,12 @@ static inline __u16 get_pdulen(struct blk_io_trace *bit)
+ 	return __bswap_16(bit->pdu_len);
+ }
  
--	BLK_TC_END	= 1 << 15,	/* we've run out of bits! */
-+	BLK_TC_END_V1	= 1 << 15,	/* we've run out of bits! */
-+
-+	BLK_TC_ZONE_APPEND      = 1ull << 16,   /* zone append */
-+        BLK_TC_ZONE_RESET       = 1ull << 17,   /* zone reset */
-+        BLK_TC_ZONE_RESET_ALL   = 1ull << 18,   /* zone reset all */
-+        BLK_TC_ZONE_FINISH      = 1ull << 19,   /* zone finish */
-+        BLK_TC_ZONE_OPEN        = 1ull << 20,   /* zone open */
-+        BLK_TC_ZONE_CLOSE       = 1ull << 21,   /* zone close */
-+
-+        BLK_TC_END_V2           = 1ull << 21,
- };
+-static inline __u32 get_magic(struct blk_io_trace *bit)
++static inline __u32 get_magic(__u32 magic)
+ {
+ 	if (data_is_native)
+-		return bit->magic;
++		return magic;
  
- #define BLK_TC_SHIFT		(16)
--#define BLK_TC_ACT(act)		((act) << BLK_TC_SHIFT)
-+#define BLK_TC_ACT(act)        ((__u64)(act) << BLK_TC_SHIFT)
+-	return __bswap_32(bit->magic);
++	return __bswap_32(magic);
+ }
  
- /*
-  * Basic trace actions
-@@ -51,6 +60,7 @@ enum {
- 	__BLK_TA_REMAP,			/* bio was remapped */
- 	__BLK_TA_ABORT,			/* request aborted */
- 	__BLK_TA_DRV_DATA,		/* binary driver data */
-+	__BLK_TA_ZONE_MGMT,		/* zone management command was issued */
- 	__BLK_TA_CGROUP = 1 << 8,
- };
+ static int read_events(int fd, int always_block, int *fdblock)
+@@ -2458,7 +2458,7 @@ static int read_events(int fd, int always_block, int *fdblock)
+ 		if (data_is_native == -1 && check_data_endianness(bit->magic))
+ 			break;
  
-@@ -85,12 +95,20 @@ enum blktrace_notify {
- #define BLK_TA_ABORT		(__BLK_TA_ABORT | BLK_TC_ACT(BLK_TC_QUEUE))
- #define BLK_TA_DRV_DATA		(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
+-		magic = get_magic(bit);
++		magic = get_magic(bit->magic);
+ 		if ((magic & 0xffffff00) != BLK_IO_TRACE_MAGIC) {
+ 			fprintf(stderr, "Bad magic %x\n", magic);
+ 			break;
+@@ -2604,7 +2604,7 @@ static int ms_prime(struct ms_stream *msp)
+ 		if (data_is_native == -1 && check_data_endianness(bit->magic))
+ 			goto err;
  
-+#define BLK_TA_ZONE_APPEND      (__BLK_TA_COMPLETE |\
-+				 BLK_TC_ACT2(BLK_TC_ZONE_APPEND))
-+#define BLK_TA_ZONE_MGMT        __BLK_TA_ZONE_MGMT
-+#define BLK_TA_ZONE_PLUG        (__BLK_TA_ZONE_PLUG | BLK_TC_ACT(BLK_TC_QUEUE))
-+#define BLK_TA_ZONE_UNPLUG      (__BLK_TA_ZONE_UNPLUG |\
-+				 BLK_TC_ACT(BLK_TC_QUEUE))
-+
- #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_TIMESTAMP	(__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
- #define BLK_TN_MESSAGE		(__BLK_TN_MESSAGE | BLK_TC_ACT(BLK_TC_NOTIFY))
- 
- #define BLK_IO_TRACE_MAGIC	0x65617400
- #define BLK_IO_TRACE_VERSION	0x07
-+#define BLK_IO_TRACE2_VERSION	0x08
- 
- /*
-  * The trace itself
-@@ -118,6 +136,22 @@ struct blk_io_trace_remap {
- 	__u64 sector_from;
- };
- 
-+struct blk_io_trace2 {
-+	__u32 magic;            /* MAGIC << 8 | BLK_IO_TRACE2_VERSION */
-+	__u32 sequence;         /* event number */
-+	__u64 time;             /* in nanoseconds */
-+	__u64 sector;           /* disk offset */
-+	__u32 bytes;            /* transfer length */
-+	__u32 pid;              /* who did it */
-+	__u64 action;           /* what happened */
-+	__u32 device;           /* device number */
-+	__u32 cpu;              /* on what cpu did it happen */
-+	__u16 error;            /* completion error */
-+	__u16 pdu_len;          /* length of data after this trace */
-+	__u8 pad[12];
-+	/* cgroup id will be stored here if exists */
-+};
-+
- /*
-  * Payload with originating cgroup info
-  */
+-		magic = get_magic(bit);
++		magic = get_magic(bit->magic);
+ 		if ((magic & 0xffffff00) != BLK_IO_TRACE_MAGIC) {
+ 			fprintf(stderr, "Bad magic %x\n", magic);
+ 			goto err;
 -- 
 2.51.1
 
