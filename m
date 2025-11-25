@@ -1,47 +1,47 @@
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB0F2D948F;
-	Tue, 25 Nov 2025 07:52:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67AF22F6180;
+	Tue, 25 Nov 2025 07:52:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764057156; cv=none; b=YhYIQYlyRooP+FB/qv51fPybiKTYicB+1sjsss1uN/gHZsLmaLvGX+exLLGiga2PsERXBRpF+x/xVB3V65DhGtXzn2kCvNtkOy/feMDv6oupR+jTa9CI4oBw32ougxmEFCxVj07wjPHVO0qr2mAf78q8BNaMs925tQwNdzGMUnQ=
+	t=1764057157; cv=none; b=ACJBTai+PKuYPpHhNf/Bu4mK5gS3j8CU5Y+ylGnFNmrYXHnWgkXjblwb+jY/0Di6c4XFYF5ml1sOuopIO3WenFyPu+yVkBdSs2BWdJ8YgxC6vqDiJfWDB3w9AXeQulokIlreeJ8/X63u7RU9lnuqYCK66T60HgwZxLH8MKcS3YE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764057156; c=relaxed/simple;
-	bh=z7K/T1kODCOW4xcy6pMJcbTD9bVcrrQbKn+FmrJjrpk=;
+	s=arc-20240116; t=1764057157; c=relaxed/simple;
+	bh=oPqIJaGcja+MF+OKuawSaRjN29dqM+eqPnwV0ycYl1A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qewnCVgcaRAgtNJjbLl+gddaNUHtWYktxT6ygwECvnZm7JPqpW58WWk4q7uOOh1DE/YAbeWyRF7xLgJaRFX1neHpPbR6t4zP+TkGJ/pw94cb5ajEA0lyABq/Sk48HydRTAGmqhl9Gxanz5ohiimVUCBNgPZc2AovXVItf9J+8bw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=fL1rc5Vw; arc=none smtp.client-ip=68.232.141.245
+	 MIME-Version; b=VSKWBIPS6o5V37JZ7Z1Q91MkuPmbG1W6GCDkz7VKoz/p04g7cr6bECv2EO2Ewd2S++JCkZbKFHAxp09PnGNeAM1nRrAzPAOnegThRo7sRk/jKAF2LYpZV515tMpp0iUggOyOBFDWLMBL0pMoWuy4Q7SxipVKf+Yb9/ASqnIuE5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=JXLFSIRd; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="fL1rc5Vw"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="JXLFSIRd"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1764057154; x=1795593154;
+  t=1764057156; x=1795593156;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=z7K/T1kODCOW4xcy6pMJcbTD9bVcrrQbKn+FmrJjrpk=;
-  b=fL1rc5VwIHI96jsoU9AAc2fDdQ+wKi7NHNV23qMguwhTKGyFa5BEA3QP
-   1aA2QbTsYRTNaIfnlz1Kwyu6e2FrhRe7xVHBFkRmX7TeiaN5ojjbt2KdO
-   B/BaJtkTyIyKtN0c+GCuHGAGf3JzvhI87pU2Oun1rkhAFinM8yWbkqRBA
-   cs9zpOeovN3aN1+r1I1H3dNr7zwUs6V1lNA1pDenQ0SOu22qtxHFA7Cub
-   Oivsn+PFulGKDPWFKpmmH06ulRuqWPg5PVWL1IC0MUTxBwzO0PAO90qcB
-   xQavTb+eK8TOq+uaKAAH7t/6TDMczi7uV0VLEEjAhDW5QUYwHjgQAEli5
-   A==;
-X-CSE-ConnectionGUID: jIRJN5cyQLaKoBGRMv6vdA==
-X-CSE-MsgGUID: ExC8ZjphRxe2gxlvyPakUA==
+  bh=oPqIJaGcja+MF+OKuawSaRjN29dqM+eqPnwV0ycYl1A=;
+  b=JXLFSIRdGzXIUEfLwj/ThQD6JEBPf0o/PKBYgpgzk/hzKxKANktOcNeS
+   nduq2D3G53CXuUcSNV1umJ6EepZyra1E6ALc6Y8Caj3ZPRS7U6S3rAybA
+   x2+0i4UAbgW46u729wJVDGr1mVHKnxQL9CmhBO/NNaaSGChvbX3Vf0UFU
+   3YTXMNv8stMsmZLlL0U4aDIczq0k5pgBpyPq2Lgam+ghPQBeDSgpTEldM
+   D3h0GWyP5yEJWJDVeumQyNrFjw4ejXZvPHPOt0ZdofjXAmtvQ6DbjNLGg
+   Y+Zzkx+ATz1G/oVsppSWvrjiYCg07gh70e55jJitVDNhXcI6RoyC89U7+
+   g==;
+X-CSE-ConnectionGUID: lFjVLVXGSqKGmJXpPhtnIA==
+X-CSE-MsgGUID: 5E7SregjRv+YRkvJZbp6zw==
 X-IronPort-AV: E=Sophos;i="6.20,224,1758556800"; 
-   d="scan'208";a="135749816"
+   d="scan'208";a="135749822"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:52:34 +0800
-IronPort-SDR: 69256042_n49H5fLrCgyQkbTKwlX99BvGFY0xSKw4i4YQ+lT+dmG0jz5
- hIQeIaHPn0jFLMiNU9LHPlRYcllMPTJW+CHWvIg==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:52:36 +0800
+IronPort-SDR: 69256044_hkNeqUcSmXsFtoYOj0yEPijqf29SGjolYkZerX+1++1gG6S
+ cmLZ7sl+ZLvXak/+4ciPA3nOQgmZTVLtwha1xYg==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:52:34 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:52:36 -0800
 WDCIronportException: Internal
 Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
-  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:52:34 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:52:35 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: Niklas Cassel <cassel@kernel.org>,
@@ -52,9 +52,9 @@ Cc: Niklas Cassel <cassel@kernel.org>,
 	linux-btrace@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 16/20] blkparse: natively parse blk_io_trace2
-Date: Mon, 24 Nov 2025 23:52:02 -0800
-Message-ID: <20251125075206.876902-17-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 17/20] blkparse: parse zone (un)plug actions
+Date: Mon, 24 Nov 2025 23:52:03 -0800
+Message-ID: <20251125075206.876902-18-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251125075206.876902-1-johannes.thumshirn@wdc.com>
 References: <20251125075206.876902-1-johannes.thumshirn@wdc.com>
@@ -66,182 +66,84 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Natively parse 'struct blk_io_trace2' from a blktrace binary.
+Parse Zone Write Plugging plug and unplug actions in blkparse.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blkparse.c | 112 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- blktrace.h |  18 +++++++++
- 2 files changed, 130 insertions(+)
+ blkparse.c     |  7 +++++++
+ blkparse_fmt.c | 18 ++++++++++++++++++
+ blktrace_api.h |  2 ++
+ 3 files changed, 27 insertions(+)
 
 diff --git a/blkparse.c b/blkparse.c
-index 7100009..2eec3a9 100644
+index 2eec3a9..76c775b 100644
 --- a/blkparse.c
 +++ b/blkparse.c
-@@ -2471,6 +2471,37 @@ static int read_one_bit(int fd, struct blk_io_trace2 **bit2, int block,
- 	return 0;
+@@ -1722,6 +1722,13 @@ static void dump_trace_fs(struct blk_io_trace2 *t, struct per_dev_info *pdi,
+ 			account_unplug(t, pci, 1);
+ 			log_unplug(pci, t, "UT");
+ 			break;
++		case __BLK_TA_ZONE_PLUG:
++			log_action(pci, t, "ZP");
++			break;
++		case __BLK_TA_ZONE_UNPLUG:
++			account_unplug(t, pci, 0);
++			log_unplug(pci, t, "ZU");
++			break;
+ 		case __BLK_TA_SPLIT:
+ 			log_track_split(pdi, t);
+ 			log_split(pci, t, "X");
+diff --git a/blkparse_fmt.c b/blkparse_fmt.c
+index f93addb..80e02fc 100644
+--- a/blkparse_fmt.c
++++ b/blkparse_fmt.c
+@@ -301,6 +301,21 @@ static char *parse_field(char *act, struct per_cpu_info *pci,
+ 	return p;
  }
  
-+static int read_one_bit2(int fd, struct blk_io_trace2 **bit2, int block,
-+			 int *fdblock)
++static void process_zoned(char *act, struct blk_io_trace2 *t, char *name)
 +{
-+	struct blk_io_trace2 *new = *bit2;
-+	int ret;
-+	int pdu_len;
-+	void *p;
-+
-+	p = (void *) ((u8 *)new + sizeof(__u32));
-+
-+	ret = read_data(fd, p, sizeof(*new) - sizeof(__u32), block, fdblock);
-+	if (ret)
-+		return ret;
-+
-+	pdu_len = get_pdulen(new->pdu_len);
-+	if (pdu_len) {
-+		void *ptr = realloc(new, sizeof(*new) + pdu_len);
-+
-+		ret = read_data(fd, ptr + sizeof(*new), pdu_len, 1, fdblock);
-+		if (ret) {
-+			free(ptr);
-+			return ret;
-+		}
-+		new = ptr;
++	switch (act[1]) {
++	case 'P': /* Zone Plug */
++		fprintf(ofp, "[%s]\n", name);
++		break;
++	case 'U': /* Zone Unplug */
++		fprintf(ofp, "[%s] %u\n", name, get_pdu_int(t));
++		break;
++	default:
++		fprintf(stderr, "Unknown zoned action %c\n", act[1]);
++		break;
 +	}
-+
-+	bit2_trace_to_cpu(new);
-+	*bit2 = new;
-+
-+	return 0;
-+}
- static int read_events(int fd, int always_block, int *fdblock)
- {
- 	struct per_dev_info *pdi = NULL;
-@@ -2538,6 +2569,44 @@ static int read_events(int fd, int always_block, int *fdblock)
- 			t->next = trace_list;
- 			trace_list = t;
- 
-+			if (!pdi || pdi->dev != bit->device)
-+				pdi = get_dev_info(bit->device);
-+
-+			if (bit->time > pdi->last_read_time)
-+				pdi->last_read_time = bit->time;
-+		} else if (version == SUPPORTED_VERSION2) {
-+			struct blk_io_trace2 *bit;
-+			bit = bit_alloc();
-+			bit->magic = magic;
-+
-+			ret = read_one_bit2(fd, &bit, 1, fdblock);
-+			if (ret)
-+				break;
-+
-+			/*
-+			 * not a real trace, so grab and handle it here
-+			 */
-+			if (bit->action & BLK_TC_ACT(BLK_TC_NOTIFY) &&
-+			    (bit->action & ~__BLK_TN_CGROUP) != BLK_TN_MESSAGE) {
-+				handle_notify(bit);
-+				output_binary(bit, sizeof(*bit) + bit->pdu_len);
-+				continue;
-+			}
-+
-+			if (verify_trace(bit->magic)) {
-+				bit_free(bit);
-+				bit = NULL;
-+				continue;
-+			}
-+
-+			t = t_alloc();
-+			memset(t, 0, sizeof(*t));
-+			t->bit = bit;
-+			t->read_sequence = read_sequence;
-+
-+			t->next = trace_list;
-+			trace_list = t;
-+
- 			if (!pdi || pdi->dev != bit->device)
- 				pdi = get_dev_info(bit->device);
- 
-@@ -2698,6 +2767,49 @@ static int ms_prime(struct ms_stream *msp)
- 				msp->last->next = t;
- 				msp->last = t;
- 			}
-+		} else if (version == SUPPORTED_VERSION2) {
-+			bit = bit_alloc();
-+			bit->magic = magic;
-+
-+			ret = read_one_bit2(pci->fd, &bit, 1, &pci->fdblock);
-+			if (ret)
-+				goto err;
-+
-+			if (verify_trace(bit->magic))
-+				goto err;
-+
-+			if (bit->cpu != pci->cpu) {
-+				fprintf(stderr,
-+					"cpu %d trace info has error cpu %d\n",
-+					pci->cpu, bit->cpu);
-+				continue;
-+			}
-+
-+			if (bit->action & BLK_TC_ACT(BLK_TC_NOTIFY) &&
-+			    (bit->action & ~__BLK_TN_CGROUP) != BLK_TN_MESSAGE) {
-+				handle_notify(bit);
-+				output_binary(bit, sizeof(*bit) + bit->pdu_len);
-+				bit_free(bit);
-+				bit = NULL;
-+
-+				i -= 1;
-+				continue;
-+			}
-+
-+			if (bit->time > pdi->last_read_time)
-+				pdi->last_read_time = bit->time;
-+
-+			t = t_alloc();
-+			memset(t, 0, sizeof(*t));
-+			t->bit = bit;
-+
-+			if (msp->first == NULL)
-+				msp->first = msp->last = t;
-+			else {
-+				msp->last->next = t;
-+				msp->last = t;
-+			}
-+
- 		} else {
- 			fprintf(stderr, "unsupported version %d\n", version);
- 			continue;
-diff --git a/blktrace.h b/blktrace.h
-index 2aace2f..0281088 100644
---- a/blktrace.h
-+++ b/blktrace.h
-@@ -127,6 +127,24 @@ static inline void bit_to_bit2(struct blk_io_trace *old,
- 		       old->pdu_len);
- }
- 
-+static inline void bit2_trace_to_cpu(struct blk_io_trace2 *t)
-+{
-+	if (data_is_native)
-+		return;
-+
-+	t->magic	= be32_to_cpu(t->magic);
-+	t->sequence	= be32_to_cpu(t->sequence);
-+	t->time		= be64_to_cpu(t->time);
-+	t->sector	= be64_to_cpu(t->sector);
-+	t->bytes	= be32_to_cpu(t->bytes);
-+	t->action	= be64_to_cpu(t->action);
-+	t->pid		= be32_to_cpu(t->pid);
-+	t->device	= be32_to_cpu(t->device);
-+	t->cpu		= be32_to_cpu(t->cpu);
-+	t->error	= be16_to_cpu(t->error);
-+	t->pdu_len	= be16_to_cpu(t->pdu_len);
 +}
 +
- static inline void bit_trace_to_cpu(struct blk_io_trace *t)
- {
- 	if (data_is_native)
+ static void process_default(char *act, struct per_cpu_info *pci,
+ 			    struct blk_io_trace2 *t, unsigned long long elapsed,
+ 			    int pdu_len, unsigned char *pdu_buf)
+@@ -429,6 +444,9 @@ static void process_default(char *act, struct per_cpu_info *pci,
+ 		fprintf(ofp, "%*s\n", pdu_len, pdu_buf);
+ 		break;
+ 
++	case 'Z':	/* Zoned command */
++		process_zoned(act, t, name);
++		break;
+ 	default:
+ 		fprintf(stderr, "Unknown action %c\n", act[0]);
+ 		break;
+diff --git a/blktrace_api.h b/blktrace_api.h
+index 04e81de..8db24fc 100644
+--- a/blktrace_api.h
++++ b/blktrace_api.h
+@@ -60,6 +60,8 @@ enum {
+ 	__BLK_TA_REMAP,			/* bio was remapped */
+ 	__BLK_TA_ABORT,			/* request aborted */
+ 	__BLK_TA_DRV_DATA,		/* binary driver data */
++	__BLK_TA_ZONE_PLUG,		/* zone write plug was plugged */
++	__BLK_TA_ZONE_UNPLUG,		/* zone write plug was unplugged */
+ 	__BLK_TA_ZONE_MGMT,		/* zone management command was issued */
+ 	__BLK_TA_CGROUP = 1 << 8,
+ };
 -- 
 2.51.1
 
