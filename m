@@ -1,47 +1,47 @@
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D07E2D94A3;
-	Tue, 25 Nov 2025 07:52:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7A3D2D8773;
+	Tue, 25 Nov 2025 07:52:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764057160; cv=none; b=DfLK7iVCdLEzsDvrXKrGh9h4TOzW3sewwCnx1ayFYLynRFjjr1tSkK5jNDVtCXy+Fte+pCqhMXO+hW0y/l8DHcXNSO3KRd3qu335WtD0O2L1a4UYc4HWe5xeTMe+R7pKQufc1zmIi28ehEZ5wy+xHX2vwqAN1DonDhY+pZ/CFSI=
+	t=1764057162; cv=none; b=iQ74BCkU3hnarkNV1tprNGnvC/jDEkYm+DTJZkZQLSc7p2b8LfnjexNCsgX0Yv6hXDyPGOSO3LVQKn8tw7o0tZ/QKHuBnGITzEQboX6TryD4S+x3scX4XgL7V47PHD55+Q9srxsNPc+NKVf1uBEdbhlSTRSI41qQ4TMW0RbizGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764057160; c=relaxed/simple;
-	bh=sHUTEMPc+qpTbk0UPvZ8g1OkD6IK2L3NuAbKbvCl+Bo=;
+	s=arc-20240116; t=1764057162; c=relaxed/simple;
+	bh=8aDF/jdFHu/yBIZxwSPDVPrCQ6q0N9Ht8S73CaPHLOg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RGfOQvKczWkd9ze7UMH0kBSoccCw2ojdlTgasPDYp1/6hZAWB+lqvRojMgjDV1dSJk8c9ulHRYpsaV53A28mZp+JnspEhD/hURIzxAPIdcM/ctaKcZLE1zDRuS3NX4Tu7nNcVeTL0oq2hYdPcnPQoIYZjk+OULoK0aHmueK+oCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Gu78iB6+; arc=none smtp.client-ip=68.232.141.245
+	 MIME-Version; b=Aw+muX05YIIFOHMr16/BgyzuS/s1vJjmhpeAzGKKMubbEtcsPfnb2tijnqS/SQV0WUMVOZ9vi0+c2UiOQO5hukpr2+pbv2cfOFfFPGEqsM9XFH0ynHKAv3Nxz+apby6UtM11ULsKvTppSt6vgSnlkzCaqzX33GN9CK+5rwSz2fg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=PqYvoNR6; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Gu78iB6+"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="PqYvoNR6"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1764057159; x=1795593159;
+  t=1764057160; x=1795593160;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=sHUTEMPc+qpTbk0UPvZ8g1OkD6IK2L3NuAbKbvCl+Bo=;
-  b=Gu78iB6+wGlHjZ8Eln2RwTOBIFz3KDHiWZYOdwX671/jIVjzbRAijsBw
-   NyzoU5NjaGqpi0qqwULKHWlu7ngQYbzVHGwj2imByVwS9XS8CT6IUmkpb
-   +U/ZIqjYFSVa8kxd+Bs/goOfktK0NmHagI5QLNFbBsbYDzqmSPKNjgpHL
-   yK9uot8bXtdHnWH/d9mhDqF5hrT67mPl8M8RarB/UzV+37KI/BjFS/F8h
-   Izb//JDICExqf4CTxEorPStDdVnp0i8fGmwPlhQizZVzQe93FhVrukIUm
-   Y+9qB+OjG6GQwqu1dPmk/MZ6b0rCGFGcraXqfRmhuenYnj4YFIVu3fiJ2
-   g==;
-X-CSE-ConnectionGUID: FEIvxuzaTqGm+NxCwoXQOw==
-X-CSE-MsgGUID: UhucRZcGQjyLVlNs+DUbDg==
+  bh=8aDF/jdFHu/yBIZxwSPDVPrCQ6q0N9Ht8S73CaPHLOg=;
+  b=PqYvoNR6fYuTOYL4JAjtDgs50YvFKqspSRJV6Q87bphi6a8/eB6EX1dX
+   AJ6iJ6Aa5w0NbXXSym9oJtnmNeixlykiWsGc//w+Fom/hmviNrRFUjcXb
+   hKnJj1YNFw1fDKyTkDvyY8KgWDfAtVdBhPhvdzMPsgGKDytaKF7JL1YRJ
+   tOz4MluA+cGVfeMB2uwamLYDMiopzfCunv0nFtE2xBIJsWNa3JbOzLr3R
+   jf+Ttv9jYUUytqDWXnf+AX95sJA43IHHn1LKORiVhC5P4AX7NFC09i6k0
+   1DNfi26Gggcd/33em8dcurQpMl4m3OGa/L7d2E+wJ8elVDT89M3+sjpg4
+   A==;
+X-CSE-ConnectionGUID: wTloQon+SnOlESsbFsauDA==
+X-CSE-MsgGUID: AEeKdIodTJiBg1uU4JLugw==
 X-IronPort-AV: E=Sophos;i="6.20,224,1758556800"; 
-   d="scan'208";a="135749828"
+   d="scan'208";a="135749830"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:52:39 +0800
-IronPort-SDR: 69256047_TOTuN/arqmhmK84crMirmgZ/bnYJvTopuGxOcPbdzsauGUW
- 7V3VbsDYyzsYnsZ9/CtqFkkfg4dVzCtfvdkVsVA==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:52:40 +0800
+IronPort-SDR: 69256048_+eCvFySyTsd7RRQO3QpCQ/hlOSuJQfglbLSJvElO2mCfuAr
+ 2hxZcf11OIjH70cpCTtHUjkSG+3DZwaOUvqcARg==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:52:39 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:52:40 -0800
 WDCIronportException: Internal
 Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
-  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:52:38 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:52:40 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: Niklas Cassel <cassel@kernel.org>,
@@ -52,9 +52,9 @@ Cc: Niklas Cassel <cassel@kernel.org>,
 	linux-btrace@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 19/20] blktrace: call BLKTRACESETUP2 ioctl per default to setup a trace
-Date: Mon, 24 Nov 2025 23:52:05 -0800
-Message-ID: <20251125075206.876902-20-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 20/20] blktrace: support protocol version 8
+Date: Mon, 24 Nov 2025 23:52:06 -0800
+Message-ID: <20251125075206.876902-21-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251125075206.876902-1-johannes.thumshirn@wdc.com>
 References: <20251125075206.876902-1-johannes.thumshirn@wdc.com>
@@ -66,81 +66,37 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Call BLKTRACESETUP2 ioctl per default and if the kernel does not support
-this ioctl because it is too old, fall back to calling BLKTRACESETUP.
+Also support protocol version 8 in conjunction with protocol version 7.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blktrace.c | 40 ++++++++++++++++++++++++++++++++++++----
- 1 file changed, 36 insertions(+), 4 deletions(-)
+ blktrace.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/blktrace.c b/blktrace.c
-index 038b2cb..72562fd 100644
---- a/blktrace.c
-+++ b/blktrace.c
-@@ -279,7 +279,7 @@ static int max_cpus;
- static int ncpus;
- static cpu_set_t *online_cpus;
- static int pagesize;
--static int act_mask = ~0U;
-+static unsigned long long act_mask = ~0U;
- static int kill_running_trace;
- static int stop_watch;
- static int piped_output;
-@@ -1067,6 +1067,36 @@ static void close_client_connections(void)
- 	}
- }
+diff --git a/blktrace.h b/blktrace.h
+index 0281088..ba06237 100644
+--- a/blktrace.h
++++ b/blktrace.h
+@@ -70,6 +70,7 @@ extern struct timespec abs_start_time;
  
-+static int setup_buts2(void)
-+{
-+	struct list_head *p;
-+	int ret = 0;
-+
-+	__list_for_each(p, &devpaths) {
-+		struct blk_user_trace_setup2 buts2;
-+		struct devpath *dpp = list_entry(p, struct devpath, head);
-+
-+		memset(&buts2, 0, sizeof(buts2));
-+		buts2.buf_size = buf_size;
-+		buts2.buf_nr = buf_nr;
-+		buts2.act_mask = act_mask;
-+
-+		if (ioctl(dpp->fd, BLKTRACESETUP2, &buts2) >= 0) {
-+			dpp->ncpus = max_cpus;
-+			dpp->buts_name = strdup(buts2.name);
-+			dpp->setup_done = 1;
-+			if (dpp->stats)
-+				free(dpp->stats);
-+			dpp->stats = calloc(dpp->ncpus, sizeof(*dpp->stats));
-+			memset(dpp->stats, 0, dpp->ncpus * sizeof(*dpp->stats));
-+		} else {
-+			ret++;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
- static int setup_buts(void)
- {
- 	struct list_head *p;
-@@ -2684,9 +2714,11 @@ static int run_tracers(void)
- 	if (net_mode == Net_client)
- 		printf("blktrace: connecting to %s\n", hostname);
+ #define CHECK_MAGIC(magic)		(((magic) & 0xffffff00) == BLK_IO_TRACE_MAGIC)
+ #define SUPPORTED_VERSION	(0x07)
++#define SUPPORTED_VERSION2	(0x08)
  
--	if (setup_buts()) {
--		done = 1;
--		return 1;
-+	if (setup_buts2()) {
-+		if (setup_buts()) {
-+			done = 1;
-+			return 1;
-+		}
+ #if __BYTE_ORDER == __LITTLE_ENDIAN
+ #define be16_to_cpu(x)		__bswap_16(x)
+@@ -99,7 +100,8 @@ static inline int verify_trace(__u32 magic)
  	}
  
- 	if (use_tracer_devpaths()) {
+ 	version = magic & 0xff;
+-	if (version != SUPPORTED_VERSION) {
++	if (version != SUPPORTED_VERSION &&
++	    version != SUPPORTED_VERSION2) {
+ 		fprintf(stderr, "unsupported trace version %x\n", version);
+ 		return 1;
+ 	}
 -- 
 2.51.1
 
