@@ -1,47 +1,47 @@
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A1262D3A96;
-	Tue, 25 Nov 2025 07:28:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 321FE2DA77E;
+	Tue, 25 Nov 2025 07:28:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764055688; cv=none; b=bQg1yzG55q52HIhEvZaa7fIPsvueSIyHXKK439SVJe599vbWoY3hNx2KKu/msQDxCOwduZHJM11kcyMKvoI+RM2YnrZ2gZG7xT7QiY8Uc12vXa7qasoanZ37R+AGn2krVME3Qp2JrI1UhTc8ifVc4rT4c01UhcXLgOdMXWdo4Mw=
+	t=1764055691; cv=none; b=PfltobSFUVOIUvKrBOgY2lq+1jYLD3PlDGi9POw0C8Ky38QoAswRu13WJZdtnPrIdxZccS1Y5Uma4M5u2dwyCJuFfDRrxtJ3IE7Gku4KYwB/VlEuApJ+uyH7n5TazZosisgVtB2IMQxTYRs+N8CUFS+mq4ffsbSRB7vkWt07E0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764055688; c=relaxed/simple;
-	bh=LqWeUmKJ6NQR38aDiso79Ju7WYePOGVRayUoPjimp0w=;
+	s=arc-20240116; t=1764055691; c=relaxed/simple;
+	bh=tex0ATmbu68rvisWlUOnoso+r6xR5x0Sb3D09NGiMko=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lNDxpnemRlRjvt53dSS8o6ZWSyEKzwpMF+ROwZRozjQk+xN3a8sx3Cv6L0KmyONTr1YURAMv7TsSCly12pu9a4fWLzST0q4DS4ZNlJ0/s8nEQ3/jHuzFf5xpMF/mGaxzwo3C92460zphL78BEmSoj47COWE4nDNKVSb3SIMb6wU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=WC4vJXYi; arc=none smtp.client-ip=216.71.154.45
+	 MIME-Version; b=n7wlX+uTv11afLhm4Kv2a6DtlCCySbdpaOLxK5RndP+YfZa6TPuwDk4KXxECkuFVs6hsS5itsPAppBxQaUjsVQ+caOImuRKGBJQSmLz2IqHtKKDnvYrLwziJHlCpL42WK1W94iyor3vNpXCnmRnHQSfNHKw5mTcgR6E7e7PzlGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=EMG89ajj; arc=none smtp.client-ip=216.71.154.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="WC4vJXYi"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="EMG89ajj"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1764055687; x=1795591687;
+  t=1764055690; x=1795591690;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=LqWeUmKJ6NQR38aDiso79Ju7WYePOGVRayUoPjimp0w=;
-  b=WC4vJXYiJkULLSBk2nLmg3QiXaBZCMlEwf0Gizuh5YnwZzeZDeWive5y
-   XrPHoQTOHGt4XBeND2O30sL4Px+dPfu38dHtMwvfvmPPncoLirzVmp5ap
-   Ju3/ixQ8oEqbRTD4GtU9zh68tOxsVpHtT9ij5mvt1XSEl5mdsvYpqQju0
-   ClcUvuFFtu9Ly7NuTHNHjBNsouGwybcl5nc3Sz1lq/8pL8XQYH7aAJRj7
-   dCXM+JBhWkzFaOjlfvwJ1ocspCCKcBveQMwxX+og0gsohc7xhTy/2ZKtQ
-   0Hd0KfmuQTCXEJ8+wMCl1XnImEQSeBJvfl8yN4BUYw3HFt2viK5aR4j+S
+  bh=tex0ATmbu68rvisWlUOnoso+r6xR5x0Sb3D09NGiMko=;
+  b=EMG89ajjNkgLlUVs/e1oPBcUOTblCldxEdD61dlzHg0bEDynvlnsX3FQ
+   0mwVQao7+6dY9AZa7M3bFvYm/fYyyEEzZP/fxrLYf5yjTgRjv8je3ec3v
+   OMFP/4wHNKIeOX98dcazbT5bzpd3we2diIEiq7oCVaOz1Sxyz4RAne6eG
+   e229DLTr1AnCLuRGFkQ+1pHH9bvPxMgxC/U1L8sYgIB4KhYHIX/Mfa7pC
+   9T0m8uisxzL9N0GSMfpJ4Mqjw4tZ2J3QIyzRc79MIPU12XwPpzwR0nZ+l
+   jQpUMWV27kaj+0ZHiSiopC45rJt7bp1Budw913kM7tndEhbWNTFqbOv6U
    g==;
-X-CSE-ConnectionGUID: tivns5/mRGekqx/kTooOhA==
-X-CSE-MsgGUID: 8jY9imjMSzeIhtKAGh7Ebg==
+X-CSE-ConnectionGUID: y7ZQkeR8TVW95Q/ENPa3og==
+X-CSE-MsgGUID: iOgKUU+4TpSE+cFOI+QPtA==
 X-IronPort-AV: E=Sophos;i="6.20,224,1758556800"; 
-   d="scan'208";a="135337553"
+   d="scan'208";a="135337557"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:28:06 +0800
-IronPort-SDR: 69255a86_GDyAncfAhGZz4egz46MDDU19vv8xuN5iWzZZGUOZpBLSAIJ
- sU+8XVIBm6NA3Y1TI/nyIIs0XDMgDlR6KbsDwlA==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:28:10 +0800
+IronPort-SDR: 69255a8a_bRrtXLQbB10U3Tl7ootU49eo3KHFrh45Swrt+f9XJ+xV26W
+ xNrGVmiI8ndEcD3muGans8czk4j+8AZ2weosJ1g==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:28:07 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:28:10 -0800
 WDCIronportException: Internal
 Received: from ft4m3x2.ad.shared (HELO neo.wdc.com) ([10.224.28.72])
-  by uls-op-cesaip01.wdc.com with ESMTP; 24 Nov 2025 23:28:04 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 24 Nov 2025 23:28:07 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -54,9 +54,9 @@ Cc: linux-block@vger.kernel.org,
 	linux-btrace@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 09/20] blkparse: skip unsupported protocol versions
-Date: Tue, 25 Nov 2025 08:27:19 +0100
-Message-ID: <20251125072730.39196-10-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 10/20] blkparse: make get_pdulen() take the pdu_len
+Date: Tue, 25 Nov 2025 08:27:20 +0100
+Message-ID: <20251125072730.39196-11-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20251125072730.39196-1-johannes.thumshirn@wdc.com>
 References: <20251125072730.39196-1-johannes.thumshirn@wdc.com>
@@ -68,203 +68,48 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Skip unsupported protocol versions for now.
+Directly pass in the pdu_len into get_pdulen() and only care about the
+byte swapping in get_pdulen().
+
+This enables us to use the function for different versions of the
+protocol.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blkparse.c | 136 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 76 insertions(+), 60 deletions(-)
+ blkparse.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/blkparse.c b/blkparse.c
-index 2e175b8..163da73 100644
+index 163da73..0402e81 100644
 --- a/blkparse.c
 +++ b/blkparse.c
-@@ -2462,10 +2462,10 @@ static int read_events(int fd, int always_block, int *fdblock)
- 	unsigned int events = 0;
+@@ -2412,12 +2412,12 @@ static int read_data(int fd, void *buffer, int bytes, int block, int *fdblock)
+ 	return 0;
+ }
  
- 	while (!is_done() && events < rb_batch) {
--		struct blk_io_trace *bit;
- 		struct trace *t;
- 		int should_block, ret;
- 		__u32 magic;
-+		u8 version;
+-static inline __u16 get_pdulen(struct blk_io_trace *bit)
++static inline __u16 get_pdulen(__u16 pdu_len)
+ {
+ 	if (data_is_native)
+-		return bit->pdu_len;
++		return pdu_len;
  
- 		should_block = !events || always_block;
+-	return __bswap_16(bit->pdu_len);
++	return __bswap_16(pdu_len);
+ }
  
-@@ -2489,42 +2489,50 @@ static int read_events(int fd, int always_block, int *fdblock)
- 			fprintf(stderr, "Bad magic %x\n", magic);
- 			break;
- 		}
-+		version = magic & 0xff;
-+		if (version == SUPPORTED_VERSION) {
-+			struct blk_io_trace *bit;
-+			bit = bit_alloc();
-+			bit->magic = magic;
+ static inline __u32 get_magic(__u32 magic)
+@@ -2439,7 +2439,7 @@ static int read_one_bit(int fd, struct blk_io_trace *bit, int block,
+ 	if (ret)
+ 		return ret;
  
--		bit = bit_alloc();
--		bit->magic = magic;
-+			ret = read_one_bit(fd, bit, 1, fdblock);
-+			if (ret)
-+				break;
+-	pdu_len = get_pdulen(bit);
++	pdu_len = get_pdulen(bit->pdu_len);
+ 	if (pdu_len) {
+ 		void *ptr = realloc(bit, sizeof(*bit) + pdu_len);
  
--		ret = read_one_bit(fd, bit, 1, fdblock);
--		if (ret)
--			break;
-+			/*
-+			 * not a real trace, so grab and handle it here
-+			 */
-+			if (bit->action & BLK_TC_ACT(BLK_TC_NOTIFY) &&
-+			    (bit->action & ~__BLK_TN_CGROUP) != BLK_TN_MESSAGE) {
-+				handle_notify(bit);
-+				output_binary(bit, sizeof(*bit) + bit->pdu_len);
-+				continue;
-+			}
- 
--		if (verify_trace(bit)) {
--			bit_free(bit);
--			bit = NULL;
--			continue;
--		}
-+			if (verify_trace(bit)) {
-+				bit_free(bit);
-+				bit = NULL;
-+				continue;
-+			}
- 
--		/*
--		 * not a real trace, so grab and handle it here
--		 */
--		if (bit->action & BLK_TC_ACT(BLK_TC_NOTIFY) && (bit->action & ~__BLK_TN_CGROUP) != BLK_TN_MESSAGE) {
--			handle_notify(bit);
--			output_binary(bit, sizeof(*bit) + bit->pdu_len);
--			continue;
--		}
-+			t = t_alloc();
-+			memset(t, 0, sizeof(*t));
-+			t->bit = bit;
-+			t->read_sequence = read_sequence;
- 
--		t = t_alloc();
--		memset(t, 0, sizeof(*t));
--		t->bit = bit;
--		t->read_sequence = read_sequence;
-+			t->next = trace_list;
-+			trace_list = t;
- 
--		t->next = trace_list;
--		trace_list = t;
-+			if (!pdi || pdi->dev != bit->device)
-+				pdi = get_dev_info(bit->device);
- 
--		if (!pdi || pdi->dev != bit->device)
--			pdi = get_dev_info(bit->device);
-+			if (bit->time > pdi->last_read_time)
-+				pdi->last_read_time = bit->time;
-+		} else {
-+			fprintf(stderr, "unsupported version %d\n", version);
-+			continue;
-+		}
- 
--		if (bit->time > pdi->last_read_time)
--			pdi->last_read_time = bit->time;
- 
- 		events++;
- 	}
-@@ -2616,6 +2624,7 @@ static int ms_prime(struct ms_stream *msp)
- 	int ret, ndone = 0;
- 
- 	for (i = 0; !is_done() && pci->fd >= 0 && i < rb_batch; i++) {
-+		u8 version;
- 
- 		ret = read_data(pci->fd, &magic, sizeof(magic), 1,
- 				&pci->fdblock);
-@@ -2631,46 +2640,53 @@ static int ms_prime(struct ms_stream *msp)
- 			goto err;
- 
- 		}
--		bit = bit_alloc();
--		bit->magic = magic;
-+		version = magic & 0xff;
-+		if (version == SUPPORTED_VERSION) {
-+			bit = bit_alloc();
-+			bit->magic = magic;
- 
--		ret = read_one_bit(pci->fd, bit, 1, &pci->fdblock);
--		if (ret)
--			goto err;
-+			ret = read_one_bit(pci->fd, bit, 1, &pci->fdblock);
-+			if (ret)
-+				goto err;
- 
--		if (verify_trace(bit))
--			goto err;
-+			if (verify_trace(bit))
-+				goto err;
- 
--		if (bit->cpu != pci->cpu) {
--			fprintf(stderr, "cpu %d trace info has error cpu %d\n",
--				pci->cpu, bit->cpu);
--			continue;
--		}
-+			if (bit->cpu != pci->cpu) {
-+				fprintf(stderr,
-+					"cpu %d trace info has error cpu %d\n",
-+					pci->cpu, bit->cpu);
-+				continue;
-+			}
- 
--		if (bit->action & BLK_TC_ACT(BLK_TC_NOTIFY) && (bit->action & ~__BLK_TN_CGROUP) != BLK_TN_MESSAGE) {
--			handle_notify(bit);
--			output_binary(bit, sizeof(*bit) + bit->pdu_len);
--			bit_free(bit);
--			bit = NULL;
-+			if (bit->action & BLK_TC_ACT(BLK_TC_NOTIFY) &&
-+			    (bit->action & ~__BLK_TN_CGROUP) != BLK_TN_MESSAGE) {
-+				handle_notify(bit);
-+				output_binary(bit, sizeof(*bit) + bit->pdu_len);
-+				bit_free(bit);
-+				bit = NULL;
- 
--			i -= 1;
--			continue;
--		}
-+				i -= 1;
-+				continue;
-+			}
- 
--		if (bit->time > pdi->last_read_time)
--			pdi->last_read_time = bit->time;
-+			if (bit->time > pdi->last_read_time)
-+				pdi->last_read_time = bit->time;
- 
--		t = t_alloc();
--		memset(t, 0, sizeof(*t));
--		t->bit = bit;
-+			t = t_alloc();
-+			memset(t, 0, sizeof(*t));
-+			t->bit = bit;
- 
--		if (msp->first == NULL)
--			msp->first = msp->last = t;
--		else {
--			msp->last->next = t;
--			msp->last = t;
-+			if (msp->first == NULL)
-+				msp->first = msp->last = t;
-+			else {
-+				msp->last->next = t;
-+				msp->last = t;
-+			}
-+		} else {
-+			fprintf(stderr, "unsupported version %d\n", version);
-+			continue;
- 		}
--
- 		ndone++;
- 		bit = NULL;
- 	}
 -- 
 2.51.1
 
