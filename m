@@ -1,47 +1,47 @@
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A701A2E03F2;
-	Tue, 25 Nov 2025 07:52:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CC802D7813;
+	Tue, 25 Nov 2025 07:52:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764057138; cv=none; b=MrZuBYLIouH5KCTtyy4dTAgbfkrW8mLBfP/g7cyAyOerfxBGSkY7dhWhIGQKrG155PW/u+l+UrjZNeCkw37sD5voAgZJRuJ4FfBVFmmvGE4HMIzYmmuvL/oseqRNsAVKpQiEswoUIMhHdIXs7e8VW6PJgi56lxJi2WpjubBzQC0=
+	t=1764057139; cv=none; b=HIpYD24ebqa1y3i3b4g51lohBUFFCzHboL0hDPYnSkxqfefK1fpGGi70KVkXwfpULMMrhp3Je0vu56/mmqcfFGyEuHJFHBbWamhtXolz2FvRPpmfnU7ShvVA4+mHsDzuZlzzoVr5ml8+2JvJsQ332GJ0OnbZ4EyXAbNKKWrqKRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764057138; c=relaxed/simple;
-	bh=8ISfg1okfY9gYJ19YEiLkBEVsv1bvX6qgrh+5Xrip30=;
+	s=arc-20240116; t=1764057139; c=relaxed/simple;
+	bh=6ciFPCT9OFL/mupgPfnetxUX1J52Y/KZ8Q9RWgSdDow=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qtc1oWIPC4EjJijm4jpuAPK1537CN3v0ZXRVUoR6taPSv5Q0oMu33GXKp2v1eD+aj8KflShOxsyytEoZxInmtDMPV+LjDcE+FI1cu/EAi1LrLOGi5KPCMH4rQLvRnhT7Ru+qSLIwC4YfX+6juzmJfb7jktjGH+X8TKj/IxSGgWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=YRuj9ATj; arc=none smtp.client-ip=68.232.141.245
+	 MIME-Version; b=diHCQ+tnlyOCFR9aNaF+2w59oUGgzf0Ed7MEnvFb4L8EeLP0rFHFPr5hn7c2TmuMdm+xW2feQDJj616CwkUWF+cMyU/q9H6iEdx9IG1FTZD0a4T73o291W1BKXRheocEbEac5VOam6CqierTXB0noMlN7nUra7RSBzLldb/dD9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=cnzLQJZH; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="YRuj9ATj"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="cnzLQJZH"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1764057136; x=1795593136;
+  t=1764057138; x=1795593138;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=8ISfg1okfY9gYJ19YEiLkBEVsv1bvX6qgrh+5Xrip30=;
-  b=YRuj9ATjE+lwOkOA358/LNdove8/wMhzJWguyKE6jy2oEvyxRc6ArCbf
-   BfQX94F74JGg/WlZu8XhkjhybThgJqlb9gcmAVPcQBL2xxnYXLwRjf0dQ
-   m61DweR5uxpWuBuw36kJmmNN4ABrUuT5k7/yRD2sJxPDAZvACYTiNEzXz
-   lCX237ckWImQkddHLRYokrcY+lAXHUD4PRONJ1ZaG/yMgTpOVpRjQFItR
-   YOsBJekkOlnIVvoHl9VKF/O7ivcXzEMVapdQvqIlzNXocKoJvjDc5IOgX
-   O67pDMosW1MjbDkoriM+ZwRbjsOL3Ag3j6d0Qh0u+NqXOukmeNnm4ZO4S
-   A==;
-X-CSE-ConnectionGUID: R0YrlP/zSY+tdOF84I8bDQ==
-X-CSE-MsgGUID: afqLr+STTTS7VbWDtdP7zA==
+  bh=6ciFPCT9OFL/mupgPfnetxUX1J52Y/KZ8Q9RWgSdDow=;
+  b=cnzLQJZH75RrB4ZUXgpuGps4PynJGhWK9+bvvWJrywqfD6+Z0idrzkew
+   n8Z4FgUJOuTjn3Tbc/ACNH6+oxaGyJAUunY+VTF2I/sUDPRSsFx72j68A
+   qRDxox1Y8kxRUft02oBBQrjfesIwASWqroXKL9I+8M69tzD5j7jc6bfmU
+   e75+0rZTbQ2WJYHpGm6twTCbFAz6BPYOrJPMmSn504nNIrJpR7jYPr8gd
+   +xR/Xg2H2rcYZlcphuMHhtJIGwHz7SSgf4fu1WzymV2Hlt7vnhwm80JDJ
+   NhJZGoGZXQVKQxKx4yRmsD9gsTwKm+eQqfRvJSyKxu/lZUPqfpLPlN9E/
+   Q==;
+X-CSE-ConnectionGUID: 4uQ5GMTtS+ag9GDkQz9iGQ==
+X-CSE-MsgGUID: zkF65aJZT8ecC766cFF6sg==
 X-IronPort-AV: E=Sophos;i="6.20,224,1758556800"; 
-   d="scan'208";a="135749785"
+   d="scan'208";a="135749790"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:52:16 +0800
-IronPort-SDR: 69256030_4Gq4zXS2ShT2SpSaeR2c9gKlOiiG3id+DNk5id6bWkGoCft
- XxiuRdG6C3M3gjIimGPmTrHoeDc4OpnjYu6bq0w==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:52:17 +0800
+IronPort-SDR: 69256031_1GiZpUf1aFZDowAHgJHud0lN+W0k/+65wwR9tO9nXQjiXm2
+ oBYMaN3cT+j9b/Bjb23ODwKNM4/n6Fg/RbABB/g==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:52:16 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:52:17 -0800
 WDCIronportException: Internal
 Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
-  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:52:15 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:52:17 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: Niklas Cassel <cassel@kernel.org>,
@@ -52,9 +52,9 @@ Cc: Niklas Cassel <cassel@kernel.org>,
 	linux-btrace@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 04/20] blktrace: change size of action to 64 bits
-Date: Mon, 24 Nov 2025 23:51:50 -0800
-Message-ID: <20251125075206.876902-5-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 05/20] blktrace: add definitions for blk_io_trace2
+Date: Mon, 24 Nov 2025 23:51:51 -0800
+Message-ID: <20251125075206.876902-6-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251125075206.876902-1-johannes.thumshirn@wdc.com>
 References: <20251125075206.876902-1-johannes.thumshirn@wdc.com>
@@ -66,131 +66,95 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In order to add the zoned commands to blktrace's actions, the storage size
-needs to be increased to 64bits.
+Add 'struct blk_io_trace2' which represents the extended version of the
+blktrace protocol.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- act_mask.c     |  4 ++--
- blkparse.c     |  2 +-
- blkparse_fmt.c | 15 ++++++++-------
- blkrawverify.c | 10 +++++-----
- blktrace.h     |  2 +-
- 5 files changed, 17 insertions(+), 16 deletions(-)
+ blktrace_api.h | 38 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 36 insertions(+), 2 deletions(-)
 
-diff --git a/act_mask.c b/act_mask.c
-index 8f1b8d7..510c7e0 100644
---- a/act_mask.c
-+++ b/act_mask.c
-@@ -42,7 +42,7 @@ int find_mask_map(char *string)
- 	return -1;
- }
+diff --git a/blktrace_api.h b/blktrace_api.h
+index ecffe6e..04e81de 100644
+--- a/blktrace_api.h
++++ b/blktrace_api.h
+@@ -24,11 +24,20 @@ enum {
+ 	BLK_TC_DRV_DATA	= 1 << 14,	/* binary driver data */
+ 	BLK_TC_FUA	= 1 << 15,	/* fua requests */
  
--int valid_act_opt(int x)
-+unsigned long long valid_act_opt(unsigned long long x)
- {
--	return (1 <= x) && (x < (1 << BLK_TC_SHIFT));
-+	return (1ull <= x) && (x < (1ull << BLK_TC_SHIFT));
- }
-diff --git a/blkparse.c b/blkparse.c
-index 3f4d827..512a2d2 100644
---- a/blkparse.c
-+++ b/blkparse.c
-@@ -299,7 +299,7 @@ static int per_device_and_cpu_stats = 1;
- static int track_ios;
- static int ppi_hash_by_pid = 1;
- static int verbose;
--static unsigned int act_mask = -1U;
-+static unsigned long long act_mask = -1U;
- static int stats_printed;
- static int bin_output_msgs = 1;
- int data_is_native = -1;
-diff --git a/blkparse_fmt.c b/blkparse_fmt.c
-index 9b83d1d..02c5a3c 100644
---- a/blkparse_fmt.c
-+++ b/blkparse_fmt.c
-@@ -8,6 +8,7 @@
- #include <unistd.h>
- #include <ctype.h>
- #include <time.h>
-+#include <stdbool.h>
- 
- #include "blktrace.h"
- 
-@@ -52,13 +53,13 @@ int add_format_spec(char *option)
- 
- static inline void fill_rwbs(char *rwbs, struct blk_io_trace *t)
- {
--	int w = t->action & BLK_TC_ACT(BLK_TC_WRITE);
--	int a = t->action & BLK_TC_ACT(BLK_TC_AHEAD);
--	int s = t->action & BLK_TC_ACT(BLK_TC_SYNC);
--	int m = t->action & BLK_TC_ACT(BLK_TC_META);
--	int d = t->action & BLK_TC_ACT(BLK_TC_DISCARD);
--	int f = t->action & BLK_TC_ACT(BLK_TC_FLUSH);
--	int u = t->action & BLK_TC_ACT(BLK_TC_FUA);
-+	bool w = !!(t->action & BLK_TC_ACT(BLK_TC_WRITE));
-+	bool a = !!(t->action & BLK_TC_ACT(BLK_TC_AHEAD));
-+	bool s = !!(t->action & BLK_TC_ACT(BLK_TC_SYNC));
-+	bool m = !!(t->action & BLK_TC_ACT(BLK_TC_META));
-+	bool d = !!(t->action & BLK_TC_ACT(BLK_TC_DISCARD));
-+	bool f = !!(t->action & BLK_TC_ACT(BLK_TC_FLUSH));
-+	bool u = !!(t->action & BLK_TC_ACT(BLK_TC_FUA));
- 	int i = 0;
- 
- 	if (f)
-diff --git a/blkrawverify.c b/blkrawverify.c
-index ed5d258..9c5d595 100644
---- a/blkrawverify.c
-+++ b/blkrawverify.c
-@@ -55,7 +55,7 @@ static struct trace_info traces[] = {
- #define N_TRACES (sizeof(traces) / sizeof(struct trace_info))
- 
- struct act_info {
--	__u32 val;
-+	__u64 val;
- 	char *string;
+-	BLK_TC_END	= 1 << 15,	/* we've run out of bits! */
++	BLK_TC_END_V1	= 1 << 15,	/* we've run out of bits! */
++
++	BLK_TC_ZONE_APPEND      = 1ull << 16,   /* zone append */
++        BLK_TC_ZONE_RESET       = 1ull << 17,   /* zone reset */
++        BLK_TC_ZONE_RESET_ALL   = 1ull << 18,   /* zone reset all */
++        BLK_TC_ZONE_FINISH      = 1ull << 19,   /* zone finish */
++        BLK_TC_ZONE_OPEN        = 1ull << 20,   /* zone open */
++        BLK_TC_ZONE_CLOSE       = 1ull << 21,   /* zone close */
++
++        BLK_TC_END_V2           = 1ull << 21,
  };
  
-@@ -80,12 +80,12 @@ static struct act_info acts[] = {
+ #define BLK_TC_SHIFT		(16)
+-#define BLK_TC_ACT(act)		((act) << BLK_TC_SHIFT)
++#define BLK_TC_ACT(act)        ((__u64)(act) << BLK_TC_SHIFT)
+ 
+ /*
+  * Basic trace actions
+@@ -51,6 +60,7 @@ enum {
+ 	__BLK_TA_REMAP,			/* bio was remapped */
+ 	__BLK_TA_ABORT,			/* request aborted */
+ 	__BLK_TA_DRV_DATA,		/* binary driver data */
++	__BLK_TA_ZONE_MGMT,		/* zone management command was issued */
+ 	__BLK_TA_CGROUP = 1 << 8,
  };
- #define N_ACTS (sizeof(acts) / sizeof(struct act_info))
  
--static char *act_to_str(__u32 action)
-+static char *act_to_str(__u64 action)
- {
- 	static char buf[1024];
- 	unsigned int i;
--	unsigned int act = action & 0xffff;
--	unsigned int trace = (action >> BLK_TC_SHIFT) & 0xffff;
-+	unsigned long long act = action & 0xffffffff;
-+	unsigned long long trace = (action >> BLK_TC_SHIFT) & 0xffffffff;
+@@ -85,12 +95,20 @@ enum blktrace_notify {
+ #define BLK_TA_ABORT		(__BLK_TA_ABORT | BLK_TC_ACT(BLK_TC_QUEUE))
+ #define BLK_TA_DRV_DATA		(__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
  
- 	if (act < N_ACTS) {
- 		sprintf(buf, "%s ", acts[act].string);
-@@ -97,7 +97,7 @@ static char *act_to_str(__u32 action)
- 			}
- 	}
- 	else
--		sprintf(buf, "Invalid action=%08x", action);
-+		sprintf(buf, "Invalid action=%016llx", action);
++#define BLK_TA_ZONE_APPEND      (__BLK_TA_COMPLETE |\
++				 BLK_TC_ACT2(BLK_TC_ZONE_APPEND))
++#define BLK_TA_ZONE_MGMT        __BLK_TA_ZONE_MGMT
++#define BLK_TA_ZONE_PLUG        (__BLK_TA_ZONE_PLUG | BLK_TC_ACT(BLK_TC_QUEUE))
++#define BLK_TA_ZONE_UNPLUG      (__BLK_TA_ZONE_UNPLUG |\
++				 BLK_TC_ACT(BLK_TC_QUEUE))
++
+ #define BLK_TN_PROCESS		(__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
+ #define BLK_TN_TIMESTAMP	(__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
+ #define BLK_TN_MESSAGE		(__BLK_TN_MESSAGE | BLK_TC_ACT(BLK_TC_NOTIFY))
  
- 	return buf;
- }
-diff --git a/blktrace.h b/blktrace.h
-index 944fc08..74dfb48 100644
---- a/blktrace.h
-+++ b/blktrace.h
-@@ -144,7 +144,7 @@ extern void set_all_format_specs(char *);
- extern int add_format_spec(char *);
- extern void process_fmt(char *, struct per_cpu_info *, struct blk_io_trace *,
- 			unsigned long long, int, unsigned char *);
--extern int valid_act_opt(int);
-+extern unsigned long long valid_act_opt(unsigned long long);
- extern int find_mask_map(char *);
- extern char *find_process_name(pid_t);
+ #define BLK_IO_TRACE_MAGIC	0x65617400
+ #define BLK_IO_TRACE_VERSION	0x07
++#define BLK_IO_TRACE2_VERSION	0x08
  
+ /*
+  * The trace itself
+@@ -118,6 +136,22 @@ struct blk_io_trace_remap {
+ 	__u64 sector_from;
+ };
+ 
++struct blk_io_trace2 {
++	__u32 magic;            /* MAGIC << 8 | BLK_IO_TRACE2_VERSION */
++	__u32 sequence;         /* event number */
++	__u64 time;             /* in nanoseconds */
++	__u64 sector;           /* disk offset */
++	__u32 bytes;            /* transfer length */
++	__u32 pid;              /* who did it */
++	__u64 action;           /* what happened */
++	__u32 device;           /* device number */
++	__u32 cpu;              /* on what cpu did it happen */
++	__u16 error;            /* completion error */
++	__u16 pdu_len;          /* length of data after this trace */
++	__u8 pad[12];
++	/* cgroup id will be stored here if exists */
++};
++
+ /*
+  * Payload with originating cgroup info
+  */
 -- 
 2.51.1
 
