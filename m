@@ -1,46 +1,47 @@
 Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 729D72701D9;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E1BB277C9D;
 	Tue, 25 Nov 2025 07:38:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764056299; cv=none; b=IdGqGdxfNIkQFsmRt7ds7bpE5AR33iWWedcgaGnUMzBSkLTK/BicHMVmMPj/x0CuPZ3tZQSm6q5C12jtR9izudNyZXwiLe+Bdd9ml4Rz5ampK+B24ZXZVNwoQNSkwvnaU6zLkTeRvdoi3TBwyRTGJTH+JOAXI3jAKd6vTVPLZ4Y=
+	t=1764056300; cv=none; b=N+uQaSHxUhw74DXW3ExbOlc4BvrheTOOIL44yWcx8zimCZs+wUa2bE9qFqBL2bak6UKZdjEmlQh4fVioVI4DrIqL29zKYpQOorVSJXiqqlh6nTm41hqH6siuXgPKZWX9mK8XQoie/q3oSQYpNqY8a7kvskLVDHaFzcTmA/O82QM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764056299; c=relaxed/simple;
-	bh=9wRgDAM+/ixElO+LfC60jEKwmuSIJsYAYnZbJZrmy9I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Es1uRlBVKLb766XXaAegSp3KRWUmBEHVrPyx18jBVhsE2yFFGMXnq2aRO+G5Hqf62xR4Lh7NIFmQcjmaM/Roev2g6zvV0rIFgUTuR5isVrWgd8Ni7BRld3G8yQiMsmPkOOlWXey5rE58/RPo5FACBCAm5Bioju0fHak+6f7ttoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ebLTEAUc; arc=none smtp.client-ip=216.71.154.42
+	s=arc-20240116; t=1764056300; c=relaxed/simple;
+	bh=qSFEjjhSfXm7utrWrROZPlF7K5bQtM2BgslWHsHsEKw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Hl0XMq+7n/JLseCgJgiR+kwobPv7AHTTZ0zy0bHtCqtVz03zBsgT2ThiykDy74spuywdQqwTvJ2OO1GaAoPbtexz7RgQMek5zmSriezqORYg8LOgSNXwAUXmX8cc8F8cspPeqO+GdYsLvuCoVaiev4Lv/mQAP/ONNshe0PwJaOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=hkD+ZFQs; arc=none smtp.client-ip=216.71.154.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ebLTEAUc"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="hkD+ZFQs"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1764056298; x=1795592298;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=9wRgDAM+/ixElO+LfC60jEKwmuSIJsYAYnZbJZrmy9I=;
-  b=ebLTEAUctxYyLVqO6F7ga0wmM75eg2ErbcNAMHASjwUGQFSazKM4mlsF
-   /hhi0xySOfxwMlBXwCwAiLhAy5n0fW4BMfRfxAkiqhXf+pSRnLAAnTDa+
-   xT3famsM/Gi9bV3DxCPRvPnt1sriyJAmVQH9KFLb3bF9fUaSLZzOtJb+I
-   zweePmFank/yFfSn4RY4FTuWbv6U5Bl8jRDHAEaD62n83ssgoCIIu1hfa
-   4iYqat+rPTcGj/mr/OjAIX8RzI0Wfs1fNL1kof88zNRmF7H5a0qvwTOG9
-   AhOYK0oblMCCa1vDuj4Dqo6NfLknfuzPk2akDsnSMEOMUTuepTtyvjv23
-   Q==;
-X-CSE-ConnectionGUID: NCg6vtgHSAW7fovYz5XHEQ==
-X-CSE-MsgGUID: UMUxXkvPT6asoSsgnIZvxQ==
+  t=1764056299; x=1795592299;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=qSFEjjhSfXm7utrWrROZPlF7K5bQtM2BgslWHsHsEKw=;
+  b=hkD+ZFQsoXQ33am05GwX0YZmQArEC7XELuCxw8CL/ye8yoa2a6stJIJC
+   Tsq2FIkOaLmR3UAbmtnNfUe1hjGKiylBmXQmSEk29zYbh9kCOnmF/8/V+
+   UPKrYjzrqO0KGW0g8tE37szmdrsBgwBSWqABoRwzELg/BDwbx+25SxBYM
+   jeeXmoLSbRvv42s2Kcvd9ORbXwz2xQanH1gU3po+LPsgX2YwaIwnpspCJ
+   NtPp5e9HcUcUVAQyJQv3KjfUZ3vdNGNhd5uksIuyEjocklFNjrBw3B3S2
+   NaaKtqxjZHymf9/HYfPOFIimrqPAPZKcfZiqDgm/8vvg83G4xEoZ33nY/
+   w==;
+X-CSE-ConnectionGUID: KsRfFSesQqOYsXqmI2VFgw==
+X-CSE-MsgGUID: rTuDEjjdSnqJWLOTSnaKZg==
 X-IronPort-AV: E=Sophos;i="6.20,224,1758556800"; 
-   d="scan'208";a="132688741"
+   d="scan'208";a="132688745"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:38:11 +0800
-IronPort-SDR: 69255ce3_eKpsTCBiVB1J40ecvJlyjoqE/NbJdzTtNCL8HC3b1X++Nnm
- EFwh9+Ax1RnbwF1H16L6FtLoP1nSmLc4SjW+JNg==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:38:14 +0800
+IronPort-SDR: 69255ce6_ZDZ7FitkIgLMecGr8PPHHuwEgtcwm8gCM1AUnWGq12QEp1g
+ EaB9tYOa3Ytf6Tmr1rlCKbHJBByRDKgq4OO54cQ==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:38:11 -0800
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:38:14 -0800
 WDCIronportException: Internal
 Received: from unknown (HELO neo.wdc.com) ([10.224.28.73])
-  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:38:08 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 24 Nov 2025 23:38:11 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -53,10 +54,12 @@ Cc: linux-block@vger.kernel.org,
 	linux-btrace@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 11/20] blkiomon: read 'magic' first
-Date: Tue, 25 Nov 2025 08:37:57 +0100
-Message-ID: <20251125073806.50762-1-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 12/20] blktrace: pass magic to CHECK_MAGIC macro
+Date: Tue, 25 Nov 2025 08:37:58 +0100
+Message-ID: <20251125073806.50762-2-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.1
+In-Reply-To: <20251125073806.50762-1-johannes.thumshirn@wdc.com>
+References: <20251125073806.50762-1-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -65,52 +68,53 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Similar to blkparse, read the 'magic' portion of 'struct blk_io_trace'
-first when reading the trace.
+Pass only the magic number itself to the CHECK_MAGIC() macro.
 
-This is a preparation of supporting multiple trace protocol versions.
+This enables support for multiple versions.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blkiomon.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ blkrawverify.c | 2 +-
+ blktrace.h     | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/blkiomon.c b/blkiomon.c
-index f8b0c9d..05f2d00 100644
---- a/blkiomon.c
-+++ b/blkiomon.c
-@@ -460,19 +460,28 @@ static int blkiomon_do_fifo(void)
- 	bit = &t->bit;
+diff --git a/blkrawverify.c b/blkrawverify.c
+index 9c5d595..cc5b06e 100644
+--- a/blkrawverify.c
++++ b/blkrawverify.c
+@@ -183,7 +183,7 @@ static int process(FILE **fp, char *devname, char *file, unsigned int cpu)
  
- 	while (up) {
-+		__u32 magic;
-+
-+		if (fread(&magic, sizeof(magic), 1, ifp) != 1) {
-+			if (!feof(ifp))
-+				fprintf(stderr,
-+					"blkiomon: could not read trace");
-+			break;
-+		}
- 		if (fread(bit, sizeof(*bit), 1, ifp) != 1) {
- 			if (!feof(ifp))
- 				fprintf(stderr,
- 					"blkiomon: could not read trace");
- 			break;
- 		}
-+		bit->magic = magic;
- 		if (ferror(ifp)) {
- 			clearerr(ifp);
- 			fprintf(stderr, "blkiomon: error while reading trace");
- 			break;
- 		}
+ 		trace_to_cpu(bit);
  
--		if (data_is_native == -1 && check_data_endianness(bit->magic)) {
-+		if (data_is_native == -1 && check_data_endianness(magic)) {
- 			fprintf(stderr, "blkiomon: endianess problem\n");
- 			break;
+-		if (!CHECK_MAGIC(bit)) {
++		if (!CHECK_MAGIC(bit->magic)) {
+ 			INC_BAD("bad trace");
+ 			continue;
  		}
+diff --git a/blktrace.h b/blktrace.h
+index 74dfb48..14c0d92 100644
+--- a/blktrace.h
++++ b/blktrace.h
+@@ -67,7 +67,7 @@ extern FILE *ofp;
+ extern int data_is_native;
+ extern struct timespec abs_start_time;
+ 
+-#define CHECK_MAGIC(t)		(((t)->magic & 0xffffff00) == BLK_IO_TRACE_MAGIC)
++#define CHECK_MAGIC(magic)		(((magic) & 0xffffff00) == BLK_IO_TRACE_MAGIC)
+ #define SUPPORTED_VERSION	(0x07)
+ 
+ #if __BYTE_ORDER == __LITTLE_ENDIAN
+@@ -90,7 +90,7 @@ extern struct timespec abs_start_time;
+ 
+ static inline int verify_trace(struct blk_io_trace *t)
+ {
+-	if (!CHECK_MAGIC(t)) {
++	if (!CHECK_MAGIC(t->magic)) {
+ 		fprintf(stderr, "bad trace magic %x\n", t->magic);
+ 		return 1;
+ 	}
 -- 
 2.51.1
 
