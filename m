@@ -1,47 +1,47 @@
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6696B2D3A96;
-	Tue, 25 Nov 2025 07:27:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 726782D3A96;
+	Tue, 25 Nov 2025 07:28:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764055678; cv=none; b=ibmJ2lTBdT5cczQu8GRl8sSS2m3f0+rpsljHiKGhaU2JxWLw1TB3aHPnCXhmZEoa9ap3NBf3JnWmVo0lW/fXqfz9tdcIlXOJZHBMcEqvIBCwt0iCUYRhvQ+4G2jzXvFFA1rQIjzeLvzbqy88G1nYRM9eum0BKExNOfMyeG2YDPM=
+	t=1764055682; cv=none; b=ktH3mOH+t3yPhi93Gv560v35KNl9QrCoPaqG4uyMepoLgqMsvUsHPK5FdroZ6iTIHDWAUNPiy6kbmmw8+zo51zTyZnYOjIDUm4SdwGpT9uVttlHOvgAKn3SKQkixPoS8HVgdiU9KTzyrBxw555YoYzNxEYkLmnEvm5+yI3lHspY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764055678; c=relaxed/simple;
-	bh=G3WmpyGCEpDpjNEcl5YKSsBhtGJWNglKA7+YSCF9QIM=;
+	s=arc-20240116; t=1764055682; c=relaxed/simple;
+	bh=WxWcgPPA4TdCgsxUrpWY+pAjjHf352OC+hR4QozVTmw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hCgRSNyestOYUEBbClSfPSKigMT+xVqvko9NW3c1M83KmCTl0cF45Iq4qKJlY0PH30wClGluIM4WCrEYfJCSIaedLacltG/M/ruN6tt/w5ddNHG9QZLWmSk0j831Kl4jV0Ta9dYv1mgtyxcHYeuV+vKhVUgn9EauxGBcrQNQwhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=oeKTRS3R; arc=none smtp.client-ip=216.71.154.45
+	 MIME-Version; b=C196SwrmKwBFnvDMit9vwyaUHvpl1loeiuaxVWY9MW+atZ+SlyOZnYuolSeux3pSb3rgWPb4jAukUXAo8cSxKRmqOO/T3hA+YTRdhs2GTPZrlxp4te2nqamTN3zs35zv3Fvr7UnVPgwVjE7AMM60tdrwhhCcdzlVf+ttHqwcHyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=f/Y5SBmQ; arc=none smtp.client-ip=216.71.154.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="oeKTRS3R"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="f/Y5SBmQ"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1764055677; x=1795591677;
+  t=1764055680; x=1795591680;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=G3WmpyGCEpDpjNEcl5YKSsBhtGJWNglKA7+YSCF9QIM=;
-  b=oeKTRS3R/YruAiNfS+UX2zSAnIv7MkpTN9xYQ9oykYDNM07deHcNi61Z
-   8OiHlZhkDtHwEBaK7eGRBGw6VV4U0dfLgdBZVb5ZARxdniiAGOd2aIT00
-   Q3E4Lao/CwhziLy7ePkBUliUFG6jKnpeMzSRWCObJ8Xo7aRaXW7SBb+p7
-   /5U7ZsCYZ+xiZPhaIFFuVEnxPx+hsBXQU1mDWpHbxgdje7agjS5DqwIxh
-   krenDUpl141XPgZxwAuwUxI09X9AkafQ3zGQKvcR9i0yuxREGN+l7j5jy
-   J/y1Zt6gW49OoyQMcwhYX7Ndzm+ScQH1qxL0zP43dokd8sE1lhrLv+cXq
+  bh=WxWcgPPA4TdCgsxUrpWY+pAjjHf352OC+hR4QozVTmw=;
+  b=f/Y5SBmQKZCnFGrfHfFGQb1jPg35JJ8Cp9Fzo7BygAwN9QpL5Si97bF8
+   yYISpAMieeFE5aifQALL3fIva0GeAOViDnGbwm3aWZpdAEObA6AwIeIi2
+   q7N1MOQiArnZQiq6218gbKDc37SBv9wCreit0Qc2sLrB5HhfbVAhPGXik
+   VTE13BXNgfYcq4sbbBKX3W4nBn3wS5reh+yfR+gp//+mYeqqvO/52Yfs7
+   j77D/Dfvu+h64hsnfOE1kvE4Mnm9z/jvwXhnJswtHHL5E7ycAXv4eHag5
+   iOYjstXxa3XCnnFgbkF06akd47xpV5WH5uSxi+nbFYwAYam7sqVGe0Hny
    w==;
-X-CSE-ConnectionGUID: lxHKCGcPRyK4lYTyEmC6iA==
-X-CSE-MsgGUID: aA6PcxSdRtikpolHCT0OFA==
+X-CSE-ConnectionGUID: Ra15afmCRhuA+CP2e7cl6A==
+X-CSE-MsgGUID: cJ0c9oHoSYCrk2wYVHcrOg==
 X-IronPort-AV: E=Sophos;i="6.20,224,1758556800"; 
-   d="scan'208";a="135337535"
+   d="scan'208";a="135337540"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:27:57 +0800
-IronPort-SDR: 69255a7d_AVXJnBfInKzxUfRTYyw9qQZgkEVFRVketkWD64iksrIpxEQ
- vieJ71I9wjt2kFVM5u6Npg/hkZEttqXRe84+6ww==
+  by ob1.hgst.iphmx.com with ESMTP; 25 Nov 2025 15:28:00 +0800
+IronPort-SDR: 69255a80_6hyYXDgfHK2RZ737LGCbayP7EK68lLyntawFwfuSrwHhifj
+ zGBiMo2BR0mMW7sz9+1vdafar6ob8FqFtPkAPqw==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:27:57 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Nov 2025 23:28:00 -0800
 WDCIronportException: Internal
 Received: from ft4m3x2.ad.shared (HELO neo.wdc.com) ([10.224.28.72])
-  by uls-op-cesaip01.wdc.com with ESMTP; 24 Nov 2025 23:27:53 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 24 Nov 2025 23:27:57 -0800
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -54,9 +54,9 @@ Cc: linux-block@vger.kernel.org,
 	linux-btrace@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 06/20] blkparse: pass magic to get_magic
-Date: Tue, 25 Nov 2025 08:27:16 +0100
-Message-ID: <20251125072730.39196-7-johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 07/20] blkparse: read 'magic' first
+Date: Tue, 25 Nov 2025 08:27:17 +0100
+Message-ID: <20251125072730.39196-8-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20251125072730.39196-1-johannes.thumshirn@wdc.com>
 References: <20251125072730.39196-1-johannes.thumshirn@wdc.com>
@@ -68,57 +68,123 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Pass the magic value to get_magic() instead of the whole 'struct
-blk_io_trace'.
+Read the 'magic' portion of 'struct blk_io_trace' first when reading the
+tracefile and only if all magic checks succeed, read the rest of the
+trace.
 
-This is a preparation for distinguishing between two different types of
-blktrace protocol versions in blkparse.
+This is a preparation of supporting multiple trace protocol versions.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blkparse.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ blkparse.c | 44 ++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 34 insertions(+), 10 deletions(-)
 
 diff --git a/blkparse.c b/blkparse.c
-index 512a2d2..d58322c 100644
+index d58322c..5645c31 100644
 --- a/blkparse.c
 +++ b/blkparse.c
-@@ -2420,12 +2420,12 @@ static inline __u16 get_pdulen(struct blk_io_trace *bit)
- 	return __bswap_16(bit->pdu_len);
- }
+@@ -2438,14 +2438,13 @@ static int read_events(int fd, int always_block, int *fdblock)
+ 		struct trace *t;
+ 		int pdu_len, should_block, ret;
+ 		__u32 magic;
+-
+-		bit = bit_alloc();
++		void *p;
  
--static inline __u32 get_magic(struct blk_io_trace *bit)
-+static inline __u32 get_magic(__u32 magic)
- {
- 	if (data_is_native)
--		return bit->magic;
-+		return magic;
+ 		should_block = !events || always_block;
  
--	return __bswap_32(bit->magic);
-+	return __bswap_32(magic);
- }
- 
- static int read_events(int fd, int always_block, int *fdblock)
-@@ -2458,7 +2458,7 @@ static int read_events(int fd, int always_block, int *fdblock)
- 		if (data_is_native == -1 && check_data_endianness(bit->magic))
+-		ret = read_data(fd, bit, sizeof(*bit), should_block, fdblock);
++		ret = read_data(fd, &magic, sizeof(magic), should_block,
++				fdblock);
+ 		if (ret) {
+-			bit_free(bit);
+ 			if (!events && ret < 0)
+ 				events = ret;
+ 			break;
+@@ -2455,15 +2454,28 @@ static int read_events(int fd, int always_block, int *fdblock)
+ 		 * look at first trace to check whether we need to convert
+ 		 * data in the future
+ 		 */
+-		if (data_is_native == -1 && check_data_endianness(bit->magic))
++		if (data_is_native == -1 && check_data_endianness(magic))
  			break;
  
--		magic = get_magic(bit);
-+		magic = get_magic(bit->magic);
+-		magic = get_magic(bit->magic);
++		magic = get_magic(magic);
  		if ((magic & 0xffffff00) != BLK_IO_TRACE_MAGIC) {
  			fprintf(stderr, "Bad magic %x\n", magic);
  			break;
-@@ -2604,7 +2604,7 @@ static int ms_prime(struct ms_stream *msp)
- 		if (data_is_native == -1 && check_data_endianness(bit->magic))
+ 		}
+ 
++		bit = bit_alloc();
++		bit->magic = magic;
++		p = (void *) ((u8 *)bit + sizeof(magic));
++
++		ret = read_data(fd, p, sizeof(*bit) - sizeof(magic),
++				should_block, fdblock);
++		if (ret) {
++			bit_free(bit);
++			if (!events && ret < 0)
++				events = ret;
++			break;
++		}
++
+ 		pdu_len = get_pdulen(bit);
+ 		if (pdu_len) {
+ 			void *ptr = realloc(bit, sizeof(*bit) + pdu_len);
+@@ -2596,20 +2608,30 @@ static int ms_prime(struct ms_stream *msp)
+ 	int ret, pdu_len, ndone = 0;
+ 
+ 	for (i = 0; !is_done() && pci->fd >= 0 && i < rb_batch; i++) {
+-		bit = bit_alloc();
+-		ret = read_data(pci->fd, bit, sizeof(*bit), 1, &pci->fdblock);
++		void *p;
++
++		ret = read_data(pci->fd, &magic, sizeof(magic), 1,
++				&pci->fdblock);
+ 		if (ret)
  			goto err;
  
--		magic = get_magic(bit);
-+		magic = get_magic(bit->magic);
+-		if (data_is_native == -1 && check_data_endianness(bit->magic))
++		if (data_is_native == -1 && check_data_endianness(magic))
+ 			goto err;
+ 
+-		magic = get_magic(bit->magic);
++		magic = get_magic(magic);
  		if ((magic & 0xffffff00) != BLK_IO_TRACE_MAGIC) {
  			fprintf(stderr, "Bad magic %x\n", magic);
  			goto err;
+ 
+ 		}
++		bit = bit_alloc();
++		bit->magic = magic;
++		p = (void *) ((u8 *)bit + sizeof(magic));
++
++		ret = read_data(pci->fd, p, sizeof(*bit) - sizeof(magic), 1,
++				&pci->fdblock);
++		if (ret)
++			goto err;
+ 
+ 		pdu_len = get_pdulen(bit);
+ 		if (pdu_len) {
+@@ -2639,6 +2661,7 @@ static int ms_prime(struct ms_stream *msp)
+ 			handle_notify(bit);
+ 			output_binary(bit, sizeof(*bit) + bit->pdu_len);
+ 			bit_free(bit);
++			bit = NULL;
+ 
+ 			i -= 1;
+ 			continue;
+@@ -2659,6 +2682,7 @@ static int ms_prime(struct ms_stream *msp)
+ 		}
+ 
+ 		ndone++;
++		bit = NULL;
+ 	}
+ 
+ 	return ndone;
 -- 
 2.51.1
 
