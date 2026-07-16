@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 093E741736D;
-	Thu, 16 Jul 2026 12:07:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 625233C5550;
+	Thu, 16 Jul 2026 12:08:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784203629; cv=none; b=bstMu9fEM4ZbzWnXDwy4zGohf+se6TLojsKvYSEheRYL0ONTP82Ku5HMPHXJ+TU0Ri37cXaSemFqgpBIa1H5nrtEjCr32y/s+wwwn2dnaVNsedktV8WxC1nY822s3DTXKqZ3cvVN9EaOnVRBDjLm8BzGHWrLCjr+s9bH+3GvGXQ=
+	t=1784203702; cv=none; b=hke4Gv3J/G6tMLEKXV8+TFyUf+hgPwNiORGVpxNuSFg9xQb7ZniWyMk9rV0fsAuK35OvxORx27kOta34zlzAO7XlvffFpOu9TuFZSZRUuCbkeMZtm9Wgo4GJJ/LcA66ZJsgeoF6LYGLdVViMYdc+m43LzvAlM1AQ6HD1IkdPhDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784203629; c=relaxed/simple;
-	bh=aPZhX3BQKknR4SA7WPaK9h4or7vPdiorZpQsWQiTJUQ=;
+	s=arc-20240116; t=1784203702; c=relaxed/simple;
+	bh=SUnPzaGvTEmDEPK71/CMkH9DDWL7fFRgcsBW9dnB5ak=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G0/bmNSVWxOKEaHHjG7qwjzSfarU4TutJYa/Dr3lGl47wjZiMOB1qEl4V4Fqt8P4XZMpF+QXmh2ySukWEDgHT7nQYEPZpt1bEiFGsqQWFJmWQrqpQHBMcpzUiX9Xmialw7dSZCuXsnOEjgTbMihtEfjBpYcX6DoZTYbRZhsZnY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ESqKfCqP; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Fh/Dh5pjgRGKK3N6pqmF78TZGLhjdlO1gk3ic/HzRTZwg58Hg9qSN6YkPn1m9bEaP0PP9RSQQberwHairL6+QL9qpYm/1RRgsjBXI6IewjsPFLQQkgb1uPVime4H0FkJx8lKg5ZSira+tEi3ZRuYp+7GGL2HKj9xk3OFOTl7HCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i+iyl/ny; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ESqKfCqP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B30321F000E9;
-	Thu, 16 Jul 2026 12:07:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i+iyl/ny"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B34E1F000E9;
+	Thu, 16 Jul 2026 12:08:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784203627;
-	bh=wI14ge0hUZuODDmuPIoCPFS9qDIKL1a4SO0oH7TmJfo=;
+	s=k20260515; t=1784203701;
+	bh=jy1MCEo4h+b5yrEKlZHrh6jMyJYtF+Ydb57Neu38nAE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ESqKfCqPr+Erp1eQt5k50lukAm25OPQbHneOAQ3TSAw2nArJb7oZh44z9qPXhr/xC
-	 fsNJLmteyK+LGY97jIV6nnt+c9OZ/UxfvtEhUdiZzeO3hel5JjiuVMVGVbnBubEjkF
-	 EG8X/61Q0dnVagwXMH66qbwqLVtvnUHgh0+x8ai1Ke4Fed8vT4QBtqRGrSxWsKQbzl
-	 KeBnqrml17r5DE37QW/CVN/HyoG5CRURXueYfYZ7z7teHwigSEdPZZ2h9yXbA97s3H
-	 iYQZAIfshWEXcnqyD7bF26EK1wGFvNE/nUHLgipqRviyZSaWKOeFqsdBgDx6+3qqrR
-	 VOhKZo+B+c++A==
-Message-ID: <ab65cea3-e4e8-4422-9cd4-b68b55543a35@kernel.org>
-Date: Thu, 16 Jul 2026 21:07:05 +0900
+	b=i+iyl/nyye1xsyGm8AQ5mD4PCPFgTS/qniWVSQZShiRT5D6g3m60t5LSNzEDd6i+u
+	 l7NYbLeBmCvGArQ7Z/70R3JK5TzbJhapTeNSv2iQnkN+tHjVXVjJDGcAVMM7bJYyU6
+	 IEZ+Ot8Du/nEb4rZgA09MJ+ggywMm+/vxci5LwStgGcN9SxIkx/4DVO4SBpz/z1tN9
+	 R5fnwrEm3sSqv4mQ+LU3PpHj97K78CE8joU77pou8oOGOmJgrsldIeXRZpn+v7D9m1
+	 j+bscYxMlBlMHC6r8v9EEjUqMqFaHHjryFHHfKifnKAN9gRVb6tFBVJtmxl0rul/qT
+	 1KsFQgdSIFV9A==
+Message-ID: <1d5a36cc-4d34-4933-8efd-a6e8b81eb415@kernel.org>
+Date: Thu, 16 Jul 2026 21:08:18 +0900
 Precedence: bulk
 X-Mailing-List: linux-btrace@vger.kernel.org
 List-Id: <linux-btrace.vger.kernel.org>
@@ -35,32 +35,29 @@ List-Subscribe: <mailto:linux-btrace+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/11] iowatcher: use blk_io_trace2 internally
+Subject: Re: [PATCH 09/11] iowatcher: natively parse blk_io_trace2
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
  "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
  Chaitanya Kulkarni <chaitanyak@nvidia.com>, linux-btrace@vger.kernel.org
 References: <20260716110442.1291010-1-johannes.thumshirn@wdc.com>
- <20260716110442.1291010-9-johannes.thumshirn@wdc.com>
+ <20260716110442.1291010-10-johannes.thumshirn@wdc.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260716110442.1291010-9-johannes.thumshirn@wdc.com>
+In-Reply-To: <20260716110442.1291010-10-johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/16/26 20:04, Johannes Thumshirn wrote:
-> Use 'struct blk_io_trace2' as internal representation for a captured
-> blktrace.
-> 
-> This implies the conversion of 'struct blk_io_trace' into 'struct
-> blk_io_trace2' when reading the trace from the binary file.
+> Natively parse 'struct blk_io_trace2' from a blktrace binary.
 > 
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
 Looks OK to me.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
 
 -- 
 Damien Le Moal
