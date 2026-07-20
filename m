@@ -1,51 +1,51 @@
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56AB23F9A0F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF5A33F9F25;
 	Mon, 20 Jul 2026 11:15:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784546103; cv=none; b=UbfigdOWSad3XBlL13Jn7/RZr8xnQ8cJavce0LWw8WgopOxxEk6g050/LqE0cqIA0Ngb0kbYRhiqe7NhbVW1JyVN44NFI8a2Zio6tNC/iE9FtChmwqCV2Qq4tKSOKRohw4wHcgIdhX8e6nkyTfYBUxsrjyDChJWqIZKdbBf4quY=
+	t=1784546103; cv=none; b=mVyf1Wc4UDXyIOwW19p9XN4JnPk4TaBzutKY6g00dGgNisHBVD1HvZMZUf5KZX3EFYzBP2B2cHcoUyZpp60uCMkz2eDg6+Vi9E4REuidn9dfv0+n1R0ZpSUzWLv0OSg1s/Hd4EDZl+DuIaJUtkdFjazESjNQtGPn4bumh174G+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784546103; c=relaxed/simple;
-	bh=4dITsj/U59Xs3BXpNSDsRxiyweprvyHfS7HWiF1HDnQ=;
+	bh=PVkKKpntkH9ENLw8rDLodJcFqjns+ysz3ZQ1ygrOOf0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rz+saAvaSuiB6GIwfXSodZUYhSjwReomXrDNwRZLruzGInYZKUYlNx2b/r/DZNR/817oBbarUCFUQRRF05DO4RSE94a1nJw4IhSMv1HF+UOTwdI0EflSAn1CIZ8tyG7a55VaCu0aXV3n3n+rkyearGFDQNboHH3fXkCUsRZ2kU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Sq53WWex; arc=none smtp.client-ip=68.232.141.245
+	 MIME-Version; b=rNvKVZflYGQXxGOOVT0Oyo3RkIlOdyurqF4hywTNQB9DMA713BiVXRMTl5rvWPDIxXsJo7CC2aU8b9/mtOhvPYk4isO+SNMywu5K6fZgeVELi8+4vm+zZUssscMiGOooLHSs4IgimKeLwyQcKoaC6z7tcafP779UfuWh2dKiZwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=F4TDQPEr; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Sq53WWex"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="F4TDQPEr"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
   t=1784546101; x=1816082101;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=4dITsj/U59Xs3BXpNSDsRxiyweprvyHfS7HWiF1HDnQ=;
-  b=Sq53WWexeQvJOW+uPNmPJB5YZu5uMEcFw5C5evWrBpqB4v8o+FXaVmrn
-   TDn/iO9qb/3u9lHZXj6NnNTAzz99cIXNcPd3cZdp9gkHPh2sd2O97D8G0
-   qIed1xmxVyqwk3/G1ft9v2HTk9/93QpibBt4HTz3OkqMRI+20d2x/uTYp
-   UMycTUpYkqjxJ3alQ7IiXvZszqD1Kgkm2srPlOZUKMhSwBVou+CXtVTLm
-   eoHc95O7jSqCm3M6Inm9dv6rwjmeqwR9fDXA5gLULDY4ycmdPcel3rgyA
-   N0PiLuBwaAksK8Gjc7APj/GGiXHaYtGJ5qpKMmyGRUoGOUmNDt6oeB8tg
-   g==;
-X-CSE-ConnectionGUID: jv1089sqTy6FOLVx53ZlvQ==
-X-CSE-MsgGUID: +ijr0dCzTUq4uW1x04NV3w==
+  bh=PVkKKpntkH9ENLw8rDLodJcFqjns+ysz3ZQ1ygrOOf0=;
+  b=F4TDQPErGiSc4wTdd6kQ6UWwQEbhjAIwOpph+QtssZ1bT04pDdNsOus7
+   NGxECYgPoQ5pBZ+Kz4jx8qf+IIY11bFZfsFf7llBxkZzECF0ucqJPObtk
+   HNbaBMRyBA9EmM5AxXu06sHkloIy+Ea1CfLh2izt5CCF+JcOVUG5hNPdF
+   PXzerl8g48RW1vW/Wj1X4mc4apdGrzrxU2DEU+kxfZeVgui3P6/XyL+T9
+   7h258uxUiS+/1yizLvJAhUbzNO1NrCgSbqys0L6unjuB+YGwYR5AD+92u
+   lGVAEv/Vk6Nh8J1JcFiG/+jxonlah4+QoMumVTXaOQRyR0dPkzH72qCoP
+   A==;
+X-CSE-ConnectionGUID: VFozw1DIQYWmtblOKQomsw==
+X-CSE-MsgGUID: 2iNAxaAZQy20TNOteMRK+Q==
 X-IronPort-AV: E=Sophos;i="6.25,174,1779120000"; 
-   d="scan'208";a="151105447"
+   d="scan'208";a="151105448"
 Received: from unknown (HELO uls-op-esad2-o.wdc.com) ([199.255.45.15])
   by ob1.hgst.iphmx.com with ESMTP; 20 Jul 2026 19:14:51 +0800
-X-CSE-ConnectionGUID: TfdFYLKKTYSV+hGVe4wzlQ==
-X-CSE-MsgGUID: NK8Ejr6qQha0SJRHuIRKMg==
-IronPort-SDR: 6a5e0313_M8RPB9sTLbUtUmgbKOdCeU30kvO7Nn/jxcLj6DHUwYKh7mB
- D2/7zgbbl48Ayc6SwbR+wKjGF0g6UI4LXswEbOQ==
+X-CSE-ConnectionGUID: FnQ2MtAMQveBf05YyizjZw==
+X-CSE-MsgGUID: bCo2mrFuRqeC71hMCAucpw==
+IronPort-SDR: 6a5e0316_zBItwtC+FJc6AIbJhgkgrYY5PPPF0aclwND7sEq3GPCFycq
+ QfXwio4qsafhGUCdlAvyNvogMW6qJ3rcVQiK+4w==
 Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
-  by uls-op-esad2-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Jul 2026 04:14:27 -0700
-X-CSE-ConnectionGUID: P1bXM0RLQauSkugGOkdwnA==
-X-CSE-MsgGUID: 2MCLMCyGTbmyEBe/lvzJpQ==
+  by uls-op-esad2-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Jul 2026 04:14:30 -0700
+X-CSE-ConnectionGUID: 544tuoQOQCyCBkktO9hEgQ==
+X-CSE-MsgGUID: y8rzCZdKR+uwj/kHeOFEBw==
 WDCIronportException: Internal
 Received: from wdap-kyufgunycc.ad.shared (HELO neo.fritz.box) ([10.224.19.3])
-  by uls-op-esai1-o.wdc.com with ESMTP; 20 Jul 2026 04:14:26 -0700
+  by uls-op-esai1-o.wdc.com with ESMTP; 20 Jul 2026 04:14:28 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -54,9 +54,9 @@ Cc: linux-block@vger.kernel.org,
 	Chaitanya Kulkarni <chaitanyak@nvidia.com>,
 	linux-btrace@vger.kernel.org,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v2 03/11] blktrace: add option to request a specific trace protocol version
-Date: Mon, 20 Jul 2026 13:14:09 +0200
-Message-ID: <20260720111417.1658507-4-johannes.thumshirn@wdc.com>
+Subject: [PATCH v2 04/11] blkrawverify: use blk_io_trace2 internally
+Date: Mon, 20 Jul 2026 13:14:10 +0200
+Message-ID: <20260720111417.1658507-5-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260720111417.1658507-1-johannes.thumshirn@wdc.com>
 References: <20260720111417.1658507-1-johannes.thumshirn@wdc.com>
@@ -68,112 +68,92 @@ List-Unsubscribe: <mailto:linux-btrace+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the '--trace-version=<1|2>' command line option to select the trace
-protocol version requested from the kernel. Requesting version 1 forces
-blktrace to use the old BLKTRACESETUP ioctl, while version 2 (the
-default) uses BLKTRACESETUP2.
+Use 'struct blk_io_trace2' as internal representation for a captured
+blktrace.
 
+This implies the conversion of 'struct blk_io_trace' into 'struct
+blk_io_trace2' when reading the trace from the binary file.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- blktrace.c     | 24 ++++++++++++++++++++++--
- doc/blktrace.8 |  7 +++++++
- 2 files changed, 29 insertions(+), 2 deletions(-)
+ blkrawverify.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/blktrace.c b/blktrace.c
-index 72562fdc9d9e..89a8f8a7dccd 100644
---- a/blktrace.c
-+++ b/blktrace.c
-@@ -283,6 +283,7 @@ static unsigned long long act_mask = ~0U;
- static int kill_running_trace;
- static int stop_watch;
- static int piped_output;
-+static int trace_ver;
+diff --git a/blkrawverify.c b/blkrawverify.c
+index 8e863cb39490..2a3aa609581f 100644
+--- a/blkrawverify.c
++++ b/blkrawverify.c
+@@ -102,7 +102,7 @@ static char *act_to_str(__u64 action)
+ 	return buf;
+ }
  
- static char *debugfs_path = "/sys/kernel/debug";
- static char *output_name;
-@@ -329,6 +330,10 @@ static int *cl_fds;
- static int (*handle_pfds)(struct tracer *, int, int);
- static int (*handle_list)(struct tracer_devpath_head *, struct list_head *);
- 
-+enum {
-+	OPT_TRACE_VERSION = 256,
-+};
-+
- #define S_OPTS	"d:a:A:r:o:kw:vVb:n:D:lh:p:sI:"
- static struct option l_opts[] = {
- 	{
-@@ -433,6 +438,12 @@ static struct option l_opts[] = {
- 		.flag = NULL,
- 		.val = 's'
- 	},
-+	{
-+		.name = "trace-version",
-+		.has_arg = required_argument,
-+		.flag = NULL,
-+		.val = OPT_TRACE_VERSION
-+	},
- 	{
- 		.name = NULL,
- 	}
-@@ -455,6 +466,7 @@ static char usage_str[] = "\n\n" \
-         "[ -I <devs file>     | --input-devs=<devs file>]\n" \
-         "[ -v <version>       | --version]\n" \
-         "[ -V <version>       | --version]\n" \
-+        "[ --trace-version=<1|2> ]\n" \
- 
- 	"\t-d Use specified device. May also be given last after options\n" \
- 	"\t-r Path to mounted debugfs, defaults to /sys/kernel/debug\n" \
-@@ -471,7 +483,8 @@ static char usage_str[] = "\n\n" \
- 	"\t-s Make the network client NOT use sendfile() to transfer data\n" \
- 	"\t-I Add devices found in <devs file>\n" \
- 	"\t-v Print program version info\n" \
--	"\t-V Print program version info\n\n";
-+	"\t-V Print program version info\n" \
-+	"\t--trace-version Request trace protocol version 1 or 2 from the kernel\n\n";
- 
- static void clear_events(struct pollfd *pfd)
+-static void dump_trace(FILE *ofp, char *prefix, struct blk_io_trace *bit)
++static void dump_trace(FILE *ofp, char *prefix, struct blk_io_trace2 *bit)
  {
-@@ -2244,6 +2257,13 @@ static int handle_args(int argc, char *argv[])
- 		case 's':
- 			net_use_sendfile = 0;
+ 	fprintf(ofp, "    Dump %s\n", prefix);
+ 	fprintf(ofp, "        %8s: %08x\n", "magic", bit->magic);
+@@ -123,13 +123,13 @@ static int process(FILE **fp, char *devname, char *file, unsigned int cpu)
+ {
+ #	define SWAP_BITS() do {						\
+ 		if (bit_save) {						\
+-			struct blk_io_trace *tmp = bit_save;		\
++			struct blk_io_trace2 *tmp = bit_save;		\
+ 			bit_save = bit;					\
+ 			bit = tmp;					\
+ 		}							\
+ 		else {							\
+ 			bit_save = bit;					\
+-			bit = malloc(sizeof(struct blk_io_trace));	\
++			bit = malloc(sizeof(struct blk_io_trace2));	\
+ 		}							\
+ 	} while (0)
+ 
+@@ -145,8 +145,9 @@ static int process(FILE **fp, char *devname, char *file, unsigned int cpu)
+ 	FILE *ifp, *ofp;
+ 	__u32 save_device = 0, save_sequence = 0;
+ 	__u64 save_time = 0;
+-	struct blk_io_trace *bit_save = NULL;
+-	struct blk_io_trace *bit = malloc(sizeof(struct blk_io_trace));
++	struct blk_io_trace bit1;
++	struct blk_io_trace2 *bit_save = NULL;
++	struct blk_io_trace2 *bit = malloc(sizeof(struct blk_io_trace2));
+ 	unsigned int ngood = 0;
+ 	unsigned int nbad = 0;
+ 	unsigned int nbad_trace = 0, nbad_pdu = 0, nbad_cpu = 0;
+@@ -172,16 +173,28 @@ static int process(FILE **fp, char *devname, char *file, unsigned int cpu)
+ 	}
+ 
+ 	ofp = *fp;
+-	while ((n = fread(bit, sizeof(struct blk_io_trace), 1, ifp)) == 1) {
++	while ((n = fread(&bit1, sizeof(struct blk_io_trace), 1, ifp)) == 1) {
+ 		if (ferror(ifp)) {
+ 			clearerr(ifp);
+ 			perror("fread");
  			break;
-+		case OPT_TRACE_VERSION:
-+			trace_ver = atoi(optarg);
-+			if (trace_ver != 1 && trace_ver != 2) {
-+				show_usage(argv[0]);
-+				exit(1);
-+			}
-+			break;
- 		default:
- 			show_usage(argv[0]);
- 			exit(1);
-@@ -2714,7 +2734,7 @@ static int run_tracers(void)
- 	if (net_mode == Net_client)
- 		printf("blktrace: connecting to %s\n", hostname);
- 
--	if (setup_buts2()) {
-+	if (trace_ver == 1 || setup_buts2()) {
- 		if (setup_buts()) {
- 			done = 1;
- 			return 1;
-diff --git a/doc/blktrace.8 b/doc/blktrace.8
-index 820b03aa4c16..c502adcfaa9d 100644
---- a/doc/blktrace.8
-+++ b/doc/blktrace.8
-@@ -191,6 +191,13 @@ Outputs version
- Sets run time to the number of seconds specified  
- .RE
- 
-+\-\-trace\-version=\fI1|2\fR
-+.RS
-+Selects the trace protocol version requested from the kernel. Requesting
-+version 1 forces blktrace to use the old \fBBLKTRACESETUP\fR ioctl, while
-+version 2 (the default) uses \fBBLKTRACESETUP2\fR.
-+.RE
+ 		}
+ 		if (data_is_native == -1)
+-			check_data_endianness(bit->magic);
+-
+-		bit_trace_to_cpu(bit);
++			check_data_endianness(bit1.magic);
 +
++		bit_trace_to_cpu(&bit1);
++
++		bit->magic	= bit1.magic;
++		bit->sequence	= bit1.sequence;
++		bit->time	= bit1.time;
++		bit->sector	= bit1.sector;
++		bit->bytes	= bit1.bytes;
++		bit->action	= bit1.action;
++		bit->pid	= bit1.pid;
++		bit->device	= bit1.device;
++		bit->cpu	= bit1.cpu;
++		bit->error	= bit1.error;
++		bit->pdu_len	= bit1.pdu_len;
  
- .SH FILTER MASKS
- The following masks may be passed with the \fI\-a\fR command line
+ 		if (!CHECK_MAGIC(bit->magic)) {
+ 			INC_BAD("bad trace");
 -- 
 2.54.0
 
